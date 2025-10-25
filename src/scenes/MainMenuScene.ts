@@ -246,7 +246,7 @@ Forest - Intro Scene Music by "syncopika"
 		const startSound = this.sound.add('start_game');
 		startSound.play();
 		this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
-			this.scene.start('MobileCheckScene');
+			this.scene.start('MainScene');
 			this.scene.stop();
 		});
 	}

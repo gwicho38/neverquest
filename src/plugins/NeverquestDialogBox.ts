@@ -251,6 +251,15 @@ export class NeverquestDialogBox {
 
 		this.keyObj = this.scene.input.keyboard!.addKey(this.actionButtonKeyCode);
 
+		// Add ESC key to close dialog
+		const escKey = this.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
+		escKey.on('down', () => {
+			if (this.chat && this.chat.length > 0 && this.isDialogVisible) {
+				console.log('[NeverquestDialogBox] ESC pressed - closing dialog');
+				this.hideDialog();
+			}
+		});
+
 		// GamePad Support
 		if (this.scene.input.gamepad && this.scene.input.gamepad.total > 0) {
 			this.gamepad = this.scene.input.gamepad.getPad(0);
@@ -614,29 +623,7 @@ export class NeverquestDialogBox {
 		} else if (this.dialog.visible && this.dialog.textMessage && this.dialog.textMessage.active) {
 			// Close dialog
 			console.log('[NeverquestDialogBox] Closing dialog (final page)');
-			this.dialog.visible = false;
-			this.dialog.textMessage.visible = false;
-			this.actionButton.visible = false;
-			this.isOverlapingChat = false;
-			this.showRandomChat = false;
-
-			// Clean up chat state to prevent reopening
-			this.chat = [];
-			this.currentChat = null;
-			this.dialogMessage = '';
-			this.pagesMessage = [];
-			this.pagesNumber = 0;
-			this.currentPage = 0;
-
-			if (this.player.container.body && 'maxSpeed' in this.player.container.body) {
-				(this.player.container.body as Phaser.Physics.Arcade.Body).maxSpeed = this.player.speed;
-			}
-			// Re-enable player input capabilities
-			console.log('[DialogBox] Setting canAtack = true (dialog complete)');
-			this.player.canMove = true;
-			this.player.canAtack = true;
-			this.player.canBlock = true;
-			this.scene.events.emit('dialogComplete');
+			this.hideDialog();
 		}
 	}
 
@@ -674,6 +661,56 @@ export class NeverquestDialogBox {
 				'[NeverquestDialogBox] showDialog called but pagesMessage is empty and no dialogMessage - cannot set text'
 			);
 		}
+	}
+
+	/**
+	 * Hide dialog and reset state to allow re-triggering
+	 */
+	hideDialog(): void {
+		console.log('[NeverquestDialogBox] Hiding dialog');
+
+		// Hide UI elements
+		this.dialog.visible = false;
+		if (this.dialog.textMessage) {
+			this.dialog.textMessage.visible = false;
+		}
+		this.actionButton.visible = false;
+		this.interactionIcon.visible = false;
+		this.isOverlapingChat = false;
+		this.showRandomChat = false;
+
+		// Clean up chat state
+		this.chat = [];
+		this.currentChat = null;
+		this.dialogMessage = '';
+		this.pagesMessage = [];
+		this.pagesNumber = 0;
+		this.currentPage = 0;
+
+		// CRITICAL: Reset canShowDialog to allow dialog to be triggered again
+		this.canShowDialog = true;
+
+		// Re-enable player controls
+		if (this.player.container.body && 'maxSpeed' in this.player.container.body) {
+			(this.player.container.body as Phaser.Physics.Arcade.Body).maxSpeed = this.player.speed;
+		}
+		console.log('[DialogBox] Re-enabling player controls after dialog close', {
+			beforeCanAtack: this.player.canAtack,
+			beforeCanMove: this.player.canMove,
+			beforeCanBlock: this.player.canBlock,
+		});
+		this.player.canMove = true;
+		this.player.canAtack = true;
+		this.player.canBlock = true;
+		console.log('[DialogBox] Player controls re-enabled', {
+			afterCanAtack: this.player.canAtack,
+			afterCanMove: this.player.canMove,
+			afterCanBlock: this.player.canBlock,
+			dialogVisible: this.dialog.visible,
+		});
+
+		// Emit event
+		this.scene.events.emit('dialogComplete');
 	}
 
 	/**

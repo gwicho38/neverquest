@@ -69,23 +69,28 @@ export class NeverquestKeyboardMouseController {
 					this.player.canMove &&
 					!this.player.isSwimming
 				);
-				console.log('[KeyboardController] Attack key pressed (J or Space):', {
-					hasPlayer: !!this.player,
-					active: this.player?.active,
-					canAtack: this.player?.canAtack,
-					canMove: this.player?.canMove,
-					isSwimming: this.player?.isSwimming,
-					attackAllowed,
-					failedConditions: !attackAllowed
-						? [
-								!this.player && 'no player',
-								this.player && !this.player.active && 'not active',
-								this.player && !this.player.canAtack && 'canAtack=false',
-								this.player && !this.player.canMove && 'canMove=false',
-								this.player && this.player.isSwimming && 'swimming',
-							].filter(Boolean)
-						: [],
-				});
+
+				if (!attackAllowed) {
+					const failedConditions = [
+						!this.player && 'no player',
+						this.player && !this.player.active && 'not active',
+						this.player && !this.player.canAtack && 'canAtack=false',
+						this.player && !this.player.canMove && 'canMove=false',
+						this.player && this.player.isSwimming && 'swimming',
+					].filter(Boolean);
+
+					console.warn('🚫 ATTACK BLOCKED:', failedConditions.join(', '), {
+						hasPlayer: !!this.player,
+						active: this.player?.active,
+						canAtack: this.player?.canAtack,
+						canMove: this.player?.canMove,
+						isSwimming: this.player?.isSwimming,
+						isAtacking: this.player?.isAtacking,
+						isBlocking: this.player?.isBlocking,
+					});
+				} else {
+					console.log('✅ Attack allowed');
+				}
 			}
 
 			if (

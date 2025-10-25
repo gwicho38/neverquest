@@ -4,20 +4,21 @@ import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-p
 import OutlinePostFx from 'phaser3-rex-plugins/plugins/outlinepipeline.js';
 import YoutubePlayerPlugin from 'phaser3-rex-plugins/plugins/youtubeplayer-plugin.js';
 import UIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
-// import { AttributeScene } from './scenes/AttributeScene';
+import { AttributeScene } from './scenes/AttributeScene';
 // import { CaveScene } from './scenes/CaveScene';
-// import { DialogScene } from './scenes/DialogScene';
+import { DialogScene } from './scenes/DialogScene';
 // import { DungeonScene } from './scenes/DungeonScene';
 // import { GameOverScene } from './scenes/GameOverScene';
-// import { HUDScene } from './scenes/HUDScene';
+import { HUDScene } from './scenes/HUDScene';
 import { IntroScene } from './scenes/IntroScene';
-// import { InventoryScene } from './scenes/InventoryScene';
+import { InventoryScene } from './scenes/InventoryScene';
 // import { JoystickScene } from './scenes/JoystickScene';
-// import { MainMenuScene } from './scenes/MainMenuScene';
-// import { MainScene } from './scenes/MainScene';
+import { MainMenuScene } from './scenes/MainMenuScene';
+import { MainScene } from './scenes/MainScene';
 // import { MobileCheckScene } from './scenes/MobileCheckScene';
 // import { OverworldScene } from './scenes/OverworldScene';
 import { PreloadScene } from './scenes/PreloadScene';
+import { UpsideDownScene } from './scenes/UpsideDownScene';
 // import { SettingScene } from './scenes/SettingScene';
 // import { TownScene } from './scenes/TownScene';
 // import { TutorialScene } from './scenes/TutorialScene';
@@ -66,23 +67,24 @@ const config: Phaser.Types.Core.GameConfig = {
 		// Preload should come first
 		PreloadScene,
 		IntroScene,
-		// MainScene,
+		MainScene,
+		MainMenuScene,
+		// UpsideDownScene,
 		// DungeonScene,
 		// TownScene,
 		// CaveScene,
 		// OverworldScene,
 		// MobileCheckScene,
 		// TutorialScene,
-		// MainMenuScene,
 
 		// UI Scenes should be loaded after the game Scenes.
 		// JoystickScene,
-		// DialogScene,
-		// HUDScene,
-		// InventoryScene,
+		DialogScene,
+		HUDScene,
+		InventoryScene,
+		AttributeScene,
 		// SettingScene,
 		// VideoPlayerScene,
-		// AttributeScene,
 		// GameOverScene,
 	],
 	input: {

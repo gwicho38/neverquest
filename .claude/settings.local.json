@@ -27,7 +27,8 @@
 			"Bash(mkdir:*)",
 			"Bash(mv:*)",
 			"Bash(rmdir:*)",
-			"Bash(rm:*)"
+			"Bash(rm:*)",
+			"Bash(npm run start)"
 		],
 		"deny": [],
 		"ask": []
