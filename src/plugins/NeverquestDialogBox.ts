@@ -281,9 +281,23 @@ export class NeverquestDialogBox {
 		this.cameraHeight = this.scene.cameras.main.height;
 		this.textWidth = this.cameraWidth - this.margin * 3;
 
+		// Create a black background rectangle for the dialog
+		const dialogY = this.margin; // Position at top of screen
+		const dialogBg = this.scene.add.rectangle(
+			this.margin,
+			dialogY,
+			this.cameraWidth - this.margin * 2,
+			this.dialogHeight,
+			0x000000, // Black color
+			0.9 // 90% opacity
+		);
+		dialogBg.setOrigin(0, 0).setScrollFactor(0, 0).setDepth(999998);
+		dialogBg.visible = false;
+		(this.dialog as any).backgroundRect = dialogBg; // Store reference for show/hide
+
 		this.dialog = this.scene.add.nineslice(
 			this.margin,
-			this.cameraHeight - this.dialogHeight - this.margin,
+			dialogY, // Positioned at top of screen now
 			this.dialogSpriteName, // texture key - must come before dimensions
 			undefined, // frame - use undefined for single-frame textures
 			this.cameraWidth - this.margin * 2, // width
@@ -294,6 +308,8 @@ export class NeverquestDialogBox {
 			32 // bottomHeight
 		) as unknown as IDialog;
 
+		// Tint the dialog box black to make the paper texture dark
+		this.dialog.setTint(0x000000);
 		this.dialog.setScrollFactor(0, 0).setOrigin(0, 0).setDepth(999999);
 		this.dialog.visible = false;
 	}
@@ -640,6 +656,10 @@ export class NeverquestDialogBox {
 		});
 		this.currentPage = 0;
 		this.dialog.visible = true;
+		// Show the black background rectangle
+		if ((this.dialog as any).backgroundRect) {
+			(this.dialog as any).backgroundRect.visible = true;
+		}
 		this.canShowDialog = false;
 
 		// Create pages if necessary
@@ -671,6 +691,10 @@ export class NeverquestDialogBox {
 
 		// Hide UI elements
 		this.dialog.visible = false;
+		// Hide the black background rectangle
+		if ((this.dialog as any).backgroundRect) {
+			(this.dialog as any).backgroundRect.visible = false;
+		}
 		if (this.dialog.textMessage) {
 			this.dialog.textMessage.visible = false;
 		}
@@ -793,8 +817,17 @@ export class NeverquestDialogBox {
 			this.cameraHeight = height;
 			this.textWidth = this.cameraWidth - this.margin * 3;
 			this.dialog.x = this.margin;
-			this.dialog.y = this.cameraHeight - this.dialogHeight - this.margin;
+			this.dialog.y = this.margin; // Position at top of screen
 			this.dialog.setSize(this.cameraWidth - this.margin * 2, this.dialogHeight);
+
+			// Update background rectangle position and size
+			if ((this.dialog as any).backgroundRect) {
+				const bgRect = (this.dialog as any).backgroundRect;
+				bgRect.x = this.margin;
+				bgRect.y = this.margin;
+				bgRect.width = this.cameraWidth - this.margin * 2;
+				bgRect.height = this.dialogHeight;
+			}
 
 			if (this.dialog.textMessage && this.dialog.textMessage.visible) {
 				this.dialog.textMessage.setPosition(this.dialog.textMessage.x, this.leftNameText.y + 30);
