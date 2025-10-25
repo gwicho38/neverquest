@@ -60,8 +60,15 @@ export class NeverquestKeyboardMouseController {
 		});
 
 		this.scene.input.keyboard!.on('keydown', (keydown: KeyboardEvent) => {
-			// J key (74) or Space (32) - Attack
-			if (keydown.keyCode === 32 || keydown.keyCode === 74) {
+			// Space key (32) - Jump
+			if (keydown.keyCode === 32) {
+				if (this.player && this.player.active && this.player.canJump && this.player.canMove) {
+					this.player.jump();
+				}
+			}
+
+			// J key (74) - Attack
+			if (keydown.keyCode === 74) {
 				const attackAllowed = !!(
 					this.player &&
 					this.player.active &&
@@ -91,17 +98,10 @@ export class NeverquestKeyboardMouseController {
 				} else {
 					console.log('✅ Attack allowed');
 				}
-			}
 
-			if (
-				(keydown.keyCode === 32 || keydown.keyCode === 74) &&
-				this.player &&
-				this.player.active &&
-				this.player.canAtack &&
-				this.player.canMove &&
-				!this.player.isSwimming
-			) {
-				this.neverquestBattleManager!.atack(this.player);
+				if (attackAllowed) {
+					this.neverquestBattleManager!.atack(this.player);
+				}
 			}
 			// K key (75) - Block
 			if (

@@ -30,6 +30,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public baseSpeed: number = 200;
 	public swimSpeed: number = 100;
 	public runSpeed: number = 300;
+	public isJumping: boolean = false;
+	public canJump: boolean = true;
+	public jumpHeight: number = 20;
+	public jumpDuration: number = 400;
 
 	// Player-specific properties
 	public attributes: IEntityAttributes;
@@ -208,6 +212,54 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		// Debug color lines.
 		(this.container.body as Phaser.Physics.Arcade.Body).debugBodyColor = 0xffffff;
 		(this.body as Phaser.Physics.Arcade.Body).debugBodyColor = 0xffff00;
+	}
+
+	/**
+	 * Makes the player jump with a visual effect
+	 */
+	jump(): void {
+		if (!this.canJump || this.isJumping || this.isSwimming) {
+			return;
+		}
+
+		console.log('[Player] Jump started');
+		this.isJumping = true;
+		this.canJump = false;
+
+		const startY = this.container.y;
+		const jumpPeakY = startY - this.jumpHeight;
+
+		// Jump up animation
+		this.scene.tweens.add({
+			targets: this.container,
+			y: jumpPeakY,
+			duration: this.jumpDuration / 2,
+			ease: 'Quad.easeOut',
+			onComplete: () => {
+				// Jump down animation
+				this.scene.tweens.add({
+					targets: this.container,
+					y: startY,
+					duration: this.jumpDuration / 2,
+					ease: 'Quad.easeIn',
+					onComplete: () => {
+						this.isJumping = false;
+						this.canJump = true;
+						console.log('[Player] Jump completed');
+					},
+				});
+			},
+		});
+
+		// Add a shadow/scale effect for more visual feedback
+		this.scene.tweens.add({
+			targets: this.container,
+			scaleX: 0.9,
+			scaleY: 0.9,
+			duration: this.jumpDuration / 2,
+			yoyo: true,
+			ease: 'Sine.easeInOut',
+		});
 	}
 
 	/**
