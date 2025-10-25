@@ -703,6 +703,21 @@ export class NeverquestDialogBox {
 		}
 		this.actionButton.visible = false;
 		this.interactionIcon.visible = false;
+
+		// Hide portrait images and name texts
+		if (this.leftPortraitImage) {
+			this.leftPortraitImage.visible = false;
+		}
+		if (this.rightPortraitImage) {
+			this.rightPortraitImage.visible = false;
+		}
+		if (this.leftNameText) {
+			this.leftNameText.visible = false;
+		}
+		if (this.rightNameText) {
+			this.rightNameText.visible = false;
+		}
+
 		this.isOverlapingChat = false;
 		this.showRandomChat = false;
 

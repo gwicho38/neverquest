@@ -125,11 +125,6 @@ export class NeverquestTiledInfoBox {
 				// Note: We do NOT disable canAtack here. The dialog system (showDialog/hideDialog)
 				// is responsible for managing player attack state when dialogs open/close.
 				// The overlap callback only manages UI visibility (interaction prompt).
-				console.log('[TiledInfoBox] Overlap: Player in NPC zone', {
-					dialogVisible: this.neverquestDialogBox.dialog.visible,
-					canShowDialog: this.neverquestDialogBox.canShowDialog,
-					canAtack: this.player.canAtack,
-				});
 			},
 			(_d: any) => {
 				return this.neverquestDialogBox.canShowDialog;
