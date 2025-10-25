@@ -282,7 +282,8 @@ export class NeverquestDialogBox {
 		this.textWidth = this.cameraWidth - this.margin * 3;
 
 		// Create a black background rectangle for the dialog
-		const dialogY = this.margin; // Position at top of screen
+		// Position 30% down from the top of the viewport
+		const dialogY = this.cameraHeight * 0.3;
 		const dialogBg = this.scene.add.rectangle(
 			this.margin,
 			dialogY,
@@ -818,15 +819,17 @@ export class NeverquestDialogBox {
 			this.cameraWidth = width;
 			this.cameraHeight = height;
 			this.textWidth = this.cameraWidth - this.margin * 3;
+			// Position 30% down from the top of the viewport
+			const dialogY = this.cameraHeight * 0.3;
 			this.dialog.x = this.margin;
-			this.dialog.y = this.margin; // Position at top of screen
+			this.dialog.y = dialogY;
 			this.dialog.setSize(this.cameraWidth - this.margin * 2, this.dialogHeight);
 
 			// Update background rectangle position and size
 			if ((this.dialog as any).backgroundRect) {
 				const bgRect = (this.dialog as any).backgroundRect;
 				bgRect.x = this.margin;
-				bgRect.y = this.margin;
+				bgRect.y = dialogY;
 				bgRect.width = this.cameraWidth - this.margin * 2;
 				bgRect.height = this.dialogHeight;
 			}
