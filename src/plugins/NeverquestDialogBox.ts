@@ -293,7 +293,6 @@ export class NeverquestDialogBox {
 		);
 		dialogBg.setOrigin(0, 0).setScrollFactor(0, 0).setDepth(999998);
 		dialogBg.visible = false;
-		(this.dialog as any).backgroundRect = dialogBg; // Store reference for show/hide
 
 		this.dialog = this.scene.add.nineslice(
 			this.margin,
@@ -307,6 +306,9 @@ export class NeverquestDialogBox {
 			32, // topHeight
 			32 // bottomHeight
 		) as unknown as IDialog;
+
+		// Store reference to background rect AFTER dialog is created
+		(this.dialog as any).backgroundRect = dialogBg;
 
 		// Tint the dialog box black to make the paper texture dark
 		this.dialog.setTint(0x000000);
