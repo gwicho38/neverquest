@@ -215,7 +215,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	}
 
 	/**
-	 * Makes the player jump with a visual effect
+	 * Makes the player jump with a visual effect and directional movement
 	 */
 	jump(): void {
 		if (!this.canJump || this.isJumping || this.isSwimming) {
@@ -229,7 +229,27 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		const startY = this.container.y;
 		const jumpPeakY = startY - this.jumpHeight;
 
-		// Jump up animation
+		// Calculate directional movement based on current velocity (set by movement system)
+		const body = this.container.body as Phaser.Physics.Arcade.Body;
+		const currentVelocityX = body.velocity.x;
+		const currentVelocityY = body.velocity.y;
+
+		// Calculate jump distance based on current velocity and jump duration
+		const jumpDistanceX = (currentVelocityX * this.jumpDuration) / 1000;
+		const jumpDistanceY = (currentVelocityY * this.jumpDuration) / 1000;
+
+		const startX = this.container.x;
+		const endX = startX + jumpDistanceX;
+		const endY = startY + jumpDistanceY;
+
+		console.log('[Player] Jump direction:', {
+			velocityX: currentVelocityX,
+			velocityY: currentVelocityY,
+			distanceX: jumpDistanceX,
+			distanceY: jumpDistanceY,
+		});
+
+		// Vertical jump animation (up then down)
 		this.scene.tweens.add({
 			targets: this.container,
 			y: jumpPeakY,
@@ -239,7 +259,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 				// Jump down animation
 				this.scene.tweens.add({
 					targets: this.container,
-					y: startY,
+					y: endY,
 					duration: this.jumpDuration / 2,
 					ease: 'Quad.easeIn',
 					onComplete: () => {
@@ -250,6 +270,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 				});
 			},
 		});
+
+		// Horizontal directional movement during jump
+		if (jumpDistanceX !== 0 || jumpDistanceY !== 0) {
+			this.scene.tweens.add({
+				targets: this.container,
+				x: endX,
+				duration: this.jumpDuration,
+				ease: 'Linear',
+			});
+		}
 
 		// Add a shadow/scale effect for more visual feedback
 		this.scene.tweens.add({
