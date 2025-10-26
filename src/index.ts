@@ -7,7 +7,7 @@ import UIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
 import { AttributeScene } from './scenes/AttributeScene';
 // import { CaveScene } from './scenes/CaveScene';
 import { DialogScene } from './scenes/DialogScene';
-// import { DungeonScene } from './scenes/DungeonScene';
+import { DungeonScene } from './scenes/DungeonScene';
 // import { GameOverScene } from './scenes/GameOverScene';
 import { HUDScene } from './scenes/HUDScene';
 import { IntroScene } from './scenes/IntroScene';
@@ -70,7 +70,7 @@ const config: Phaser.Types.Core.GameConfig = {
 		MainScene,
 		MainMenuScene,
 		// UpsideDownScene,
-		// DungeonScene,
+		DungeonScene,
 		// TownScene,
 		// CaveScene,
 		// OverworldScene,
