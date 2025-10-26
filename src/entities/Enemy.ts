@@ -144,8 +144,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 			if (now - this.lastPerceptionCheck > this.perceptionCheckInterval) {
 				this.lastPerceptionCheck = now;
 				this.checkPlayerInRange();
-			} else if (this.currentPath) {
+			} else if (this.currentPath && !this.isAtacking) {
 				// If we have a path, continue following it even between perception checks
+				// Don't follow path while attacking to prevent animation override
 				this.followCurrentPath();
 			}
 		}
@@ -205,6 +206,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	 * Continue following the current path (called between perception checks)
 	 */
 	private followCurrentPath(): void {
+		// Don't move or play animations while attacking
+		if (this.isAtacking) return;
+
 		if (this.currentPath && this.currentWaypointIndex < this.currentPath.length) {
 			const waypoint = this.currentPath[this.currentWaypointIndex];
 			const distance = Phaser.Math.Distance.Between(this.container.x, this.container.y, waypoint.x, waypoint.y);
@@ -229,6 +233,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	 * Move directly to target (original behavior, fallback)
 	 */
 	private moveDirectlyToTarget(target: Phaser.GameObjects.Container): void {
+		// Don't move or play animations while attacking
+		if (this.isAtacking) return;
+
 		this.scene.physics.moveToObject(this.container, target, this.speed);
 
 		const body = this.container.body as Phaser.Physics.Arcade.Body;

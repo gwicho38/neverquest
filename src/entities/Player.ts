@@ -127,15 +127,16 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		this.neverquestKeyboardMouseController = new NeverquestKeyboardMouseController(this.scene, this);
 		this.neverquestKeyboardMouseController.create();
 
-		this.scene.scene.launch('JoystickScene', {
-			player: this,
-			map: map,
-		});
+		// JoystickScene is currently disabled - using keyboard/mouse controls only
+		// this.scene.scene.launch('JoystickScene', {
+		// 	player: this,
+		// 	map: map,
+		// });
 
 		/**
 		 * The Joystick Scene.
 		 */
-		this.joystickScene = this.scene.scene.get('JoystickScene');
+		this.joystickScene = null; // this.scene.scene.get('JoystickScene');
 
 		/**
 		 * This object is responsible for moving the entity.
