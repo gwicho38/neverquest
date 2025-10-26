@@ -32,7 +32,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public runSpeed: number = 300;
 	public isJumping: boolean = false;
 	public canJump: boolean = true;
-	public jumpHeight: number = 20;
+	public jumpHeight: number = 16; // Reduced by 20% from 20
 	public jumpDuration: number = 400;
 
 	// Player-specific properties
@@ -235,9 +235,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		const currentVelocityY = body.velocity.y;
 
 		// Calculate jump distance based on current velocity and jump duration
-		// Reduced by 50% to make jumps feel more controlled
-		const jumpDistanceX = ((currentVelocityX * this.jumpDuration) / 1000) * 0.5;
-		const jumpDistanceY = ((currentVelocityY * this.jumpDuration) / 1000) * 0.5;
+		// Reduced by 60% total (50% + additional 20%) to make jumps feel more controlled
+		const jumpDistanceX = ((currentVelocityX * this.jumpDuration) / 1000) * 0.4;
+		const jumpDistanceY = ((currentVelocityY * this.jumpDuration) / 1000) * 0.4;
 
 		const startX = this.container.x;
 		const endX = startX + jumpDistanceX;
