@@ -34,6 +34,10 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public canJump: boolean = true;
 	public jumpHeight: number = 16; // Reduced by 20% from 20
 	public jumpDuration: number = 400;
+	public isRolling: boolean = false;
+	public canRoll: boolean = true;
+	public rollDistance: number = 40; // Distance the player rolls
+	public rollDuration: number = 300; // Roll is faster than jump
 
 	// Player-specific properties
 	public attributes: IEntityAttributes;
@@ -288,6 +292,85 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			scaleX: 0.95,
 			scaleY: 0.95,
 			duration: this.jumpDuration / 2,
+			yoyo: true,
+			ease: 'Sine.easeInOut',
+		});
+	}
+
+	/**
+	 * Makes the player roll in the current movement direction
+	 */
+	roll(): void {
+		if (!this.canRoll || this.isRolling || this.isSwimming || this.isJumping) {
+			return;
+		}
+
+		console.log('[Player] Roll started');
+		this.isRolling = true;
+		this.canRoll = false;
+
+		// Get current velocity to determine roll direction
+		const body = this.container.body as Phaser.Physics.Arcade.Body;
+		const currentVelocityX = body.velocity.x;
+		const currentVelocityY = body.velocity.y;
+
+		// Calculate roll direction based on velocity, or default to facing direction
+		let rollDirectionX = 0;
+		let rollDirectionY = 0;
+
+		if (currentVelocityX !== 0 || currentVelocityY !== 0) {
+			// Normalize the velocity vector to get direction
+			const magnitude = Math.sqrt(currentVelocityX * currentVelocityX + currentVelocityY * currentVelocityY);
+			rollDirectionX = (currentVelocityX / magnitude) * this.rollDistance;
+			rollDirectionY = (currentVelocityY / magnitude) * this.rollDistance;
+		} else {
+			// If not moving, roll in the direction the player is facing (default to down)
+			rollDirectionY = this.rollDistance;
+		}
+
+		const startX = this.container.x;
+		const startY = this.container.y;
+		const endX = startX + rollDirectionX;
+		const endY = startY + rollDirectionY;
+
+		console.log('[Player] Roll direction:', {
+			velocityX: currentVelocityX,
+			velocityY: currentVelocityY,
+			directionX: rollDirectionX,
+			directionY: rollDirectionY,
+		});
+
+		// Roll movement animation
+		this.scene.tweens.add({
+			targets: this.container,
+			x: endX,
+			y: endY,
+			duration: this.rollDuration,
+			ease: 'Quad.easeOut',
+			onComplete: () => {
+				this.isRolling = false;
+				this.canRoll = true;
+				console.log('[Player] Roll completed');
+			},
+		});
+
+		// Add rotation effect during roll
+		this.scene.tweens.add({
+			targets: this,
+			angle: 360,
+			duration: this.rollDuration,
+			ease: 'Linear',
+			onComplete: () => {
+				this.angle = 0; // Reset rotation
+			},
+		});
+
+		// Add slight scale effect for visual feedback
+		this.scene.tweens.add({
+			targets: this.container,
+			scaleX: 0.9,
+			scaleY: 0.9,
+			duration: this.rollDuration / 2,
 			yoyo: true,
 			ease: 'Sine.easeInOut',
 		});

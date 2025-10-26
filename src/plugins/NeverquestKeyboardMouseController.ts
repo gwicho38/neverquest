@@ -114,6 +114,12 @@ export class NeverquestKeyboardMouseController {
 			) {
 				this.neverquestBattleManager!.block(this.player);
 			}
+			// L key (76) - Roll
+			if (keydown.keyCode === 76) {
+				if (this.player && this.player.active && this.player.canRoll && this.player.canMove) {
+					this.player.roll();
+				}
+			}
 			// I key (73) - Inventory (only block if canMove is false)
 			if (keydown.keyCode === 73 && this.player && this.player.active && this.player.canMove) {
 				console.log('[KeyboardController] Inventory (I) key pressed - toggling scene');
