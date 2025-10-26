@@ -235,8 +235,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		const currentVelocityY = body.velocity.y;
 
 		// Calculate jump distance based on current velocity and jump duration
-		const jumpDistanceX = (currentVelocityX * this.jumpDuration) / 1000;
-		const jumpDistanceY = (currentVelocityY * this.jumpDuration) / 1000;
+		// Reduced by 50% to make jumps feel more controlled
+		const jumpDistanceX = ((currentVelocityX * this.jumpDuration) / 1000) * 0.5;
+		const jumpDistanceY = ((currentVelocityY * this.jumpDuration) / 1000) * 0.5;
 
 		const startX = this.container.x;
 		const endX = startX + jumpDistanceX;
