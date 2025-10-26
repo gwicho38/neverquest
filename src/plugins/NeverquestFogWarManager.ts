@@ -45,6 +45,17 @@ export class NeverquestFogWarManager {
 	private maskTextureName: string;
 
 	/**
+	 * Last player position for fog update optimization
+	 */
+	private lastPlayerX: number = 0;
+	private lastPlayerY: number = 0;
+
+	/**
+	 * Minimum distance player must move before fog updates (in pixels)
+	 */
+	private fogUpdateThreshold: number = 10;
+
+	/**
 	 * Creates a new Fog of War Manager
 	 * @param scene The scene in which this fog will be put upon.
 	 * @param map The map to cover with the fog of war.
@@ -113,17 +124,34 @@ export class NeverquestFogWarManager {
 
 	/**
 	 * Updates the fog of war.
+	 * Only updates if player has moved significantly to avoid expensive operations every frame.
 	 */
 	updateFog(): void {
+		if (!this.player || !this.imageMask) return;
+
+		// Calculate distance player has moved since last fog update
+		const dx = this.player.container.x - this.lastPlayerX;
+		const dy = this.player.container.y - this.lastPlayerY;
+		const distanceMoved = Math.sqrt(dx * dx + dy * dy);
+
+		// Only update fog if player moved beyond threshold
+		if (distanceMoved < this.fogUpdateThreshold) {
+			return;
+		}
+
+		// Update last position
+		this.lastPlayerX = this.player.container.x;
+		this.lastPlayerY = this.player.container.y;
+
+		// Perform expensive fog update operations
 		this.renderTexture!.clear();
 		this.renderTexture!.fill(0x000000, 0.7);
 		this.renderTexture!.setTint(0x0a2948);
-		if (this.player && this.imageMask) {
-			this.imageMask.x = this.player.container.x;
-			this.imageMask.y = this.player.container.y;
-			this.noVisionRT!.erase(this.imageMask);
-			// Only erase once - erasing multiple times is wasteful
-			this.renderTexture!.erase(this.imageMask);
-		}
+
+		this.imageMask.x = this.player.container.x;
+		this.imageMask.y = this.player.container.y;
+		this.noVisionRT!.erase(this.imageMask);
+		// Only erase once - erasing multiple times is wasteful
+		this.renderTexture!.erase(this.imageMask);
 	}
 }
