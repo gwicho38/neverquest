@@ -123,8 +123,8 @@ export class DungeonScene extends Phaser.Scene {
 
 		// Initialize dynamic lighting system for atmospheric dungeons
 		this.lighting = new NeverquestLightingManager(this, {
-			ambientDarkness: 0.9, // Very dark dungeons
-			defaultLightRadius: 120, // Player torch radius
+			ambientDarkness: 0.3, // Reduced from 0.9 for better visibility
+			defaultLightRadius: 180, // Increased from 120 for larger light area
 			enableFlicker: true,
 			lightColor: 0xffaa66, // Warm orange torch light
 		});
@@ -361,9 +361,9 @@ export class DungeonScene extends Phaser.Scene {
 				const worldY = tileY * this.dungeon.tileHeight + this.dungeon.tileHeight / 2;
 
 				// Add a wall torch light
-				this.lighting.addStaticLight(worldX, worldY, 80, {
+				this.lighting.addStaticLight(worldX, worldY, 140, {
 					color: 0xff8844, // Warm orange
-					intensity: 0.7,
+					intensity: 0.9,
 					flicker: true,
 					flickerAmount: 4,
 				});
