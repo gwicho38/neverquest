@@ -92,7 +92,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		/**
 		 * Maximum speed to be used for the player.
 		 */
-		this.speed = 70;
+		this.speed = 50;
 
 		// TODO - Should get the player's items when he starts the game.
 		/**
@@ -338,20 +338,36 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			velocityY: currentVelocityY,
 			directionX: rollDirectionX,
 			directionY: rollDirectionY,
+			startX,
+			startY,
+			endX,
+			endY,
 		});
 
-		// Roll movement animation
-		this.scene.tweens.add({
-			targets: this.container,
-			x: endX,
-			y: endY,
-			duration: this.rollDuration,
-			ease: 'Quad.easeOut',
-			onComplete: () => {
-				this.isRolling = false;
-				this.canRoll = true;
-				console.log('[Player] Roll completed');
-			},
+		// Roll movement animation - handle X and Y separately for better control
+		if (rollDirectionX !== 0) {
+			this.scene.tweens.add({
+				targets: this.container,
+				x: endX,
+				duration: this.rollDuration,
+				ease: 'Quad.easeOut',
+			});
+		}
+
+		if (rollDirectionY !== 0) {
+			this.scene.tweens.add({
+				targets: this.container,
+				y: endY,
+				duration: this.rollDuration,
+				ease: 'Quad.easeOut',
+			});
+		}
+
+		// Set up completion callback on a separate tween or timeout
+		this.scene.time.delayedCall(this.rollDuration, () => {
+			this.isRolling = false;
+			this.canRoll = true;
+			console.log('[Player] Roll completed');
 		});
 
 		// Add rotation effect during roll
