@@ -84,6 +84,11 @@ export class NeverquestLightingManager {
 	// State
 	private enabled: boolean = true;
 
+	// Camera position tracking for optimization
+	private lastCameraX: number = 0;
+	private lastCameraY: number = 0;
+	private cameraMovementThreshold: number = 5; // Only update when camera moves 5+ pixels
+
 	constructor(scene: Phaser.Scene, options: LightingOptions = {}) {
 		this.scene = scene;
 
@@ -149,6 +154,23 @@ export class NeverquestLightingManager {
 		}
 
 		this.lastUpdateFrame = this.frameCounter;
+
+		// Check if camera has moved significantly
+		const camera = this.scene.cameras.main;
+		const dx = camera.scrollX - this.lastCameraX;
+		const dy = camera.scrollY - this.lastCameraY;
+		const cameraDistanceMoved = Math.sqrt(dx * dx + dy * dy);
+
+		// Only update lighting if camera moved beyond threshold or we have dynamic lights
+		// Dynamic lights might be moving even if camera is static
+		const hasDynamicLights = this.dynamicLights.length > 0;
+		if (cameraDistanceMoved < this.cameraMovementThreshold && !hasDynamicLights) {
+			return;
+		}
+
+		// Update last camera position
+		this.lastCameraX = camera.scrollX;
+		this.lastCameraY = camera.scrollY;
 
 		// Performance monitoring (log every 60 frames)
 		if (this.frameCounter % 60 === 0) {
