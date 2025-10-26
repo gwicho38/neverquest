@@ -282,11 +282,11 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			});
 		}
 
-		// Add a shadow/scale effect for more visual feedback
+		// Add a subtle scale effect for visual feedback (reduced to minimize screen shake)
 		this.scene.tweens.add({
 			targets: this.container,
-			scaleX: 0.9,
-			scaleY: 0.9,
+			scaleX: 0.95,
+			scaleY: 0.95,
 			duration: this.jumpDuration / 2,
 			yoyo: true,
 			ease: 'Sine.easeInOut',
