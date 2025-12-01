@@ -114,6 +114,12 @@ export const UILabels = {
 	// Settings Scene
 	AUDIO_LABEL: 'Audio:',
 	AUDIO_LABEL_WITH_VALUE: (value: number) => `Audio: ${parseFloat(value.toFixed(1)) * 100}`,
+
+	// Spell Wheel
+	SPELL_WHEEL_INSTRUCTIONS: 'Move mouse to select, release L to cast',
+	SPELL_WHEEL_MANA_LABEL: (cost: number) => `Mana: ${cost}`,
+	SPELL_WHEEL_NO_SPELLS: 'No spells available',
+	SPELL_WHEEL_CAST: (spellName: string) => `Cast ${spellName}`,
 } as const;
 
 // =============================================================================

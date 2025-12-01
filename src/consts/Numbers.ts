@@ -521,3 +521,65 @@ export const TerminalEntityValues = {
 	// Animation timing in milliseconds
 	WALK_ANIMATION_DURATION: 200,
 } as const;
+
+// =============================================================================
+// SPELL WHEEL
+// =============================================================================
+
+export const SpellWheelValues = {
+	// Timing
+	HOLD_THRESHOLD: 200, // ms to distinguish tap from hold
+	OPEN_ANIMATION_DURATION: 150,
+	CLOSE_ANIMATION_DURATION: 100,
+	SELECTION_FEEDBACK_DURATION: 100,
+
+	// Dimensions
+	WHEEL_RADIUS: 120,
+	WHEEL_INNER_RADIUS: 40,
+	SEGMENT_ICON_OFFSET: 75, // Distance from center to icon
+	CENTER_ICON_SIZE: 32,
+	SPELL_ICON_SIZE: 40,
+
+	// Angles
+	SEGMENT_GAP: 2, // Degrees gap between segments
+
+	// Overlay
+	OVERLAY_ALPHA: 0.7,
+} as const;
+
+// =============================================================================
+// SPELL SYSTEM
+// =============================================================================
+
+export const SpellValues = {
+	// Mana costs
+	MANA_COST_LOW: 10,
+	MANA_COST_MEDIUM: 20,
+	MANA_COST_HIGH: 35,
+	MANA_COST_VERY_HIGH: 50,
+
+	// Cooldowns (ms)
+	COOLDOWN_SHORT: 1000,
+	COOLDOWN_MEDIUM: 2000,
+	COOLDOWN_LONG: 4000,
+
+	// Damage multipliers
+	DAMAGE_WEAK: 0.5,
+	DAMAGE_NORMAL: 1.0,
+	DAMAGE_STRONG: 1.5,
+	DAMAGE_VERY_STRONG: 2.0,
+} as const;
+
+// =============================================================================
+// INPUT
+// =============================================================================
+
+export const InputValues = {
+	// Key codes
+	KEY_L: 76,
+	KEY_SPACE: 32,
+	KEY_J: 74,
+	KEY_K: 75,
+	KEY_I: 73,
+	KEY_U: 85,
+} as const;

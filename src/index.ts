@@ -19,6 +19,7 @@ import { MainScene } from './scenes/MainScene';
 // import { OverworldScene } from './scenes/OverworldScene';
 import { PreloadScene } from './scenes/PreloadScene';
 import { UpsideDownScene } from './scenes/UpsideDownScene';
+import { SpellWheelScene } from './scenes/SpellWheelScene';
 // import { SettingScene } from './scenes/SettingScene';
 // import { TownScene } from './scenes/TownScene';
 // import { TutorialScene } from './scenes/TutorialScene';
@@ -88,6 +89,7 @@ const config: Phaser.Types.Core.GameConfig = {
 		// SettingScene,
 		// VideoPlayerScene,
 		// GameOverScene,
+		SpellWheelScene,
 	],
 	input: {
 		gamepad: true,

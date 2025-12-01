@@ -151,6 +151,33 @@ export const GameOverColors = {
 } as const;
 
 // =============================================================================
+// SPELL COLORS (for spell wheel and effects)
+// =============================================================================
+
+export const SpellColors = {
+	// Hex colors for text/UI
+	FIRE: '#ff4400',
+	ICE: '#44aaff',
+	LIGHTNING: '#ffff00',
+	HOLY: '#ffdd88',
+	DARK: '#aa44ff',
+
+	// Numeric colors for graphics/particles
+	FIRE_NUMERIC: 0xff4400,
+	ICE_NUMERIC: 0x44aaff,
+	LIGHTNING_NUMERIC: 0xffff00,
+	HOLY_NUMERIC: 0xffdd88,
+	DARK_NUMERIC: 0xaa44ff,
+
+	// Spell wheel UI
+	WHEEL_BACKGROUND: 0x1a1a2e,
+	WHEEL_SEGMENT: 0x2a2a4e,
+	WHEEL_SEGMENT_HOVER: 0x3a3a6e,
+	WHEEL_BORDER: 0x4a4a6e,
+	WHEEL_CENTER: 0x2a2a4e,
+} as const;
+
+// =============================================================================
 // TYPE EXPORTS
 // =============================================================================
 

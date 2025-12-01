@@ -1,8 +1,10 @@
 import { AttributeSceneName } from '../scenes/AttributeScene';
 import { InventorySceneName } from '../scenes/InventoryScene';
+import { SpellWheelSceneName } from '../scenes/SpellWheelScene';
 import { SceneToggleWatcher } from '../scenes/watchers/SceneToggleWatcher';
 import { NeverquestBattleManager } from './NeverquestBattleManager';
 import { DebugMessages } from '../consts/Messages';
+import { SpellWheelValues, InputValues } from '../consts/Numbers';
 
 /**
  * @class
@@ -34,6 +36,26 @@ export class NeverquestKeyboardMouseController {
 	attributeSceneName: string;
 
 	/**
+	 * The name of the Spell Wheel Scene.
+	 */
+	spellWheelSceneName: string;
+
+	/**
+	 * Track L key press time for tap vs hold detection.
+	 */
+	private lKeyDownTime: number = 0;
+
+	/**
+	 * Timer for opening spell wheel after hold threshold.
+	 */
+	private spellWheelTimer: Phaser.Time.TimerEvent | null = null;
+
+	/**
+	 * Whether spell wheel is currently open.
+	 */
+	private spellWheelOpen: boolean = false;
+
+	/**
 	 * This class is responsible for managing all keyboard and mouse inputs.
 	 * This class should be imported only once in your Scene, and should not be active in multiple scenes, so you can better manage the player inputs.
 	 * @param scene The Scene which this class is a child.
@@ -45,6 +67,7 @@ export class NeverquestKeyboardMouseController {
 		this.neverquestBattleManager = null;
 		this.inventorySceneName = InventorySceneName;
 		this.attributeSceneName = AttributeSceneName;
+		this.spellWheelSceneName = SpellWheelSceneName;
 	}
 
 	/**
@@ -115,10 +138,19 @@ export class NeverquestKeyboardMouseController {
 			) {
 				this.neverquestBattleManager!.block(this.player);
 			}
-			// L key (76) - Roll
-			if (keydown.keyCode === 76) {
-				if (this.player && this.player.active && this.player.canRoll && this.player.canMove) {
-					this.player.roll();
+			// L key (76) - Tap = Roll, Hold = Spell Wheel
+			if (keydown.keyCode === InputValues.KEY_L) {
+				if (this.player && this.player.active && this.player.canMove) {
+					// Record the time when L key was pressed
+					this.lKeyDownTime = Date.now();
+
+					// Start a timer to open spell wheel if held long enough
+					if (this.spellWheelTimer) {
+						this.spellWheelTimer.destroy();
+					}
+					this.spellWheelTimer = this.scene.time.delayedCall(SpellWheelValues.HOLD_THRESHOLD, () => {
+						this.openSpellWheel();
+					});
 				}
 			}
 			// I key (73) - Inventory (only block if canMove is false)
@@ -135,9 +167,56 @@ export class NeverquestKeyboardMouseController {
 
 		this.scene.input.keyboard!.on('keyup', (keyup: KeyboardEvent) => {
 			// K key (75) - Stop Block
-			if (keyup.keyCode === 75 && this.player && this.player.active && !this.player.isSwimming) {
+			if (keyup.keyCode === InputValues.KEY_K && this.player && this.player.active && !this.player.isSwimming) {
 				this.neverquestBattleManager!.stopBlock(this.player);
 			}
+
+			// L key (76) - On release: roll if tapped, or close spell wheel if it was opened
+			if (keyup.keyCode === InputValues.KEY_L) {
+				// Cancel the spell wheel timer if it's still pending
+				if (this.spellWheelTimer) {
+					this.spellWheelTimer.destroy();
+					this.spellWheelTimer = null;
+				}
+
+				// If spell wheel wasn't opened, this was a tap - trigger roll
+				if (!this.spellWheelOpen) {
+					const holdDuration = Date.now() - this.lKeyDownTime;
+					if (holdDuration < SpellWheelValues.HOLD_THRESHOLD) {
+						if (this.player && this.player.active && this.player.canRoll && this.player.canMove) {
+							this.player.roll();
+						}
+					}
+				}
+				// Note: If spell wheel is open, SpellWheelScene handles its own keyup
+			}
+		});
+
+		// Listen for spell wheel scene stop event to reset state
+		this.scene.events.on('spellwheelclosed', () => {
+			this.spellWheelOpen = false;
+		});
+	}
+
+	/**
+	 * Opens the spell wheel UI
+	 */
+	private openSpellWheel(): void {
+		if (!this.player || !this.player.active || !this.player.canMove) {
+			return;
+		}
+
+		// Check if spell wheel scene is already running
+		if (this.scene.scene.isActive(this.spellWheelSceneName)) {
+			return;
+		}
+
+		this.spellWheelOpen = true;
+
+		// Launch the spell wheel scene
+		this.scene.scene.launch(this.spellWheelSceneName, {
+			player: this.player,
+			parentScene: this.scene,
 		});
 	}
 }
