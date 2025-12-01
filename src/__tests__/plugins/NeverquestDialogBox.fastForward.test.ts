@@ -7,21 +7,8 @@
 import { NeverquestDialogBox } from '../../plugins/NeverquestDialogBox';
 import Phaser from 'phaser';
 
-// Mock Phaser.Input.Keyboard.JustDown
-jest.mock('phaser', () => {
-	const actual = jest.requireActual('phaser');
-	return {
-		...actual,
-		Input: {
-			...actual.Input,
-			Keyboard: {
-				...actual.Input.Keyboard,
-				JustDown: jest.fn(),
-				KeyCodes: actual.Input.Keyboard.KeyCodes,
-			},
-		},
-	};
-});
+// NOTE: Don't use jest.mock('phaser') - the mock is already set up via moduleNameMapper in jest.config.js!
+// JustDown is available at Phaser.Input.Keyboard.JustDown
 
 // Mock Phaser objects
 const mockTimerEvent = {

@@ -707,8 +707,12 @@ export class NeverquestDialogBox {
 		if (this.dialog.textMessage) {
 			this.dialog.textMessage.visible = false;
 		}
-		this.actionButton.visible = false;
-		this.interactionIcon.visible = false;
+		if (this.actionButton) {
+			this.actionButton.visible = false;
+		}
+		if (this.interactionIcon) {
+			this.interactionIcon.visible = false;
+		}
 
 		// Hide portrait images and name texts
 		if (this.leftPortraitImage) {

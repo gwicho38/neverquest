@@ -171,7 +171,9 @@ const Phaser = {
 				SHIFT: 16,
 				ENTER: 13,
 				SPACE: 32,
+				ESC: 27,
 			},
+			JustDown: jest.fn(() => false),
 		},
 	},
 	Physics: {

@@ -97,7 +97,7 @@ describe('NeverquestDialogBox', () => {
 		it('should initialize with default values', () => {
 			expect(dialogBox.scene).toBe(mockScene);
 			expect(dialogBox.player).toBe(mockPlayer);
-			expect(dialogBox.fontFamily).toBe("'Press Start 2P'");
+			expect(dialogBox.fontFamily).toBe('"Press Start 2P"');
 			expect(dialogBox.canShowDialog).toBe(true);
 			expect(dialogBox.isAnimatingText).toBe(false);
 			expect(dialogBox.chat).toEqual([]);
