@@ -23,6 +23,7 @@ describe('NeverquestBattleManager - Player Death', () => {
 				pause: jest.fn(),
 				isActive: jest.fn().mockReturnValue(true),
 				key: 'MainScene',
+				get: jest.fn().mockReturnValue(null),
 			},
 			themeSound: {
 				isPlaying: true,
@@ -113,10 +114,8 @@ describe('NeverquestBattleManager - Player Death', () => {
 			battleManager.handlePlayerDeath(mockPlayer);
 
 			expect(mockPhaserJuice.add).toHaveBeenCalledWith(mockPlayer);
-			expect(mockPhaserJuice.add(mockPlayer).flash).toHaveBeenCalledWith({
-				repeat: 3,
-				duration: 200,
-			});
+			// flash() is called without arguments for compatibility with all sprite types
+			expect(mockPhaserJuice.add(mockPlayer).flash).toHaveBeenCalled();
 		});
 
 		it('should launch GameOver scene after delay', () => {

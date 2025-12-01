@@ -29,12 +29,27 @@ describe('NeverquestKeyboardMouseController', () => {
 					},
 				},
 			},
+			events: {
+				on: jest.fn(),
+			},
+			time: {
+				delayedCall: jest.fn(),
+			},
+			scene: {
+				isActive: jest.fn().mockReturnValue(false),
+				launch: jest.fn(),
+			},
 		};
 
 		mockPlayer = {
 			active: true,
 			isSwimming: false,
 			isBlocking: false,
+			canMove: true,
+			canAtack: true,
+			canBlock: true,
+			canJump: true,
+			jump: jest.fn(),
 			container: {
 				body: {},
 			},
@@ -107,13 +122,13 @@ describe('NeverquestKeyboardMouseController', () => {
 			controller.create();
 		});
 
-		it('should attack with spacebar (keyCode 32)', () => {
+		it('should jump with spacebar (keyCode 32)', () => {
 			const keydownCallback = mockScene.input.keyboard.on.mock.calls.find(
 				(call: any) => call[0] === 'keydown'
 			)[1];
 
 			keydownCallback({ keyCode: 32 });
-			expect(controller.neverquestBattleManager.atack).toHaveBeenCalledWith(mockPlayer);
+			expect(mockPlayer.jump).toHaveBeenCalled();
 		});
 
 		it('should attack with J key (keyCode 74)', () => {
@@ -141,13 +156,13 @@ describe('NeverquestKeyboardMouseController', () => {
 			expect(controller.neverquestBattleManager.stopBlock).toHaveBeenCalledWith(mockPlayer);
 		});
 
-		it('should not attack while swimming', () => {
+		it('should not attack while swimming (J key)', () => {
 			mockPlayer.isSwimming = true;
 			const keydownCallback = mockScene.input.keyboard.on.mock.calls.find(
 				(call: any) => call[0] === 'keydown'
 			)[1];
 
-			keydownCallback({ keyCode: 32 });
+			keydownCallback({ keyCode: 74 });
 			expect(controller.neverquestBattleManager.atack).not.toHaveBeenCalled();
 		});
 
