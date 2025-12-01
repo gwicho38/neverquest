@@ -629,6 +629,138 @@ describe('ParticlePool', () => {
 		});
 	});
 
+	describe('Complex Config Handling (emitZone fix)', () => {
+		it('should detect emitZone as complex config', () => {
+			const config = {
+				speed: 100,
+				emitZone: { type: 'random', source: { getRandomPoint: jest.fn() } },
+			};
+			const emitter = particlePool.emit('particle', 100, 200, config);
+
+			// Should not use pooling for emitZone configs
+			// Emitter should be tracked in nonPooledEmitters
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(true);
+		});
+
+		it('should detect deathZone as complex config', () => {
+			const config = {
+				speed: 100,
+				deathZone: { type: 'onEnter', source: { contains: jest.fn() } },
+			};
+			const emitter = particlePool.emit('particle', 100, 200, config);
+
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(true);
+		});
+
+		it('should detect moveToX as complex config', () => {
+			const config = { speed: 100, moveToX: 500 };
+			const emitter = particlePool.emit('particle', 100, 200, config);
+
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(true);
+		});
+
+		it('should detect moveToY as complex config', () => {
+			const config = { speed: 100, moveToY: 400 };
+			const emitter = particlePool.emit('particle', 100, 200, config);
+
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(true);
+		});
+
+		it('should not use pooling for burst with emitZone', () => {
+			const config = {
+				speed: 100,
+				lifespan: 1000,
+				emitZone: { type: 'random', source: { getRandomPoint: jest.fn() } },
+			};
+			particlePool.burst('particle', 100, 200, 30, config);
+
+			// Should not add to pools
+			expect(particlePool['pools'].size).toBe(0);
+		});
+
+		it('should destroy non-pooled emitter after duration', () => {
+			const config = {
+				speed: 100,
+				emitZone: { type: 'random', source: { getRandomPoint: jest.fn() } },
+			};
+			const emitter = particlePool.emit('particle', 100, 200, config, 1000);
+
+			// Add destroy mock
+			emitter.destroy = jest.fn();
+			emitter.scene = mockScene;
+
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(true);
+
+			// Execute the delayed callback
+			const timerCallback = timerCallbacks[timerCallbacks.length - 1];
+			timerCallback.callback();
+
+			expect(emitter.destroy).toHaveBeenCalled();
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(false);
+		});
+
+		it('should destroy non-pooled emitter after burst lifespan', () => {
+			const config = {
+				speed: 100,
+				lifespan: 1000,
+				emitZone: { type: 'random', source: { getRandomPoint: jest.fn() } },
+			};
+			particlePool.burst('particle', 100, 200, 30, config);
+
+			const emitter = mockEmitters[mockEmitters.length - 1];
+			emitter.destroy = jest.fn();
+			emitter.scene = mockScene;
+
+			// Execute the delayed callback
+			const timerCallback = timerCallbacks[timerCallbacks.length - 1];
+			timerCallback.callback();
+
+			expect(emitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should use pooling for simple configs without emitZone', () => {
+			const config = { speed: 100, lifespan: 1000 };
+			const emitter = particlePool.emit('particle', 100, 200, config);
+
+			// Should use pooling
+			expect(particlePool['nonPooledEmitters'].has(emitter)).toBe(false);
+			expect(particlePool['pools'].size).toBe(1);
+		});
+
+		it('should clean up non-pooled emitters on clear', () => {
+			const config = {
+				speed: 100,
+				emitZone: { type: 'random', source: { getRandomPoint: jest.fn() } },
+			};
+			const emitter = particlePool.emit('particle', 100, 200, config);
+
+			emitter.destroy = jest.fn();
+			emitter.scene = mockScene;
+
+			expect(particlePool['nonPooledEmitters'].size).toBe(1);
+
+			particlePool.clear();
+
+			expect(emitter.destroy).toHaveBeenCalled();
+			expect(particlePool['nonPooledEmitters'].size).toBe(0);
+		});
+
+		it('should handle mixed simple and complex configs', () => {
+			const simpleConfig = { speed: 100 };
+			const complexConfig = {
+				speed: 100,
+				emitZone: { type: 'random', source: { getRandomPoint: jest.fn() } },
+			};
+
+			const simpleEmitter = particlePool.emit('particle', 100, 200, simpleConfig);
+			const complexEmitter = particlePool.emit('particle', 150, 250, complexConfig);
+
+			expect(particlePool['nonPooledEmitters'].has(simpleEmitter)).toBe(false);
+			expect(particlePool['nonPooledEmitters'].has(complexEmitter)).toBe(true);
+			expect(particlePool['pools'].size).toBe(1); // Only simple config creates pool
+		});
+	});
+
 	describe('Integration', () => {
 		it('should handle multiple emit and release cycles', () => {
 			const config = { speed: 100 };

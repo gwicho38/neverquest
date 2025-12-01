@@ -9,10 +9,20 @@ import { ObjectPool } from '../../utils/ObjectPool';
 export class ParticlePool {
 	private scene: Phaser.Scene;
 	private pools: Map<string, ObjectPool<Phaser.GameObjects.Particles.ParticleEmitter>>;
+	private nonPooledEmitters: Set<Phaser.GameObjects.Particles.ParticleEmitter>;
 
 	constructor(scene: Phaser.Scene) {
 		this.scene = scene;
 		this.pools = new Map();
+		this.nonPooledEmitters = new Set();
+	}
+
+	/**
+	 * Check if a config has complex properties that make pooling problematic
+	 * Configs with emitZone cause issues when reusing emitters due to internal state
+	 */
+	private hasComplexConfig(config: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig): boolean {
+		return !!(config.emitZone || config.deathZone || config.moveToX || config.moveToY);
 	}
 
 	/**
@@ -65,19 +75,33 @@ export class ParticlePool {
 		config: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig,
 		duration: number = 0
 	): Phaser.GameObjects.Particles.ParticleEmitter {
-		const pool = this.getPool(texture, config);
-		const emitter = pool.acquire();
+		let emitter: Phaser.GameObjects.Particles.ParticleEmitter;
 
-		// Configure and position
-		emitter.setPosition(x, y);
-		emitter.setVisible(true);
-		emitter.setConfig(config);
+		// Complex configs (with emitZone, etc.) can't be safely pooled
+		// due to internal state issues when calling setConfig()
+		if (this.hasComplexConfig(config)) {
+			emitter = this.scene.add.particles(x, y, texture, config);
+			emitter.setDepth(50);
+			this.nonPooledEmitters.add(emitter);
+		} else {
+			const pool = this.getPool(texture, config);
+			emitter = pool.acquire();
+			emitter.setPosition(x, y);
+			emitter.setVisible(true);
+			emitter.setConfig(config);
+		}
+
 		emitter.start();
 
-		// Auto-release after duration if specified
+		// Auto-release/destroy after duration if specified
 		if (duration > 0) {
 			this.scene.time.delayedCall(duration, () => {
-				this.release(texture, emitter);
+				if (this.nonPooledEmitters.has(emitter)) {
+					this.nonPooledEmitters.delete(emitter);
+					emitter.destroy();
+				} else {
+					this.release(texture, emitter);
+				}
 			});
 		}
 
@@ -99,21 +123,37 @@ export class ParticlePool {
 		count: number,
 		config: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig
 	): void {
-		const pool = this.getPool(texture, config);
-		const emitter = pool.acquire();
+		let emitter: Phaser.GameObjects.Particles.ParticleEmitter;
+		const isComplex = this.hasComplexConfig(config);
 
-		emitter.setPosition(x, y);
-		emitter.setVisible(true);
-		emitter.setConfig(config);
+		// Complex configs (with emitZone, etc.) can't be safely pooled
+		// due to internal state issues when calling setConfig()
+		if (isComplex) {
+			emitter = this.scene.add.particles(x, y, texture, config);
+			emitter.setDepth(50);
+			this.nonPooledEmitters.add(emitter);
+		} else {
+			const pool = this.getPool(texture, config);
+			emitter = pool.acquire();
+			emitter.setPosition(x, y);
+			emitter.setVisible(true);
+			emitter.setConfig(config);
+		}
+
 		emitter.explode(count, x, y);
 
-		// Auto-release after particles die
+		// Auto-release/destroy after particles die
 		const maxLifespan = Array.isArray(config.lifespan)
 			? Math.max(...(config.lifespan as number[]))
 			: ((config.lifespan || 1000) as number);
 
 		this.scene.time.delayedCall(maxLifespan + 100, () => {
-			this.release(texture, emitter);
+			if (isComplex) {
+				this.nonPooledEmitters.delete(emitter);
+				emitter.destroy();
+			} else {
+				this.release(texture, emitter);
+			}
 		});
 	}
 
@@ -130,11 +170,18 @@ export class ParticlePool {
 	}
 
 	/**
-	 * Clear all pools
+	 * Clear all pools and destroy non-pooled emitters
 	 */
 	clear(): void {
 		this.pools.forEach((pool) => pool.clear());
 		this.pools.clear();
+
+		// Clean up non-pooled emitters
+		this.nonPooledEmitters.forEach((emitter) => {
+			if (emitter && !emitter.scene) return; // Already destroyed
+			emitter.destroy();
+		});
+		this.nonPooledEmitters.clear();
 	}
 
 	/**
