@@ -3,6 +3,9 @@ import { NeverquestInterfaceController } from '../plugins/NeverquestInterfaceCon
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
 import intro_video from '../assets/video/intro_video_converted_FULLHD.mp4';
 import { PanelComponent } from '../components/PanelComponent';
+import { HexColors } from '../consts/Colors';
+import { Alpha, AnimationTiming, Dimensions } from '../consts/Numbers';
+import { FontFamily, UILabels } from '../consts/Messages';
 
 export class MainMenuScene extends Phaser.Scene {
 	neverquestInterfaceControler: NeverquestInterfaceController | null;
@@ -31,8 +34,8 @@ export class MainMenuScene extends Phaser.Scene {
 		this.neverquestInterfaceControler = null;
 		this.gameStartText = null;
 		this.nineSliceOffset = 10;
-		this.textWidth = 452;
-		this.fontFamily = '"Press Start 2P"';
+		this.textWidth = Dimensions.MAIN_MENU_TEXT_WIDTH;
+		this.fontFamily = `"${FontFamily.PIXEL}"`;
 		this.lastMenuAction = null;
 		this.video = null;
 		this.themeSound = null;
@@ -61,7 +64,7 @@ export class MainMenuScene extends Phaser.Scene {
 
 			if ((this.scale.orientation as any) === 'portrait-primary') {
 				this.video.setScale(2);
-				this.video.setOrigin(0.4, 0);
+				this.video.setOrigin(Alpha.MEDIUM, 0);
 			} else {
 				// if Landscape, just fits the video on the canvas.
 				this.video.scaleX = this.cameras.main.width / this.video.width;
@@ -76,7 +79,7 @@ export class MainMenuScene extends Phaser.Scene {
 			this.video.setPaused(false);
 		}
 
-		this.sound.volume = 0.35;
+		this.sound.volume = Alpha.MEDIUM_LIGHT;
 		this.themeSound = this.sound.add('forest', {
 			loop: true,
 		});
@@ -84,9 +87,9 @@ export class MainMenuScene extends Phaser.Scene {
 		this.neverquestInterfaceControler = new NeverquestInterfaceController(this);
 
 		this.gameStartText = this.add
-			.text(this.cameras.main.midPoint.x, this.cameras.main.midPoint.y, 'Start Game', {
+			.text(this.cameras.main.midPoint.x, this.cameras.main.midPoint.y, UILabels.BUTTON_START_GAME, {
 				fontSize: 34,
-				fontFamily: '"Press Start 2P"',
+				fontFamily: this.fontFamily,
 			})
 			.setOrigin(0.5, 0.5)
 			.setInteractive();
@@ -101,7 +104,7 @@ export class MainMenuScene extends Phaser.Scene {
 			.text(this.gameStartText.x, this.gameStartText.y + 60, 'Load Game', {
 				fontSize: 34,
 				fontFamily: this.fontFamily,
-				color: this.saveManager.hasSaveData() ? '#ffffff' : '#666666',
+				color: this.saveManager.hasSaveData() ? HexColors.WHITE : HexColors.GRAY,
 			})
 			.setOrigin(0.5, 0.5)
 			.setInteractive();
@@ -113,7 +116,7 @@ export class MainMenuScene extends Phaser.Scene {
 		});
 
 		this.creditsText = this.add
-			.text(this.gameStartText.x, this.gameStartText.y + 120, 'Credits', {
+			.text(this.gameStartText.x, this.gameStartText.y + Dimensions.MAIN_MENU_CREDITS_SPACING, 'Credits', {
 				fontSize: 34,
 				fontFamily: this.fontFamily,
 			})
@@ -135,11 +138,14 @@ export class MainMenuScene extends Phaser.Scene {
 		if (size && this && this.cameras && this.cameras.main) {
 			this.gameStartText!.setPosition(size.width / 2, size.height / 2);
 			this.loadGameText!.setPosition(this.gameStartText!.x, this.gameStartText!.y + 60);
-			this.creditsText!.setPosition(this.gameStartText!.x, this.gameStartText!.y + 120);
+			this.creditsText!.setPosition(
+				this.gameStartText!.x,
+				this.gameStartText!.y + Dimensions.MAIN_MENU_CREDITS_SPACING
+			);
 			this.video!.setPosition(this.cameras.main.x, this.cameras.main.y);
 			if (size.aspectRatio < 1) {
 				this.video!.setScale(2);
-				this.video!.setOrigin(0.4, 0);
+				this.video!.setOrigin(Alpha.MEDIUM, 0);
 			} else {
 				// if Landscape, just fits the video on the canvas.
 				this.video!.scaleX = this.cameras.main.width / this.video!.width;
@@ -242,7 +248,7 @@ Forest - Intro Scene Music by "syncopika"
 
 	startGame(): void {
 		this.themeSound!.stop();
-		this.cameras.main.fadeOut(300, 0, 0, 0);
+		this.cameras.main.fadeOut(AnimationTiming.TWEEN_NORMAL, 0, 0, 0);
 		const startSound = this.sound.add('start_game');
 		startSound.play();
 		this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {
@@ -259,7 +265,7 @@ Forest - Intro Scene Music by "syncopika"
 		const saveData = this.saveManager!.loadGame(false);
 		if (saveData) {
 			this.themeSound!.stop();
-			this.cameras.main.fadeOut(300, 0, 0, 0);
+			this.cameras.main.fadeOut(AnimationTiming.TWEEN_NORMAL, 0, 0, 0);
 			const startSound = this.sound.add('start_game');
 			startSound.play();
 			this.cameras.main.once(Phaser.Cameras.Scene2D.Events.FADE_OUT_COMPLETE, () => {

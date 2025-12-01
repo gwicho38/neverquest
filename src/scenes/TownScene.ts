@@ -6,6 +6,8 @@ import { NeverquestEnvironmentParticles } from '../plugins/NeverquestEnvironment
 import { NeverquestEnemyZones } from '../plugins/NeverquestEnemyZones';
 import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
+import { CameraValues, Alpha } from '../consts/Numbers';
+import { SaveMessages } from '../consts/Messages';
 
 export class TownScene extends Phaser.Scene {
 	player: any;
@@ -38,7 +40,7 @@ export class TownScene extends Phaser.Scene {
 	}
 
 	create(): void {
-		this.cameras.main.setZoom(2.5);
+		this.cameras.main.setZoom(CameraValues.ZOOM_CLOSE);
 
 		this.mapCreator = new NeverquestMapCreator(this, 'town');
 		this.mapCreator.create();
@@ -71,7 +73,7 @@ export class TownScene extends Phaser.Scene {
 		this.particles = new NeverquestEnvironmentParticles(this, this.mapCreator.map);
 		this.particles.create();
 
-		this.sound.volume = 0.35;
+		this.sound.volume = Alpha.MEDIUM_LIGHT;
 		this.themeSound = this.sound.add('path_to_lake_land', {
 			loop: true,
 		});
@@ -106,7 +108,7 @@ export class TownScene extends Phaser.Scene {
 				if (saveData) {
 					this.saveManager!.applySaveData(saveData);
 				} else {
-					this.saveManager!.showSaveNotification('No checkpoint found', true);
+					this.saveManager!.showSaveNotification(SaveMessages.NO_CHECKPOINT_FOUND, true);
 				}
 			}
 		});

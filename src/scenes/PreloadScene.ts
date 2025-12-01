@@ -2,6 +2,9 @@ import Phaser from 'phaser';
 import { Animations } from '../consts/Animations';
 import { ASEPRITE_CONFIG, AtlasConfig, Images, NeverquestAudios, TilemapConfig } from '../consts/GameAssets';
 import { IPreloadScene } from '../types/SceneTypes';
+import { HexColors, NumericColors } from '../consts/Colors';
+import { Alpha, FontStyles } from '../consts/Numbers';
+import { FontFamily, UILabels } from '../consts/Messages';
 
 export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 	public progressBar: Phaser.GameObjects.Graphics | null = null;
@@ -58,7 +61,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 		this.cameraWidth = this.cameras.main.width;
 		this.cameraHeight = this.cameras.main.height;
 
-		this.progressBox.fillStyle(0x222222, 0.8);
+		this.progressBox.fillStyle(NumericColors.GRAY_VERY_DARK, Alpha.VERY_HIGH);
 		this.progressBox.fillRect(
 			this.boxStartingX,
 			this.cameraHeight / 2 + this.boxMargin,
@@ -69,10 +72,10 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 		this.loadingText = this.make.text({
 			x: this.cameraWidth / 2,
 			y: this.cameraHeight / 2 - this.boxHeight,
-			text: 'Loading...',
+			text: UILabels.LOADING_TEXT,
 			style: {
-				font: '20px monospace',
-				color: '#ffffff',
+				font: FontStyles.PRELOAD_LOADING,
+				color: HexColors.WHITE,
 			},
 		});
 		this.loadingText.setOrigin(0.5, 0.5);
@@ -82,8 +85,8 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 			y: this.cameraHeight / 2 - 5,
 			text: '0%',
 			style: {
-				font: '18px monospace',
-				color: '#ffffff',
+				font: FontStyles.PRELOAD_PERCENT,
+				color: HexColors.WHITE,
 			},
 		});
 		this.percentText.setOrigin(0.5, 0.5);
@@ -92,7 +95,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 			this.currentValue = value;
 			this.percentText!.setText(parseInt((value * 100).toString()) + '%');
 			this.progressBar!.clear();
-			this.progressBar!.fillStyle(0xffffff, 1);
+			this.progressBar!.fillStyle(NumericColors.WHITE, 1);
 			this.progressBar!.fillRect(
 				this.barStartingX,
 				this.cameraHeight / 2 + this.barMargin,
@@ -122,7 +125,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 			this.percentText!.setPosition(this.cameraWidth / 2, this.cameraHeight / 2 - 5);
 
 			this.progressBox!.clear();
-			this.progressBox!.fillStyle(0x222222, 0.8);
+			this.progressBox!.fillStyle(NumericColors.GRAY_VERY_DARK, Alpha.VERY_HIGH);
 			this.progressBox!.fillRect(
 				this.boxStartingX,
 				this.cameraHeight / 2 + this.boxMargin,
@@ -130,7 +133,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 				this.boxHeight
 			);
 			this.progressBar!.clear();
-			this.progressBar!.fillStyle(0xffffff, 1);
+			this.progressBar!.fillStyle(NumericColors.WHITE, 1);
 			this.progressBar!.fillRect(
 				this.barStartingX,
 				this.cameraHeight / 2 + this.barMargin,
@@ -162,7 +165,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 		// Web Fonts
 		(window as any).WebFont.load({
 			google: {
-				families: ['Press Start 2P'],
+				families: [FontFamily.PIXEL],
 			},
 			active: () => {
 				this.scene.start('IntroScene');

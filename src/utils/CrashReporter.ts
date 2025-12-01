@@ -3,6 +3,8 @@
  * Handles error logging, crash reporting, and user feedback
  */
 
+import { ArchitectureConstants, PlatformConstants, UserAgentArchDetection } from '../consts/Messages';
+
 export interface CrashReport {
 	timestamp: string;
 	version: string;
@@ -111,11 +113,11 @@ export class CrashReporter {
 		// Fallback for browser environment
 		if (typeof navigator !== 'undefined') {
 			const platform = navigator.platform.toLowerCase();
-			if (platform.includes('win')) return 'win32';
-			if (platform.includes('mac')) return 'darwin';
-			if (platform.includes('linux')) return 'linux';
+			if (platform.includes('win')) return PlatformConstants.WIN32;
+			if (platform.includes('mac')) return PlatformConstants.DARWIN;
+			if (platform.includes('linux')) return PlatformConstants.LINUX;
 		}
-		return 'unknown';
+		return PlatformConstants.UNKNOWN;
 	}
 
 	private getArch(): string {
@@ -125,12 +127,15 @@ export class CrashReporter {
 		// Fallback for browser environment
 		if (typeof navigator !== 'undefined') {
 			const userAgent = navigator.userAgent;
-			if (userAgent.includes('x64') || userAgent.includes('x86_64')) return 'x64';
-			if (userAgent.includes('x86') || userAgent.includes('i386')) return 'ia32';
-			if (userAgent.includes('arm64') || userAgent.includes('aarch64')) return 'arm64';
-			if (userAgent.includes('arm')) return 'arm';
+			if (userAgent.includes(UserAgentArchDetection.X64) || userAgent.includes(UserAgentArchDetection.X86_64))
+				return ArchitectureConstants.X64;
+			if (userAgent.includes(UserAgentArchDetection.X86) || userAgent.includes(UserAgentArchDetection.I386))
+				return ArchitectureConstants.IA32;
+			if (userAgent.includes(UserAgentArchDetection.ARM64) || userAgent.includes(UserAgentArchDetection.AARCH64))
+				return ArchitectureConstants.ARM64;
+			if (userAgent.includes(UserAgentArchDetection.ARM)) return ArchitectureConstants.ARM;
 		}
-		return 'unknown';
+		return ArchitectureConstants.UNKNOWN;
 	}
 
 	private getMemoryUsage(): NodeJS.MemoryUsage | undefined {

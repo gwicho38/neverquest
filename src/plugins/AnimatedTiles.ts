@@ -8,6 +8,8 @@
 // This plugin is based on Photonstorms Phaser 3 plugin template with added support for ES6.
 //
 
+import { ErrorMessages } from '../consts/Messages';
+
 interface TileAnimationFrame {
 	duration: number;
 	tileid: number;
@@ -241,9 +243,7 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 			if (pos > -1) {
 				layer.splice(pos, 1);
 			} else {
-				console.error(
-					"This shouldn't happen. Not at all. Blame Phaser Animated Tiles plugin. You'll be fine though."
-				);
+				console.error(ErrorMessages.ANIMATED_TILES_UNEXPECTED_ERROR);
 			}
 		});
 	}

@@ -1,3 +1,6 @@
+import { AudioValues } from '../consts/Numbers';
+import { Characters } from '../consts/Messages';
+
 /**
  * @class
  */
@@ -48,7 +51,7 @@ export class NeverquestTypingSoundManager {
 		this.typingKeySounds = ['typing_key_01', 'typing_key_02', 'typing_key_03', 'typing_key_04', 'typing_key_05'];
 		this.letterAudios = [];
 		this.letterTypedIndex = 0;
-		this.typingSoundVolume = 0.4;
+		this.typingSoundVolume = AudioValues.VOLUME_TYPING_SOUND;
 	}
 
 	/**
@@ -70,7 +73,7 @@ export class NeverquestTypingSoundManager {
 	 */
 	type(letter: string): void {
 		// If its Space or empty, plays the space sound.
-		if (letter.trim() === '' || letter.trim() === ' ') {
+		if (letter.trim() === Characters.EMPTY_STRING || letter.trim() === Characters.SPACE) {
 			this.spaceAudioManager!.play();
 		} else {
 			// If its a letter, then play one of the letter sounds.

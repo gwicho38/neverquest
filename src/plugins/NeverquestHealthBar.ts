@@ -1,4 +1,5 @@
 import Phaser from 'phaser';
+import { Alpha, Dimensions } from '../consts/Numbers';
 
 /**
  * @class
@@ -60,10 +61,10 @@ export class NeverquestHealthBar extends Phaser.GameObjects.Sprite {
 		this.full = health;
 		this.offX = offX;
 		this.offY = offY;
-		this.size = width * 0.43;
+		this.size = width * Dimensions.HEALTH_BAR_WIDTH_MULTIPLIER;
 		this.x = x + offX;
 		this.y = y + offY;
-		this.alpha = 0.8;
+		this.alpha = Alpha.VERY_HIGH;
 		this.setOrigin(0, 0);
 		this.setDepth(2);
 

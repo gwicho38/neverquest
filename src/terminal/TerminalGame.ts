@@ -2,6 +2,9 @@ import { EntityAttributes, IEntityAttributes } from '../entities/EntityAttribute
 import { TerminalEntity } from './entities/TerminalEntity';
 import { TerminalMap } from './TerminalMap';
 import { TerminalRenderer } from './TerminalRenderer';
+import { AnimationTiming, SpecialNumbers } from '../consts/Numbers';
+import { TerminalMessages, GameMessages } from '../consts/Messages';
+import { EnemyTypes, PlayerConfig } from '../consts/TerminalConfig';
 
 /**
  * Main Terminal Game class
@@ -12,7 +15,7 @@ export class TerminalGame {
 	private player: TerminalEntity;
 	private enemies: TerminalEntity[] = [];
 	private running: boolean = false;
-	private tickRate: number = 500; // ms per game tick (enemy movement)
+	private tickRate: number = AnimationTiming.TERMINAL_GAME_TICK_RATE;
 	private lastTick: number = Date.now();
 	private gameLoopInterval?: ReturnType<typeof setInterval>;
 
@@ -33,7 +36,14 @@ export class TerminalGame {
 		playerAttrs.atack = 10;
 		playerAttrs.defense = 5;
 
-		this.player = new TerminalEntity(spawnPos.x, spawnPos.y, '🧙‍♂️', 'white', playerAttrs, 'Player');
+		this.player = new TerminalEntity(
+			spawnPos.x,
+			spawnPos.y,
+			PlayerConfig.SYMBOL,
+			PlayerConfig.COLOR,
+			playerAttrs,
+			PlayerConfig.NAME
+		);
 		this.player.isPlayer = true;
 		this.map.addEntity(this.player);
 
@@ -47,15 +57,11 @@ export class TerminalGame {
 		this.render();
 
 		// Log welcome message
-		this.renderer.log('{green-fg}✨ Welcome to Neverquest - Terminal Edition! ✨{/green-fg}');
-		this.renderer.log(
-			'{cyan-fg}🎮 Controls: Arrow/WASD=Move | Space/J=Attack | B/K=Block | H=Help | Q=Quit{/cyan-fg}'
-		);
-		this.renderer.log('{yellow-fg}🗡️  Your quest begins... Defeat all monsters and collect treasures!{/yellow-fg}');
+		this.renderer.log(TerminalMessages.WELCOME);
+		this.renderer.log(TerminalMessages.CONTROLS_INFO);
+		this.renderer.log(TerminalMessages.QUEST_BEGIN);
 		this.renderer.log('');
-		this.renderer.log(
-			"{red-fg}👀 Look for {/red-fg}{red-bg}{yellow-fg}{bold}[🧙‍♂️]{/bold}{/yellow-fg}{/red-bg}{red-fg} (wizard in YELLOW BRACKETS on RED) - that's YOU!{/red-fg}"
-		);
+		this.renderer.log(TerminalMessages.PLAYER_MARKER);
 	}
 
 	/**
@@ -110,14 +116,14 @@ export class TerminalGame {
 				this.render();
 
 				// Additional renders to show walking animation
-				setTimeout(() => this.render(), 50);
-				setTimeout(() => this.render(), 100);
-				setTimeout(() => this.render(), 150);
+				setTimeout(() => this.render(), AnimationTiming.TERMINAL_WALK_ANIMATION_STEP_1);
+				setTimeout(() => this.render(), AnimationTiming.TERMINAL_WALK_ANIMATION_STEP_2);
+				setTimeout(() => this.render(), AnimationTiming.TERMINAL_WALK_ANIMATION_STEP_3);
 			} else {
-				this.renderer.log(`There's a ${entityAt.entityName} in the way!`, 'yellow');
+				this.renderer.log(GameMessages.ENTITY_IN_WAY(entityAt.entityName), 'yellow');
 			}
 		} else {
-			this.renderer.log('You bump into a wall.', 'red');
+			this.renderer.log(GameMessages.BUMP_INTO_WALL, 'red');
 		}
 	}
 
@@ -150,15 +156,13 @@ export class TerminalGame {
 				// Show damage number animation
 				await this.map.animator.animateDamage(entity.x, entity.y, damage, () => this.render());
 
-				this.renderer.log(
-					`{red-fg}⚔️  You attack ${entity.symbol} ${entity.entityName} for ${damage} damage! 💥{/red-fg}`
-				);
+				this.renderer.log(TerminalMessages.ATTACK_MESSAGE(entity.symbol, entity.entityName, damage));
 
 				if (!entity.isAlive()) {
 					// Death animation
 					await this.map.animator.animateDeath(entity.x, entity.y, () => this.render());
 
-					this.renderer.log(`{green-fg}✨ ${entity.entityName} defeated! +10 XP 🎯{/green-fg}`);
+					this.renderer.log(TerminalMessages.ENEMY_DEFEATED_MESSAGE(entity.entityName));
 					this.map.removeEntity(entity);
 					const index = this.enemies.indexOf(entity);
 					if (index > -1) {
@@ -170,7 +174,7 @@ export class TerminalGame {
 					await this.map.animator.animateParticleBurst(entity.x, entity.y, () => this.render());
 				} else {
 					const healthPercent = Math.floor((entity.attributes.health / entity.attributes.maxHealth) * 100);
-					this.renderer.log(`{yellow-fg}${entity.entityName} has ${healthPercent}% HP remaining{/yellow-fg}`);
+					this.renderer.log(TerminalMessages.ENEMY_HP_REMAINING(entity.entityName, healthPercent));
 				}
 
 				this.render();
@@ -178,7 +182,7 @@ export class TerminalGame {
 			}
 		}
 
-		this.renderer.log('No enemies nearby!', 'yellow');
+		this.renderer.log(GameMessages.NO_ENEMIES_NEARBY, 'yellow');
 	}
 
 	/**
@@ -192,14 +196,14 @@ export class TerminalGame {
 		// Show block animation
 		await this.map.animator.animateBlock(this.player.x, this.player.y, () => this.render());
 
-		this.renderer.log(`{blue-fg}🛡️  You raise your shield! Defense +${defenseBoost} for this turn{/blue-fg}`);
+		this.renderer.log(TerminalMessages.SHIELD_RAISED_MESSAGE(defenseBoost));
 
 		// Reset defense after a short time (simulated turn)
 		setTimeout(() => {
 			this.player.attributes.defense -= defenseBoost;
-			this.renderer.log('{grey-fg}Your shield is lowered{/grey-fg}');
+			this.renderer.log(TerminalMessages.SHIELD_LOWERED_MESSAGE);
 			this.render();
-		}, 2000);
+		}, AnimationTiming.BLOCK_DURATION);
 
 		this.render();
 	}
@@ -208,17 +212,8 @@ export class TerminalGame {
 	 * Spawn enemies
 	 */
 	private spawnEnemies(count: number): void {
-		const enemyTypes = [
-			{ name: 'Rat', symbol: '🐀', color: 'yellow', health: 20, attack: 3 },
-			{ name: 'Bat', symbol: '🦇', color: 'white', health: 15, attack: 5 },
-			{ name: 'Ogre', symbol: '👹', color: 'red', health: 50, attack: 8 },
-			{ name: 'Goblin', symbol: '👺', color: 'green', health: 25, attack: 6 },
-			{ name: 'Ghost', symbol: '👻', color: 'white', health: 30, attack: 7 },
-			{ name: 'Dragon', symbol: '🐉', color: 'red', health: 100, attack: 15 },
-		];
-
 		for (let i = 0; i < count; i++) {
-			const type = enemyTypes[Math.floor(Math.random() * enemyTypes.length)];
+			const type = EnemyTypes[Math.floor(Math.random() * EnemyTypes.length)];
 			let x, y;
 			let attempts = 0;
 
@@ -246,22 +241,20 @@ export class TerminalGame {
 	 * Show help
 	 */
 	private showHelp(): void {
-		this.renderer.log('{cyan-fg}📖 === Help ==={/cyan-fg}');
-		this.renderer.log('🏃 Arrow Keys / WASD: Move');
-		this.renderer.log('⚔️  Space / J: Attack adjacent enemy (with animation!)');
-		this.renderer.log('🛡️  B / K: Block/Defend (+5 DEF for 2 seconds)');
-		this.renderer.log('📖 H: Show this help');
-		this.renderer.log('🚪 Q / Escape: Quit');
+		this.renderer.log(TerminalMessages.HELP_HEADER);
+		this.renderer.log(TerminalMessages.HELP_MOVE);
+		this.renderer.log(TerminalMessages.HELP_ATTACK);
+		this.renderer.log(TerminalMessages.HELP_BLOCK);
+		this.renderer.log(TerminalMessages.HELP_HELP);
+		this.renderer.log(TerminalMessages.HELP_QUIT);
 		this.renderer.log('');
-		this.renderer.log('{yellow-fg}🎮 Game Elements:{/yellow-fg}');
-		this.renderer.log(
-			'{red-bg}{yellow-fg}{bold}[🧙‍♂️]{/bold}{/yellow-fg}{/red-bg} You (Player) - Wizard in YELLOW BRACKETS on RED!'
-		);
-		this.renderer.log('🐀🦇👹👺👻🐉 Monsters');
-		this.renderer.log('█ Walls  🚪 Doors  ≈ Water');
-		this.renderer.log('💎 Treasure  🔥 Torches');
+		this.renderer.log(TerminalMessages.HELP_ELEMENTS_HEADER);
+		this.renderer.log(TerminalMessages.HELP_PLAYER);
+		this.renderer.log(TerminalMessages.HELP_MONSTERS);
+		this.renderer.log(TerminalMessages.HELP_TERRAIN);
+		this.renderer.log(TerminalMessages.HELP_ITEMS);
 		this.renderer.log('');
-		this.renderer.log('{green-fg}✨ NEW: Animated attacks with particles and damage numbers!{/green-fg}');
+		this.renderer.log(TerminalMessages.HELP_NEW_FEATURES);
 	}
 
 	/**
@@ -272,29 +265,32 @@ export class TerminalGame {
 		const xpBar = this.createXPBar(this.player.attributes.experience, this.player.attributes.nextLevelExperience);
 
 		const status = [
-			'{cyan-fg}{red-bg}{yellow-fg}{bold}[🧙‍♂️]{/bold}{/yellow-fg}{/red-bg} Player Status{/cyan-fg}',
+			TerminalMessages.STATUS_PLAYER_HEADER,
 			'',
-			`❤️  HP: ${healthBar}`,
-			`{red-fg}${this.player.attributes.health}/${this.player.attributes.maxHealth}{/red-fg}`,
+			TerminalMessages.STATUS_HP_LABEL(healthBar),
+			TerminalMessages.STATUS_HP_VALUES(this.player.attributes.health, this.player.attributes.maxHealth),
 			'',
-			`⭐ Level: {yellow-fg}${this.player.attributes.level}{/yellow-fg}`,
-			`✨ XP: ${xpBar}`,
-			`{green-fg}${this.player.attributes.experience}/${this.player.attributes.nextLevelExperience}{/green-fg}`,
+			TerminalMessages.STATUS_LEVEL(this.player.attributes.level),
+			TerminalMessages.STATUS_XP(xpBar),
+			TerminalMessages.STATUS_XP_VALUES(
+				this.player.attributes.experience,
+				this.player.attributes.nextLevelExperience
+			),
 			'',
-			'{cyan-fg}📊 Stats:{/cyan-fg}',
-			`💪 STR: ${this.player.attributes.rawAttributes.str}`,
-			`🏃 AGI: ${this.player.attributes.rawAttributes.agi}`,
-			`❤️  VIT: ${this.player.attributes.rawAttributes.vit}`,
-			`🎯 DEX: ${this.player.attributes.rawAttributes.dex}`,
-			`🧠 INT: ${this.player.attributes.rawAttributes.int}`,
+			TerminalMessages.STATUS_STATS_HEADER,
+			TerminalMessages.STATUS_STR(this.player.attributes.rawAttributes.str),
+			TerminalMessages.STATUS_AGI(this.player.attributes.rawAttributes.agi),
+			TerminalMessages.STATUS_VIT(this.player.attributes.rawAttributes.vit),
+			TerminalMessages.STATUS_DEX(this.player.attributes.rawAttributes.dex),
+			TerminalMessages.STATUS_INT(this.player.attributes.rawAttributes.int),
 			'',
-			`⚔️  ATK: {red-fg}${this.player.attributes.atack}{/red-fg}`,
-			`🛡️  DEF: {blue-fg}${this.player.attributes.defense}{/blue-fg}`,
+			TerminalMessages.STATUS_ATK(this.player.attributes.atack),
+			TerminalMessages.STATUS_DEF(this.player.attributes.defense),
 			'',
-			'{yellow-fg}👾 Enemies{/yellow-fg}',
-			`Remaining: {red-fg}${this.enemies.length}{/red-fg}`,
+			TerminalMessages.STATUS_ENEMIES_HEADER,
+			TerminalMessages.STATUS_ENEMIES_REMAINING(this.enemies.length),
 			'',
-			`📍 Position: (${this.player.x}, ${this.player.y})`,
+			TerminalMessages.STATUS_POSITION(this.player.x, this.player.y),
 		].join('\n');
 
 		this.renderer.updateStatus(status);
@@ -389,8 +385,8 @@ export class TerminalGame {
 				{ dx: 1, dy: 0 },
 			];
 
-			// 30% chance to move
-			if (Math.random() < 0.3) {
+			// Random movement chance
+			if (Math.random() < SpecialNumbers.ENEMY_RANDOM_MOVE_CHANCE) {
 				const dir = directions[Math.floor(Math.random() * directions.length)];
 				const newX = enemy.x + dir.dx;
 				const newY = enemy.y + dir.dy;
@@ -407,7 +403,7 @@ export class TerminalGame {
 	 */
 	public start(): void {
 		this.running = true;
-		this.renderer.log('{green-fg}Game started!{/green-fg}');
+		this.renderer.log(TerminalMessages.GAME_STARTED);
 
 		// Start the game loop for enemy movement
 		this.gameLoopInterval = setInterval(() => {

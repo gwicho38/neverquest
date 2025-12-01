@@ -4,6 +4,9 @@
  */
 
 import Phaser from 'phaser';
+import { NumericColors } from '../../consts/Colors';
+import { Dimensions, Alpha } from '../../consts/Numbers';
+import { DebugMessages } from '../../consts/Messages';
 
 export class NeverquestMinimap {
 	scene: Phaser.Scene;
@@ -14,9 +17,9 @@ export class NeverquestMinimap {
 	container!: Phaser.GameObjects.Container;
 
 	// Minimap dimensions
-	width: number = 150;
-	height: number = 150;
-	padding: number = 10;
+	width: number = Dimensions.MINIMAP_SIZE;
+	height: number = Dimensions.MINIMAP_SIZE;
+	padding: number = Dimensions.MINIMAP_OFFSET;
 
 	// Minimap position (bottom-left)
 	x: number;
@@ -28,7 +31,7 @@ export class NeverquestMinimap {
 	border!: Phaser.GameObjects.Graphics;
 
 	// Scale factor for minimap (how much of the map to show)
-	mapScale: number = 0.1; // 10% of full map size
+	mapScale: number = Alpha.LOW; // 10% of full map size
 	showFullMap: boolean = true; // If true, show entire map; if false, show area around player
 
 	// Debug logging (only log once initially)
@@ -72,12 +75,12 @@ export class NeverquestMinimap {
 
 		// Create background
 		const background = this.scene.add.graphics();
-		background.fillStyle(0x000000, 0.7);
+		background.fillStyle(NumericColors.BLACK, Alpha.HIGH);
 		background.fillRect(0, 0, this.width, this.height);
 
 		// Create border
 		this.border = this.scene.add.graphics();
-		this.border.lineStyle(2, 0xffffff, 0.8);
+		this.border.lineStyle(2, NumericColors.WHITE, Alpha.VERY_HIGH);
 		this.border.strokeRect(0, 0, this.width, this.height);
 
 		// Create render texture for the map
@@ -86,7 +89,7 @@ export class NeverquestMinimap {
 
 		// Create player marker (red dot)
 		this.playerMarker = this.scene.add.graphics();
-		this.playerMarker.fillStyle(0xff0000, 1);
+		this.playerMarker.fillStyle(NumericColors.RED, 1);
 		this.playerMarker.fillCircle(0, 0, 3);
 
 		// Add all to container
@@ -170,9 +173,7 @@ export class NeverquestMinimap {
 			console.log(`  Player world position: (${playerX}, ${playerY})`);
 			console.log(`  Player tile position: (${playerTileX}, ${playerTileY})`);
 			console.log(`  View radius in tiles: ${viewRadiusInTiles}`);
-			console.log(
-				`  Desired bounds: start(${desiredStartX}, ${desiredStartY}) end(${desiredEndX}, ${desiredEndY})`
-			);
+			console.log(DebugMessages.MINIMAP_DESIRED_BOUNDS(desiredStartX, desiredStartY, desiredEndX, desiredEndY));
 			console.log(`  Clamped bounds: start(${startX}, ${startY}) end(${endX}, ${endY})`);
 			console.log(`  Map size: ${this.map.width} x ${this.map.height} tiles`);
 			console.log(`  Tile size: ${this.map.tileWidth} x ${this.map.tileHeight} pixels`);
@@ -217,7 +218,7 @@ export class NeverquestMinimap {
 		const tempGraphics = this.scene.add.graphics();
 
 		// Draw a test rectangle in top-left corner to verify coordinate system
-		tempGraphics.fillStyle(0xff0000, 1);
+		tempGraphics.fillStyle(NumericColors.RED, 1);
 		tempGraphics.fillRect(0, 0, 10, 10);
 
 		let minX = Infinity,
@@ -238,7 +239,7 @@ export class NeverquestMinimap {
 					const tile = layer.getTileAt(x, y);
 					if (tile && tile.index !== -1) {
 						// Determine tile color based on collision or layer properties
-						let color = 0x228b22; // Floor color (green)
+						let color: number = NumericColors.GREEN_FOREST; // Floor color (green)
 
 						// Check if tile has collision
 						if (
@@ -248,16 +249,16 @@ export class NeverquestMinimap {
 							tile.collideLeft ||
 							tile.collideRight
 						) {
-							color = 0x8b4513; // Wall color (brown)
+							color = NumericColors.BROWN_SADDLE; // Wall color (brown)
 						}
 
 						// Check layer name for additional context
 						if (layerData.name && layerData.name.toLowerCase().includes('collision')) {
-							color = 0x8b4513; // Wall/collision layer (brown)
+							color = NumericColors.BROWN_SADDLE; // Wall/collision layer (brown)
 						} else if (layerData.name && layerData.name.toLowerCase().includes('ground')) {
 							// Keep floor color for ground layer if not colliding
 							if (!tile.collides) {
-								color = 0x228b22;
+								color = NumericColors.GREEN_FOREST;
 							}
 						}
 
@@ -331,7 +332,10 @@ export class NeverquestMinimap {
 			console.log(`  Clamped marker position: (${clampedMarkerX}, ${clampedMarkerY})`);
 			console.log(`  Minimap size: ${this.width} x ${this.height}`);
 			console.log(
-				`  Marker position as %: (${((clampedMarkerX / this.width) * 100).toFixed(1)}%, ${((clampedMarkerY / this.height) * 100).toFixed(1)}%)`
+				DebugMessages.MINIMAP_MARKER_POSITION_PERCENT(
+					((clampedMarkerX / this.width) * 100).toFixed(1),
+					((clampedMarkerY / this.height) * 100).toFixed(1)
+				)
 			);
 			this.hasLoggedOnce = true;
 		}

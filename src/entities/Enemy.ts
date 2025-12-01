@@ -10,6 +10,8 @@ import { ENTITIES } from '../consts/Entities';
 import { NeverquestDropSystem } from '../plugins/NeverquestDropSystem';
 import { EnemiesSeedConfig } from '../consts/enemies/EnemiesSeedConfig';
 import { IEnemyConfig } from '../types/EnemyTypes';
+import { EntitySpeed, AnimationTiming, CombatNumbers } from '../consts/Numbers';
+import { ErrorMessages } from '../consts/Messages';
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	// BaseEntity properties
@@ -21,13 +23,13 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	public isBlocking: boolean = false;
 	public canBlock: boolean = true;
 	public showHitBox: boolean = false;
-	public perceptionRange: number = 75;
+	public perceptionRange: number = CombatNumbers.PERCEPTION_RANGE;
 	public isSwimming: boolean = false;
 	public canSwim: boolean = true;
 	public isRunning: boolean = false;
-	public baseSpeed: number = 200;
-	public swimSpeed: number = 100;
-	public runSpeed: number = 300;
+	public baseSpeed: number = EntitySpeed.BASE;
+	public swimSpeed: number = EntitySpeed.SWIM;
+	public runSpeed: number = EntitySpeed.RUN;
 
 	// Enemy-specific properties
 	public attributes: IEntityAttributes;
@@ -48,12 +50,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	// Pathfinding properties
 	public currentPath: Phaser.Math.Vector2[] | null = null;
 	public currentWaypointIndex: number = 0;
-	public pathUpdateInterval: number = 1000; // Update path every 1 second
+	public pathUpdateInterval: number = AnimationTiming.PATH_UPDATE_INTERVAL; // Update path every 1 second
 	public lastPathUpdate: number = 0;
-	public waypointReachedDistance: number = 10; // Distance to consider waypoint reached
+	public waypointReachedDistance: number = CombatNumbers.WAYPOINT_REACHED_DISTANCE; // Distance to consider waypoint reached
 
 	// Performance optimization - throttle perception checks
-	public perceptionCheckInterval: number = 200; // Check every 200ms instead of every frame
+	public perceptionCheckInterval: number = AnimationTiming.PERCEPTION_CHECK_INTERVAL; // Check every 200ms instead of every frame
 	public lastPerceptionCheck: number = 0;
 
 	// Animation properties from AnimationNames
@@ -70,7 +72,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 
 		const enemyConfig: IEnemyConfig | undefined = EnemiesSeedConfig.find((c) => c.id === id);
 		if (!enemyConfig) {
-			throw new Error(`Enemy config not found for id: ${id}`);
+			throw new Error(ErrorMessages.ENEMY_CONFIG_NOT_FOUND(id));
 		}
 
 		Object.assign(this, BaseEntity);
@@ -219,7 +221,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 			} else {
 				// Move towards current waypoint
 				const angle = Phaser.Math.Angle.Between(this.container.x, this.container.y, waypoint.x, waypoint.y);
-				this.scene.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), this.speed);
+				const velocity = this.scene.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), this.speed);
+				const body = this.container.body as Phaser.Physics.Arcade.Body;
+				body.setVelocity(velocity.x, velocity.y);
 				(this.neverquestAnimationManager as any).animateWithAngle(
 					`${this.texture.key}-${this.walkPrefixAnimation}`,
 					angle
@@ -241,7 +245,6 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 		const body = this.container.body as Phaser.Physics.Arcade.Body;
 		const angle = Math.atan2(body.velocity.y, body.velocity.x);
 
-		this.scene.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), this.speed);
 		(this.neverquestAnimationManager as any).animateWithAngle(
 			`${this.texture.key}-${this.walkPrefixAnimation}`,
 			angle
@@ -288,8 +291,9 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 			} else {
 				// Move towards current waypoint
 				const angle = Phaser.Math.Angle.Between(this.container.x, this.container.y, waypoint.x, waypoint.y);
-
-				this.scene.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), this.speed);
+				const velocity = this.scene.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), this.speed);
+				const body = this.container.body as Phaser.Physics.Arcade.Body;
+				body.setVelocity(velocity.x, velocity.y);
 
 				(this.neverquestAnimationManager as any).animateWithAngle(
 					`${this.texture.key}-${this.walkPrefixAnimation}`,

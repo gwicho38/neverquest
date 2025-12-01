@@ -4,6 +4,8 @@
  */
 
 import Phaser from 'phaser';
+import { NumericColors } from '../../consts/Colors';
+import { AnimationTiming, ParticleValues, SpellEffectDurations } from '../../consts/Numbers';
 import {
 	FIREBALL_PARTICLE,
 	FIRE_TRAIL_PARTICLE,
@@ -39,7 +41,7 @@ export class SpellEffects {
 		emitter.explode(count, x, y);
 
 		// Auto-cleanup after particles die
-		this.scene.time.delayedCall(700, () => {
+		this.scene.time.delayedCall(AnimationTiming.TWEEN_VERY_SLOW, () => {
 			emitter.destroy();
 		});
 	}
@@ -49,7 +51,7 @@ export class SpellEffects {
 		y: number,
 		targetX: number,
 		targetY: number,
-		duration: number = 1000
+		duration: number = ParticleValues.LIFESPAN_LONG
 	): Phaser.GameObjects.Particles.ParticleEmitter {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, FIRE_TRAIL_PARTICLE);
 
@@ -61,7 +63,7 @@ export class SpellEffects {
 			duration,
 			onComplete: () => {
 				emitter.stop();
-				this.scene.time.delayedCall(500, () => {
+				this.scene.time.delayedCall(AnimationTiming.TWEEN_SLOW, () => {
 					emitter.destroy();
 				});
 			},
@@ -80,7 +82,7 @@ export class SpellEffects {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, config);
 		emitter.explode(count, x, y);
 
-		this.scene.time.delayedCall(1000, () => {
+		this.scene.time.delayedCall(ParticleValues.LIFESPAN_LONG, () => {
 			emitter.destroy();
 		});
 	}
@@ -103,17 +105,17 @@ export class SpellEffects {
 
 		// Add freeze effect ring
 		const graphics = this.scene.add.graphics();
-		graphics.lineStyle(3, 0x66aaff, 1);
+		graphics.lineStyle(3, NumericColors.BLUE_LIGHT, 1);
 
 		// Animate expanding ring
 		const ringData = { radius: 0 };
 		this.scene.tweens.add({
 			targets: ringData,
 			radius,
-			duration: 500,
+			duration: AnimationTiming.TWEEN_SLOW,
 			onUpdate: (tween: Phaser.Tweens.Tween) => {
 				graphics.clear();
-				graphics.lineStyle(3, 0x66aaff, 1 - tween.progress);
+				graphics.lineStyle(3, NumericColors.BLUE_LIGHT, 1 - tween.progress);
 				graphics.strokeCircle(x, y, ringData.radius);
 			},
 			onComplete: () => {
@@ -127,7 +129,7 @@ export class SpellEffects {
 		x: number,
 		y: number,
 		radius: number = 80,
-		duration: number = 3000
+		duration: number = SpellEffectDurations.FROZEN_GROUND
 	): Phaser.GameObjects.Particles.ParticleEmitter {
 		const config = { ...FROZEN_GROUND_PARTICLE };
 
@@ -143,7 +145,7 @@ export class SpellEffects {
 		// Stop after duration
 		this.scene.time.delayedCall(duration, () => {
 			emitter.stop();
-			this.scene.time.delayedCall(3500, () => {
+			this.scene.time.delayedCall(SpellEffectDurations.FROST_CLEANUP, () => {
 				emitter.destroy();
 			});
 		});
@@ -164,7 +166,7 @@ export class SpellEffects {
 
 		// Draw lightning line
 		const graphics = this.scene.add.graphics();
-		graphics.lineStyle(3, 0xffffff, 1);
+		graphics.lineStyle(3, NumericColors.WHITE, 1);
 		graphics.lineBetween(x, y, targetX, targetY);
 
 		// Particles along the path
@@ -176,7 +178,7 @@ export class SpellEffects {
 			graphics.destroy();
 		});
 
-		this.scene.time.delayedCall(400, () => {
+		this.scene.time.delayedCall(SpellEffectDurations.LIGHTNING_BOLT_CLEANUP, () => {
 			emitter.destroy();
 		});
 	}
@@ -199,7 +201,7 @@ export class SpellEffects {
 		x: number,
 		y: number,
 		radius: number = 60,
-		duration: number = 2000
+		duration: number = ParticleValues.LIFESPAN_VERY_LONG
 	): Phaser.GameObjects.Particles.ParticleEmitter {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...STATIC_FIELD_PARTICLE,
@@ -211,7 +213,7 @@ export class SpellEffects {
 
 		this.scene.time.delayedCall(duration, () => {
 			emitter.stop();
-			this.scene.time.delayedCall(700, () => {
+			this.scene.time.delayedCall(AnimationTiming.TWEEN_VERY_SLOW, () => {
 				emitter.destroy();
 			});
 		});
@@ -226,7 +228,7 @@ export class SpellEffects {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, HEAL_PARTICLE);
 		emitter.explode(count, x, y);
 
-		this.scene.time.delayedCall(1300, () => {
+		this.scene.time.delayedCall(SpellEffectDurations.HEAL_CLEANUP, () => {
 			emitter.destroy();
 		});
 	}
@@ -235,7 +237,7 @@ export class SpellEffects {
 		x: number,
 		y: number,
 		radius: number = 50,
-		duration: number = 5000
+		duration: number = SpellEffectDurations.DIVINE_SHIELD
 	): Phaser.GameObjects.Particles.ParticleEmitter {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...DIVINE_SHIELD_PARTICLE,
@@ -248,7 +250,7 @@ export class SpellEffects {
 
 		this.scene.time.delayedCall(duration, () => {
 			emitter.stop();
-			this.scene.time.delayedCall(1600, () => {
+			this.scene.time.delayedCall(SpellEffectDurations.SHIELD_CLEANUP, () => {
 				emitter.destroy();
 			});
 		});
@@ -262,20 +264,20 @@ export class SpellEffects {
 
 		// Add bright flash
 		const flash = this.scene.add.graphics();
-		flash.fillStyle(0xffffff, 1);
+		flash.fillStyle(NumericColors.WHITE, 1);
 		flash.fillCircle(x, y, 100);
 		flash.setBlendMode(1); // ADD blend mode
 
 		this.scene.tweens.add({
 			targets: flash,
 			alpha: 0,
-			duration: 300,
+			duration: AnimationTiming.TWEEN_NORMAL,
 			onComplete: () => {
 				flash.destroy();
 			},
 		});
 
-		this.scene.time.delayedCall(1600, () => {
+		this.scene.time.delayedCall(SpellEffectDurations.RESURRECTION_CLEANUP, () => {
 			emitter.destroy();
 		});
 	}
@@ -287,7 +289,7 @@ export class SpellEffects {
 		x: number,
 		y: number,
 		radius: number = 80,
-		duration: number = 4000
+		duration: number = SpellEffectDurations.POISON_CLOUD
 	): Phaser.GameObjects.Particles.ParticleEmitter {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...POISON_CLOUD_PARTICLE,
@@ -299,7 +301,7 @@ export class SpellEffects {
 
 		this.scene.time.delayedCall(duration, () => {
 			emitter.stop();
-			this.scene.time.delayedCall(3500, () => {
+			this.scene.time.delayedCall(SpellEffectDurations.POISON_CLEANUP, () => {
 				emitter.destroy();
 			});
 		});
@@ -315,22 +317,26 @@ export class SpellEffects {
 			targets: emitter,
 			x: targetX,
 			y: targetY,
-			duration: 500,
+			duration: AnimationTiming.TWEEN_SLOW,
 			onComplete: () => {
 				emitter.explode(15, targetX, targetY);
-				this.scene.time.delayedCall(700, () => {
+				this.scene.time.delayedCall(AnimationTiming.TWEEN_VERY_SLOW, () => {
 					emitter.destroy();
 				});
 			},
 		});
 	}
 
-	public curse(x: number, y: number, duration: number = 3000): Phaser.GameObjects.Particles.ParticleEmitter {
+	public curse(
+		x: number,
+		y: number,
+		duration: number = SpellEffectDurations.CURSE
+	): Phaser.GameObjects.Particles.ParticleEmitter {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, CURSE_PARTICLE);
 
 		this.scene.time.delayedCall(duration, () => {
 			emitter.stop();
-			this.scene.time.delayedCall(1300, () => {
+			this.scene.time.delayedCall(SpellEffectDurations.CURSE_CLEANUP, () => {
 				emitter.destroy();
 			});
 		});

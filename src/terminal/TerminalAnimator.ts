@@ -1,3 +1,5 @@
+import { AnimationTiming } from '../consts/Numbers';
+
 /**
  * Terminal animation system for visual effects
  */
@@ -61,19 +63,19 @@ export class TerminalAnimator {
 		onFrame: () => void
 	): Promise<void> {
 		// Show weapon flying toward target
-		this.addEffect(fromX, fromY, '⚔️', 'yellow', 150);
+		this.addEffect(fromX, fromY, '⚔️', 'yellow', AnimationTiming.HIT_FLASH_DURATION);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 
 		// Impact effect on target
-		this.addEffect(toX, toY, '💥', 'red', 200);
+		this.addEffect(toX, toY, '💥', 'red', AnimationTiming.TWEEN_FAST);
 		onFrame();
-		await this.sleep(100);
+		await this.sleep(AnimationTiming.TWEEN_FAST);
 
 		// Sparkle effect
-		this.addEffect(toX, toY, '✨', 'yellow', 150);
+		this.addEffect(toX, toY, '✨', 'yellow', AnimationTiming.HIT_FLASH_DURATION);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 	}
 
 	/**
@@ -81,19 +83,19 @@ export class TerminalAnimator {
 	 */
 	public async animateBlock(x: number, y: number, onFrame: () => void): Promise<void> {
 		// Shield appears
-		this.addEffect(x, y, '🛡️', 'blue', 200);
+		this.addEffect(x, y, '🛡️', 'blue', AnimationTiming.TWEEN_FAST);
 		onFrame();
-		await this.sleep(100);
+		await this.sleep(AnimationTiming.TWEEN_FAST);
 
 		// Shield flash
-		this.addEffect(x, y, '✨', 'cyan', 150);
+		this.addEffect(x, y, '✨', 'cyan', AnimationTiming.HIT_FLASH_DURATION);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 
 		// Shield fades
-		this.addEffect(x, y, '🛡️', 'grey', 100);
+		this.addEffect(x, y, '🛡️', 'grey', AnimationTiming.TWEEN_FAST);
 		onFrame();
-		await this.sleep(100);
+		await this.sleep(AnimationTiming.TWEEN_FAST);
 	}
 
 	/**
@@ -103,13 +105,13 @@ export class TerminalAnimator {
 		const damageStr = `-${damage}`;
 
 		// Damage number floats up
-		this.addEffect(x, y - 1, damageStr, 'red', 300);
+		this.addEffect(x, y - 1, damageStr, 'red', AnimationTiming.TWEEN_NORMAL);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 
-		this.addEffect(x, y - 2, damageStr, 'red', 200);
+		this.addEffect(x, y - 2, damageStr, 'red', AnimationTiming.TWEEN_FAST);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 	}
 
 	/**
@@ -119,13 +121,13 @@ export class TerminalAnimator {
 		const healStr = `+${amount}`;
 
 		// Heal number floats up
-		this.addEffect(x, y - 1, healStr, 'green', 300);
+		this.addEffect(x, y - 1, healStr, 'green', AnimationTiming.TWEEN_NORMAL);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 
-		this.addEffect(x, y - 2, healStr, 'green', 200);
+		this.addEffect(x, y - 2, healStr, 'green', AnimationTiming.TWEEN_FAST);
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 	}
 
 	/**
@@ -133,10 +135,10 @@ export class TerminalAnimator {
 	 */
 	public async animateDeath(x: number, y: number, onFrame: () => void): Promise<void> {
 		const deathEffects = [
-			{ symbol: '💀', color: 'white', duration: 200 },
-			{ symbol: '☠️', color: 'grey', duration: 200 },
-			{ symbol: '✨', color: 'white', duration: 200 },
-			{ symbol: '·', color: 'black', duration: 100 },
+			{ symbol: '💀', color: 'white', duration: AnimationTiming.TWEEN_FAST },
+			{ symbol: '☠️', color: 'grey', duration: AnimationTiming.TWEEN_FAST },
+			{ symbol: '✨', color: 'white', duration: AnimationTiming.TWEEN_FAST },
+			{ symbol: '·', color: 'black', duration: AnimationTiming.TWEEN_FAST },
 		];
 
 		for (const effect of deathEffects) {
@@ -163,17 +165,17 @@ export class TerminalAnimator {
 
 		// Burst out
 		particles.forEach(({ dx, dy }) => {
-			this.addEffect(centerX + dx, centerY + dy, '·', 'yellow', 150);
+			this.addEffect(centerX + dx, centerY + dy, '·', 'yellow', AnimationTiming.HIT_FLASH_DURATION);
 		});
 		onFrame();
-		await this.sleep(150);
+		await this.sleep(AnimationTiming.HIT_FLASH_DURATION);
 
 		// Fade
 		particles.forEach(({ dx, dy }) => {
-			this.addEffect(centerX + dx * 2, centerY + dy * 2, '·', 'grey', 100);
+			this.addEffect(centerX + dx * 2, centerY + dy * 2, '·', 'grey', AnimationTiming.TWEEN_FAST);
 		});
 		onFrame();
-		await this.sleep(100);
+		await this.sleep(AnimationTiming.TWEEN_FAST);
 	}
 
 	/**

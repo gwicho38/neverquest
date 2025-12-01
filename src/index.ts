@@ -26,6 +26,8 @@ import { UpsideDownScene } from './scenes/UpsideDownScene';
 import { crashReporter } from './utils/CrashReporter';
 import { debugHelper } from './utils/DebugHelper';
 import { logger } from './utils/Logger';
+import { PhysicsConfig } from './consts/Numbers';
+import { ErrorPageStyles, ErrorPageText } from './consts/Messages';
 
 // Create canvas with willReadFrequently attribute
 const canvas = document.getElementById('neverquest-rpg') as HTMLCanvasElement;
@@ -126,7 +128,7 @@ const config: Phaser.Types.Core.GameConfig = {
 		default: 'arcade',
 		arcade: {
 			gravity: { x: 0, y: 0 }, // Top down game, so no gravity
-			checkCollision: { up: false, down: false, left: false, right: false },
+			checkCollision: PhysicsConfig.COLLISION_CHECK,
 			debug: false,
 			debugShowBody: true,
 			debugShowStaticBody: true,
@@ -161,13 +163,13 @@ try {
 
 	// Show user-friendly error message
 	document.body.innerHTML = `
-		<div style="display: flex; align-items: center; justify-content: center; height: 100vh; font-family: Arial, sans-serif;">
-			<div style="text-align: center;">
-				<h2>Game Failed to Load</h2>
-				<p>We're sorry, but the game encountered an error during initialization.</p>
-				<p>Please refresh the page to try again.</p>
-				<button onclick="window.location.reload()" style="padding: 10px 20px; font-size: 16px; cursor: pointer;">
-					Refresh Page
+		<div style="${ErrorPageStyles.CONTAINER}">
+			<div style="${ErrorPageStyles.TEXT_CENTER}">
+				<h2>${ErrorPageText.TITLE}</h2>
+				<p>${ErrorPageText.MESSAGE}</p>
+				<p>${ErrorPageText.INSTRUCTION}</p>
+				<button onclick="window.location.reload()" style="${ErrorPageStyles.REFRESH_BUTTON}">
+					${ErrorPageText.BUTTON_TEXT}
 				</button>
 			</div>
 		</div>

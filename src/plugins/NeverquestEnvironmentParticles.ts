@@ -1,3 +1,5 @@
+import { Alpha, AnimationTiming, Scale, Depth } from '../consts/Numbers';
+
 /**
  * Interface for Tiled object properties
  */
@@ -111,14 +113,14 @@ export class NeverquestEnvironmentParticles {
 			x: { min: -(width / 2), max: width / 2 },
 			y: { min: -(height / 2), max: height / 2 },
 			lifespan: 300000,
-			scale: 0.8,
-			alpha: { start: 0.5, end: 0.7 },
+			scale: Alpha.VERY_HIGH,
+			alpha: { start: Alpha.HALF, end: Alpha.HIGH },
 			radial: true,
 			// rotation: 180, // Not a valid ParticleEmitterConfig property
 		});
 
 		// Clouds should always cast shadows above everything else in the map.
-		this.particles.depth = 9999999999999;
+		this.particles.depth = Depth.CLOUDS;
 	}
 
 	/**
@@ -140,9 +142,9 @@ export class NeverquestEnvironmentParticles {
 			speedY: { min: 5, max: 20 },
 			x: { min: -(width / 2), max: width / 2 },
 			y: { min: -(height / 2), max: height / 2 },
-			lifespan: 3000,
-			scale: { start: 1.3, end: 0.7 },
-			alpha: { start: 0.4, end: 1 },
+			lifespan: AnimationTiming.TEXT_DISPLAY_DURATION,
+			scale: { start: Scale.MEDIUM_LARGE, end: Alpha.HIGH },
+			alpha: { start: Alpha.MEDIUM, end: Alpha.OPAQUE },
 			radial: true,
 			// rotation: 180, // Not a valid ParticleEmitterConfig property
 		});
@@ -156,8 +158,8 @@ export class NeverquestEnvironmentParticles {
 			x: { min: -(width / 2), max: width / 2 },
 			y: { min: -(height / 2), max: height / 2 },
 			lifespan: 7000,
-			scale: { start: 1.3, end: 0.7 },
-			alpha: { start: 0.4, end: 1 },
+			scale: { start: Scale.MEDIUM_LARGE, end: Alpha.HIGH },
+			alpha: { start: Alpha.MEDIUM, end: Alpha.OPAQUE },
 			radial: true,
 			// rotation: 180, // Not a valid ParticleEmitterConfig property
 		});

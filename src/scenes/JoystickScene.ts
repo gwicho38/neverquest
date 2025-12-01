@@ -3,6 +3,7 @@ import joystick from '../plugins/VirtualJoystick/VirtualJoystickPlugin';
 import joystick_atlas_image from '../assets/sprites/joystick-0.png';
 import joystick_json from '../assets/sprites/joystick.json';
 import { NeverquestBattleManager } from '../plugins/NeverquestBattleManager';
+import { JoystickValues } from '../consts/Numbers';
 
 export class JoystickScene extends Phaser.Scene {
 	useOnScreenControls: boolean;
@@ -35,9 +36,9 @@ export class JoystickScene extends Phaser.Scene {
 		this.buttonB = null;
 		this.atlasName = 'joystick';
 		this.isMobile = false;
-		this.stickPositionMultiplier = 0.1;
-		this.buttonAMultiplierXposition = 0.18;
-		this.buttonAMultiplierYposition = 0.25;
+		this.stickPositionMultiplier = JoystickValues.STICK_POSITION_MULTIPLIER;
+		this.buttonAMultiplierXposition = JoystickValues.BUTTON_A_MULTIPLIER_X;
+		this.buttonAMultiplierYposition = JoystickValues.BUTTON_A_MULTIPLIER_Y;
 		this.neverquestBattleManager = null;
 		this.phantomStick = null;
 	}
@@ -58,13 +59,13 @@ export class JoystickScene extends Phaser.Scene {
 			const position_stick =
 				Math.sqrt(this.cameras.main.width ** 2 + this.cameras.main.height ** 2) * this.stickPositionMultiplier;
 
-			this.stick = this.pad.addHiddenStick(120);
+			this.stick = this.pad.addHiddenStick(JoystickValues.STICK_RADIUS);
 			this.phantomStick = this.pad
-				.addStick(0, 0, 120, this.atlasName, 'base', 'stick')
+				.addStick(0, 0, JoystickValues.STICK_RADIUS, this.atlasName, 'base', 'stick')
 				.alignBottomLeft(position_stick);
 
 			this.buttonA = this.pad
-				.addButton(0, 120, this.atlasName, 'button0-up', 'button0-down')
+				.addButton(0, JoystickValues.STICK_RADIUS, this.atlasName, 'button0-up', 'button0-down')
 				.setName(this.buttonAName);
 			this.buttonA.posX = this.cameras.main.width - this.cameras.main.width * this.buttonAMultiplierXposition;
 			this.buttonA.posY = this.cameras.main.height - this.cameras.main.height * this.buttonAMultiplierXposition;
@@ -112,7 +113,7 @@ export class JoystickScene extends Phaser.Scene {
 					// Button B not used for now.
 					if (this.buttonB) {
 						this.buttonB.posX = this.cameras.main.width - 50;
-						this.buttonB.posY = this.cameras.main.height - 250;
+						this.buttonB.posY = this.cameras.main.height - JoystickValues.BUTTON_B_OFFSET_Y;
 					}
 				}
 			});

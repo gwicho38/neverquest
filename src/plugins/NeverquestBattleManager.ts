@@ -6,6 +6,9 @@ import { NeverquestEntityTextDisplay } from './NeverquestEntityTextDisplay';
 import { CRITICAL_MULTIPLIER } from '../consts/Battle';
 import { ExpManager } from './attributes/ExpManager';
 import { HUDScene } from '../scenes/HUDScene';
+import { NumericColors } from '../consts/Colors';
+import { CombatNumbers, Alpha } from '../consts/Numbers';
+import { GameMessages } from '../consts/Messages';
 
 /**
  * @class
@@ -110,12 +113,12 @@ export class NeverquestBattleManager extends AnimationNames {
 			left: 'left',
 		};
 		this.hitboxVelocity = 10;
-		this.hitboxOffsetDividerY = 1.5;
-		this.hitboxOffsetBody = 4;
+		this.hitboxOffsetDividerY = CombatNumbers.HITBOX_OFFSET_DIVIDER_Y;
+		this.hitboxOffsetBody = CombatNumbers.HITBOX_OFFSET_BODY;
 		this.hitboxSpriteName = 'slash';
 		this.phaserJuice = null;
 		this.variation = 10;
-		this.enemyHitboxLifetime = 200;
+		this.enemyHitboxLifetime = CombatNumbers.ENEMY_HITBOX_LIFETIME;
 		this.enemyConstructorName = ENTITIES.Enemy;
 		this.PlayerConstructorName = ENTITIES.Player;
 		this.neverquestEntityTextDisplay = null;
@@ -134,9 +137,9 @@ export class NeverquestBattleManager extends AnimationNames {
 			0
 		);
 
-		hitbox.body.debugBodyColor = 0xff00ff;
+		hitbox.body.debugBodyColor = NumericColors.RED_MAGENTA;
 
-		hitbox.alpha = 0.3;
+		hitbox.alpha = Alpha.LIGHT;
 		hitbox.depth = 50;
 		if (atacker.frame.name.includes(this.atackDirectionFrameName.up)) {
 			hitbox.body.setOffset(0, 4);
@@ -244,22 +247,19 @@ export class NeverquestBattleManager extends AnimationNames {
 			const targetName = target.entityName || 'Enemy';
 			const attackerName = atacker.entityName === ENTITIES.Player ? 'You' : atacker.entityName;
 			if (isCritical) {
-				HUDScene.log(
-					atacker.scene,
-					`💥 ${attackerName} landed a CRITICAL hit on ${targetName} for ${damage} damage!`
-				);
+				HUDScene.log(atacker.scene, GameMessages.CRITICAL_HIT(attackerName, targetName, damage));
 			} else {
-				HUDScene.log(atacker.scene, `⚔️ ${attackerName} hit ${targetName} for ${damage} damage`);
+				HUDScene.log(atacker.scene, GameMessages.NORMAL_HIT(attackerName, targetName, damage));
 			}
 
 			if (target.attributes.health <= 0) {
 				if (target.entityName === ENTITIES.Player) {
 					// Player died - trigger game over
-					HUDScene.log(atacker.scene, '💀 You have been defeated!');
+					HUDScene.log(atacker.scene, GameMessages.PLAYER_DEFEATED);
 					this.handlePlayerDeath(target);
 				} else {
 					// Enemy died
-					HUDScene.log(atacker.scene, `✨ ${targetName} defeated! +${target.exp} XP`);
+					HUDScene.log(atacker.scene, GameMessages.ENEMY_DEFEATED_WITH_EXP(targetName, target.exp));
 					if (atacker.entityName === ENTITIES.Player) {
 						ExpManager.addExp(atacker, target.exp);
 					}
@@ -277,7 +277,7 @@ export class NeverquestBattleManager extends AnimationNames {
 			// Log miss message
 			const targetName = target.entityName || 'Enemy';
 			const attackerName = atacker.entityName === ENTITIES.Player ? 'You' : atacker.entityName;
-			HUDScene.log(atacker.scene, `❌ ${attackerName} missed ${targetName}!`);
+			HUDScene.log(atacker.scene, GameMessages.ATTACK_MISS(attackerName, targetName));
 
 			this.neverquestEntityTextDisplay = new NeverquestEntityTextDisplay(target.scene);
 			// Display 0 damage for a miss
@@ -360,7 +360,7 @@ export class NeverquestBattleManager extends AnimationNames {
 			}
 
 			// Add visual feedback - darker tint while blocking
-			blocker.setTint(0x888888);
+			blocker.setTint(NumericColors.GRAY_LIGHT);
 		}
 	}
 
@@ -589,7 +589,7 @@ export class NeverquestBattleManager extends AnimationNames {
 
 					this.resetEnemyState(atackedEnemies);
 				}
-			}, 2600); // Increased to handle slow enemy animations (rat: 2500ms max)
+			}, CombatNumbers.ATTACK_TIMEOUT_FALLBACK); // Increased to handle slow enemy animations (rat: 2500ms max)
 
 			console.log('[BattleManager] About to play attack animation:', attackAnimKey);
 			const playResult = atacker.anims.play(attackAnimKey, true);
@@ -660,6 +660,6 @@ export class NeverquestBattleManager extends AnimationNames {
 			});
 			// Pause the current scene
 			scene.scene.pause();
-		}, 1500);
+		}, CombatNumbers.PLAYER_DEATH_DELAY);
 	}
 }

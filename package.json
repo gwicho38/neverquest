@@ -1,6 +1,6 @@
 {
 	"name": "neverquest-rpg-template",
-	"version": "0.2.1",
+	"version": "0.3.0",
 	"description": "A modern Action RPG built with Phaser and Electron. Features rich gameplay, multiple scenes, and cross-platform support.",
 	"main": "electron-main.js",
 	"author": "Jonatan Pietroski dos Santos <jonatanpietroski@gmail.com> (https://github.com/SkyAlpha)",
@@ -26,6 +26,8 @@
 		"serve": "node scripts/serve.js",
 		"lint": "eslint src --ext .js,.ts",
 		"lint:fix": "eslint src --ext .js,.ts --fix",
+		"lint:hardcoded": "node scripts/lint-hardcoded.js",
+		"lint:hardcoded:json": "node scripts/lint-hardcoded.js --json",
 		"format": "prettier --write 'src/**/*.{js,ts}'",
 		"test": "jest",
 		"test:watch": "jest --watch",

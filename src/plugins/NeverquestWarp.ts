@@ -1,3 +1,6 @@
+import { HexColors } from '../consts/Colors';
+import { Alpha, ParticleValues, Scale, AnimationTiming } from '../consts/Numbers';
+
 interface WarpPoint extends Phaser.GameObjects.Zone {
 	warp: any;
 }
@@ -35,7 +38,7 @@ export class NeverquestWarp {
 	/**
 	 * Duration of the fade time of the camera.
 	 */
-	defaultFadeTime: number = 300;
+	defaultFadeTime: number = AnimationTiming.TWEEN_NORMAL;
 
 	/**
 	 * Duration of the fade out time of the camera.
@@ -121,9 +124,9 @@ export class NeverquestWarp {
 				// accelerationY: -1,
 				x: { min: -(warp.width! / 2), max: warp.width! / 2 },
 				y: { min: -(warp.height! / 2), max: warp.height! / 2 },
-				lifespan: { min: 500, max: 2000 },
-				scale: { start: 1.3, end: 0.8 },
-				alpha: { start: 1, end: 0.7 },
+				lifespan: { min: ParticleValues.LIFESPAN_MEDIUM, max: ParticleValues.LIFESPAN_VERY_LONG },
+				scale: { start: Scale.MEDIUM_LARGE, end: Alpha.VERY_HIGH },
+				alpha: { start: Alpha.OPAQUE, end: Alpha.HIGH },
 				// radial: true,
 				// rotation: 180, // Not a valid ParticleEmitterConfig property
 			};
@@ -193,7 +196,7 @@ export class NeverquestWarp {
 			const arrow = this.scene.add
 				.text(pos.x, pos.y, '↓', {
 					fontSize: '20px',
-					color: '#ffaa00',
+					color: HexColors.ORANGE_LIGHT,
 					fontStyle: 'bold',
 				})
 				.setOrigin(0.5)
@@ -212,7 +215,7 @@ export class NeverquestWarp {
 			// Pulse alpha
 			this.scene.tweens.add({
 				targets: arrow,
-				alpha: 0.5,
+				alpha: Alpha.HALF,
 				duration: 1000,
 				yoyo: true,
 				repeat: -1,

@@ -1,4 +1,5 @@
 import blessed from 'blessed';
+import { TerminalMessages } from '../consts/Messages';
 
 /**
  * Base Terminal Renderer for the game
@@ -16,7 +17,7 @@ export class TerminalRenderer {
 		// Create the main screen
 		this.screen = blessed.screen({
 			smartCSR: true,
-			title: 'Neverquest - Terminal Edition',
+			title: TerminalMessages.TERMINAL_TITLE,
 			fullUnicode: true,
 			dockBorders: true,
 		});

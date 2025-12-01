@@ -6,6 +6,9 @@ import { SceneToggleWatcher } from './watchers/SceneToggleWatcher';
 import { NeverquestInterfaceController } from '../plugins/NeverquestInterfaceController';
 import { PanelComponent } from '../components/PanelComponent';
 import { Player } from '../entities/Player';
+import { HexColors } from '../consts/Colors';
+import { Dimensions } from '../consts/Numbers';
+import { UILabels } from '../consts/Messages';
 
 export const AttributeSceneName = 'AttributeScene';
 
@@ -133,7 +136,7 @@ export class AttributeScene extends Phaser.Scene {
 			const minus_button = new ButtonMinus(this, xPosition, yPosition, 'removeAttribute', attribute);
 			const plus_button = new ButtonPlus(
 				this,
-				this.attributesBackground!.x + 150,
+				this.attributesBackground!.x + Dimensions.ATTRIBUTE_PLUS_BUTTON_OFFSET,
 				yPosition,
 				'addAttribute',
 				attribute
@@ -165,7 +168,7 @@ export class AttributeScene extends Phaser.Scene {
 			.text(
 				this.attributesBackground!.x + 43,
 				this.attributesBackground!.y + startPosition + 26 * (this.attributesConfiguration.length + 1),
-				'Available: ' + this.player!.attributes.availableStatPoints
+				UILabels.AVAILABLE_LABEL + this.player!.attributes.availableStatPoints
 			)
 			.setOrigin(0, 0.5);
 	}
@@ -177,34 +180,43 @@ export class AttributeScene extends Phaser.Scene {
 			(this.attributesBackground!.width / 2) * this.attributesBackground!.scaleX;
 		const baseY = this.attributesBackground!.y + 115;
 		this.atackText = this.add
-			.text(baseX, baseY, `Atack: ${this.player!.attributes.atack}`, {
-				color: '#ffffff',
+			.text(baseX, baseY, UILabels.ATTACK_LABEL(this.player!.attributes.atack), {
+				color: HexColors.WHITE,
 			})
 			.setOrigin(0, 0.5);
 		this.defenseText = this.add
-			.text(baseX, this.atackText.y + this.atackText.height + 5, `Defense: ${this.player!.attributes.defense}`, {
-				color: '#ffffff',
-			})
+			.text(
+				baseX,
+				this.atackText.y + this.atackText.height + 5,
+				UILabels.DEFENSE_LABEL(this.player!.attributes.defense),
+				{
+					color: HexColors.WHITE,
+				}
+			)
 			.setOrigin(0, 0.5);
 		this.maxHealthText = this.add
 			.text(
 				baseX,
 				this.defenseText.y + this.defenseText.height + 5,
-				`Max Health: ${this.player!.attributes.baseHealth}`
+				UILabels.MAX_HEALTH_LABEL(this.player!.attributes.baseHealth)
 			)
 			.setOrigin(0, 0.5);
 		this.criticalText = this.add
 			.text(
 				baseX,
 				this.maxHealthText.y + this.maxHealthText.height + 5,
-				`Critical: ${this.player!.attributes.critical} %`
+				UILabels.CRITICAL_LABEL(this.player!.attributes.critical)
 			)
 			.setOrigin(0, 0.5);
 		this.fleeText = this.add
-			.text(baseX, this.criticalText.y + this.criticalText.height + 5, `Flee: ${this.player!.attributes.flee}`)
+			.text(
+				baseX,
+				this.criticalText.y + this.criticalText.height + 5,
+				UILabels.FLEE_LABEL(this.player!.attributes.flee)
+			)
 			.setOrigin(0, 0.5);
 		this.hitText = this.add
-			.text(baseX, this.fleeText.y + this.fleeText.height + 5, `Hit: ${this.player!.attributes.hit}`)
+			.text(baseX, this.fleeText.y + this.fleeText.height + 5, UILabels.HIT_LABEL(this.player!.attributes.hit))
 			.setOrigin(0, 0.5);
 	}
 
@@ -253,12 +265,12 @@ export class AttributeScene extends Phaser.Scene {
 
 	setAttributesText(): void {
 		if (this.scene.isActive()) {
-			this.atackText.setText(`Atack: ${this.player!.attributes.atack}`);
-			this.defenseText.setText(`Defense: ${this.player!.attributes.defense}`);
-			this.maxHealthText.setText(`Max Health: ${this.player!.attributes.baseHealth}`);
-			this.criticalText.setText(`Critical: ${this.player!.attributes.critical} %`);
-			this.fleeText.setText(`Flee: ${this.player!.attributes.flee}`);
-			this.hitText.setText(`Hit: ${this.player!.attributes.hit}`);
+			this.atackText.setText(UILabels.ATTACK_LABEL(this.player!.attributes.atack));
+			this.defenseText.setText(UILabels.DEFENSE_LABEL(this.player!.attributes.defense));
+			this.maxHealthText.setText(UILabels.MAX_HEALTH_LABEL(this.player!.attributes.baseHealth));
+			this.criticalText.setText(UILabels.CRITICAL_LABEL(this.player!.attributes.critical));
+			this.fleeText.setText(UILabels.FLEE_LABEL(this.player!.attributes.flee));
+			this.hitText.setText(UILabels.HIT_LABEL(this.player!.attributes.hit));
 		}
 	}
 
@@ -266,6 +278,6 @@ export class AttributeScene extends Phaser.Scene {
 		this.checkButtonEnabled();
 		this.setAttributesText();
 		if (this.player && this.availableAttributesText)
-			this.availableAttributesText.setText('Available: ' + this.player.attributes.availableStatPoints);
+			this.availableAttributesText.setText(UILabels.AVAILABLE_LABEL + this.player.attributes.availableStatPoints);
 	}
 }

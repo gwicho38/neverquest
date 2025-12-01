@@ -4,6 +4,7 @@
  */
 
 import Phaser from 'phaser';
+import { AnimationTiming, Scale, Alpha, CameraValues, CombatEffectDurations } from '../../consts/Numbers';
 import {
 	HIT_IMPACT_PHYSICAL,
 	HIT_IMPACT_FIRE,
@@ -15,6 +16,7 @@ import {
 	BLOOD_SPLATTER_PARTICLE,
 	DAMAGE_TYPE_COLORS,
 } from '../../consts/ParticleConfigs';
+import { HexColors } from '../../consts/Colors';
 
 export type DamageType = 'PHYSICAL' | 'FIRE' | 'ICE' | 'LIGHTNING' | 'POISON' | 'HOLY' | 'DARK';
 
@@ -66,9 +68,9 @@ export class CombatEffects {
 		const critText = this.scene.add
 			.text(x, y - 40, 'CRITICAL!', {
 				fontSize: '32px',
-				color: '#ffff00',
+				color: HexColors.YELLOW,
 				fontStyle: 'bold',
-				stroke: '#ff8800',
+				stroke: HexColors.ORANGE,
 				strokeThickness: 4,
 			})
 			.setOrigin(0.5);
@@ -78,7 +80,7 @@ export class CombatEffects {
 			targets: critText,
 			y: y - 80,
 			alpha: 0,
-			scale: 1.5,
+			scale: Scale.LARGE,
 			duration: 800,
 			ease: 'Cubic.easeOut',
 			onComplete: () => {
@@ -88,10 +90,10 @@ export class CombatEffects {
 
 		// Screen shake
 		if (shake && this.scene.cameras.main) {
-			this.scene.cameras.main.shake(200, 0.01);
+			this.scene.cameras.main.shake(CameraValues.SHAKE_CRITICAL_DURATION, Alpha.CAMERA_SHAKE_CRITICAL);
 		}
 
-		this.scene.time.delayedCall(700, () => {
+		this.scene.time.delayedCall(AnimationTiming.TWEEN_VERY_SLOW, () => {
 			emitter.destroy();
 		});
 	}
@@ -113,9 +115,9 @@ export class CombatEffects {
 		const blockText = this.scene.add
 			.text(x, y - 30, 'BLOCKED!', {
 				fontSize: '20px',
-				color: '#ffee88',
+				color: HexColors.YELLOW_LIGHT,
 				fontStyle: 'bold',
-				stroke: '#aa8800',
+				stroke: HexColors.AMBER,
 				strokeThickness: 3,
 			})
 			.setOrigin(0.5);
@@ -131,7 +133,7 @@ export class CombatEffects {
 			},
 		});
 
-		this.scene.time.delayedCall(500, () => {
+		this.scene.time.delayedCall(AnimationTiming.TWEEN_SLOW, () => {
 			emitter.destroy();
 		});
 	}
@@ -162,7 +164,7 @@ export class CombatEffects {
 				fontSize,
 				color,
 				fontStyle: isCritical ? 'bold' : 'normal',
-				stroke: '#000000',
+				stroke: HexColors.BLACK,
 				strokeThickness: isCritical ? 4 : 3,
 			})
 			.setOrigin(0.5);
@@ -172,7 +174,7 @@ export class CombatEffects {
 			targets: damageText,
 			y: y - 60,
 			alpha: 0,
-			duration: 1000,
+			duration: AnimationTiming.DAMAGE_NUMBER_DURATION,
 			ease: 'Cubic.easeOut',
 			onComplete: () => {
 				damageText.destroy();
@@ -187,7 +189,7 @@ export class CombatEffects {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, DEATH_EXPLOSION_PARTICLE);
 		emitter.explode(count, x, y);
 
-		this.scene.time.delayedCall(1100, () => {
+		this.scene.time.delayedCall(CombatEffectDurations.DEATH_EXPLOSION_CLEANUP, () => {
 			emitter.destroy();
 		});
 	}
@@ -213,7 +215,7 @@ export class CombatEffects {
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, config);
 		emitter.explode(count, x, y);
 
-		this.scene.time.delayedCall(900, () => {
+		this.scene.time.delayedCall(CombatEffectDurations.BLOOD_SPLATTER_CLEANUP, () => {
 			emitter.destroy();
 		});
 	}
@@ -249,9 +251,9 @@ export class CombatEffects {
 		const healText = this.scene.add
 			.text(x, y, `+${healAmount}`, {
 				fontSize: '24px',
-				color: '#44ff44',
+				color: HexColors.GREEN_LIGHT,
 				fontStyle: 'bold',
-				stroke: '#006600',
+				stroke: HexColors.GREEN_DARK,
 				strokeThickness: 3,
 			})
 			.setOrigin(0.5);
@@ -260,7 +262,7 @@ export class CombatEffects {
 			targets: healText,
 			y: y - 50,
 			alpha: 0,
-			duration: 1000,
+			duration: AnimationTiming.DAMAGE_NUMBER_DURATION,
 			ease: 'Cubic.easeOut',
 			onComplete: () => {
 				healText.destroy();
@@ -275,9 +277,9 @@ export class CombatEffects {
 		const missText = this.scene.add
 			.text(x, y - 20, 'MISS', {
 				fontSize: '20px',
-				color: '#888888',
+				color: HexColors.GRAY_LIGHT,
 				fontStyle: 'italic',
-				stroke: '#000000',
+				stroke: HexColors.BLACK,
 				strokeThickness: 2,
 			})
 			.setOrigin(0.5);
@@ -302,9 +304,9 @@ export class CombatEffects {
 		const dodgeText = this.scene.add
 			.text(x, y - 20, 'DODGE', {
 				fontSize: '20px',
-				color: '#ffee88',
+				color: HexColors.YELLOW_LIGHT,
 				fontStyle: 'bold',
-				stroke: '#996600',
+				stroke: HexColors.GOLD,
 				strokeThickness: 2,
 			})
 			.setOrigin(0.5);

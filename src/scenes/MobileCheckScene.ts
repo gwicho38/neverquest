@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { FontFamily, UILabels } from '../consts/Messages';
+import { FontSizes } from '../consts/Numbers';
 
 export class MobileCheckScene extends Phaser.Scene {
 	landscapeImage: Phaser.GameObjects.Image | null;
@@ -21,12 +23,11 @@ export class MobileCheckScene extends Phaser.Scene {
 		this.landscapeImage = null;
 		this.landscapeImageName = 'landscape_mobile';
 		this.helpText = null;
-		this.textOrientationFullscreen =
-			'Please, touch the screen to enable Full Screen mode and rotate your device to Landscape mode.';
-		this.textOrientation = 'Please, rotate your device to landscape to have a better experience.';
-		this.textFullscreen = 'Please, touch the screen to enable Full Screen mode.';
-		this.fontSize = '20px';
-		this.fontFamily = "'Press Start 2P'";
+		this.textOrientationFullscreen = UILabels.MOBILE_FULLSCREEN_AND_ORIENTATION;
+		this.textOrientation = UILabels.MOBILE_ORIENTATION;
+		this.textFullscreen = UILabels.MOBILE_FULLSCREEN;
+		this.fontSize = FontSizes.LARGE;
+		this.fontFamily = `'${FontFamily.PIXEL}'`;
 		this.isMobile = null;
 		this.finishedChecks = false;
 		this.nextScene = 'MainScene';

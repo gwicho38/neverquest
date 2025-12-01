@@ -1,3 +1,7 @@
+import { HexColors } from '../consts/Colors';
+import { FontFamilies, Alpha } from '../consts/Numbers';
+import { InfoBoxMessages } from '../consts/Messages';
+
 export class InfoBox {
 	scene: Phaser.Scene;
 	backgroundSprite: any; // NineSlice type
@@ -19,7 +23,7 @@ export class InfoBox {
 		y: number,
 		width: number,
 		height: number,
-		config: { name: string; description: string } = { name: '', description: '' }
+		config: { name: string; description: string } = { name: '', description: InfoBoxMessages.DESCRIPTION_SEPARATOR }
 	) {
 		/**
 		 * The phaser scene that this infobox belongs.
@@ -60,7 +64,7 @@ export class InfoBox {
 		 * @type { string }
 		 * @default
 		 */
-		this.titleFontFamily = "'Press Start 2P'";
+		this.titleFontFamily = FontFamilies.PRESS_START_2P;
 
 		/**
 		 * The Offset of the Nine Slice background. It's used to protect the background from streching.
@@ -90,7 +94,7 @@ export class InfoBox {
 			)
 			.setScrollFactor(0, 0)
 			.setOrigin(0, 0);
-		this.backgroundSprite.alpha = 0.7;
+		this.backgroundSprite.alpha = Alpha.HIGH;
 	}
 
 	createInformation(): void {
@@ -100,7 +104,7 @@ export class InfoBox {
 		this.name = this.scene.add.text(baseX, baseY, this.config.name, {
 			fontSize: this.titleTextFontSize,
 			fontFamily: `${this.titleFontFamily}`,
-			color: '#ffffff',
+			color: HexColors.WHITE,
 			wordWrap: { width: wrap },
 		});
 		this.name.setOrigin(0, 0.5);
@@ -108,7 +112,7 @@ export class InfoBox {
 		this.description = this.scene.add.text(baseX, this.name.y + this.name.height + 10, this.config.description, {
 			fontSize: this.titleTextFontSize,
 			fontFamily: `${this.titleFontFamily}`,
-			color: '#ffffff',
+			color: HexColors.WHITE,
 			wordWrap: { width: wrap },
 		});
 		this.description.setScrollFactor(0, 0);

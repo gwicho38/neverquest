@@ -1,6 +1,7 @@
 import { isNumber } from 'lodash';
 import { CHATS } from '../consts/DB_SEED/Chats';
 import { NeverquestDialogBox } from './NeverquestDialogBox';
+import { DialogBox } from '../consts/Numbers';
 
 interface Zone extends Phaser.GameObjects.Zone {
 	chat?: any[];
@@ -119,7 +120,7 @@ export class NeverquestTiledInfoBox {
 				this.neverquestDialogBox.interactionIcon.visible = true;
 				this.neverquestDialogBox.interactionIcon.setPosition(
 					this.player.container.x,
-					this.player.container.y - this.player.container.body.height * 2.5
+					this.player.container.y - this.player.container.body.height * DialogBox.MARGIN_MULTIPLIER_TEXT_Y
 				);
 				this.neverquestDialogBox.chat = zone.chat;
 				// Note: We do NOT disable canAtack here. The dialog system (showDialog/hideDialog)

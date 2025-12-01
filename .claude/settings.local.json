@@ -28,7 +28,16 @@
 			"Bash(mv:*)",
 			"Bash(rmdir:*)",
 			"Bash(rm:*)",
-			"Bash(npm run start)"
+			"Bash(npm run start)",
+			"Bash(npm run lint:hardcoded:*)",
+			"Bash(node scripts/lint-hardcoded.js:*)",
+			"Bash(node -e:*)",
+			"Bash(npx tsc:*)",
+			"Bash(npm run lint:fix:*)",
+			"Bash(sort:*)",
+			"Bash(node /Users/lefv/repos/neverquest/scripts/lint-hardcoded.js:*)",
+			"Bash(npx prettier:*)",
+			"Bash(npm run type-check:*)"
 		],
 		"deny": [],
 		"ask": []

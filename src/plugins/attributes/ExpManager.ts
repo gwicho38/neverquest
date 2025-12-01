@@ -1,6 +1,8 @@
 import { NeverquestEntityTextDisplay } from '../NeverquestEntityTextDisplay';
 import { HUDScene } from '../../scenes/HUDScene';
 import { ParticlePool } from '../effects/ParticlePool';
+import { ExperienceMessages } from '../../consts/Messages';
+import { Alpha } from '../../consts/Numbers';
 
 interface Entity {
 	attributes: {
@@ -75,7 +77,7 @@ export class ExpManager {
 			entity.healthBar.update(entity.attributes.health);
 		}
 		// Log level up message
-		HUDScene.log(entity.scene, `🎉 LEVEL UP! You are now level ${entity.attributes.level}! (+1 stat point)`);
+		HUDScene.log(entity.scene, ExperienceMessages.LEVEL_UP(entity.attributes.level));
 
 		// Add next level experience.
 		this.levelUpEffects(entity);
@@ -88,8 +90,8 @@ export class ExpManager {
 	static levelUpEffects(entity: Entity): void {
 		entity.scene.sound.play('level_up');
 		this.displayText = new NeverquestEntityTextDisplay(entity.scene);
-		// Display 999 as a placeholder for "LEVEL UP!!"
-		this.displayText.displayDamage(999, entity);
+		// Display placeholder number for "LEVEL UP!!" visual effect
+		this.displayText.displayDamage(ExperienceMessages.LEVEL_UP_VISUAL_PLACEHOLDER, entity);
 
 		const origin = entity.getTopLeft();
 		const textures = entity.scene.textures;
@@ -121,7 +123,7 @@ export class ExpManager {
 			lifespan: 300,
 			gravityY: 10,
 			speed: 20,
-			scale: { start: 0, end: 0.15, ease: 'Quad.easeOut' },
+			scale: { start: 0, end: Alpha.FOG_START, ease: 'Quad.easeOut' },
 			alpha: { start: 1, end: 0, ease: 'Quad.easeIn' },
 			blendMode: 'ADD',
 			emitZone: { type: 'edge', source: logoSource, quantity: 1 } as any,

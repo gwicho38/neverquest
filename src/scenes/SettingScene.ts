@@ -1,6 +1,8 @@
 import Phaser from 'phaser';
 import { NeverquestSoundManager } from '../plugins/NeverquestSoundManager';
 import { PanelComponent } from '../components/PanelComponent';
+import { FontFamilies, FontSizes, SettingSceneValues } from '../consts/Numbers';
+import { UILabels } from '../consts/Messages';
 
 const COLOR_LIGHT = 0x7b5e57;
 const COLOR_DARK = 0x260e04;
@@ -40,13 +42,13 @@ export class SettingScene extends Phaser.Scene {
 		this.margin = 10;
 		this.dialogXPosition = this.margin;
 		this.dialogYPosition = 75;
-		this.dialogBottomOffset = 120;
+		this.dialogBottomOffset = SettingSceneValues.DIALOG_BOTTOM_OFFSET;
 		this.nineSliceOffsets = 60;
 		this.nineSliceSafeArea = 32;
-		this.settingHeaderMarginTop = 115;
+		this.settingHeaderMarginTop = SettingSceneValues.SETTING_HEADER_MARGIN_TOP;
 		this.settingHeaderText = 'Settings';
-		this.settingHeaderFontSize = '18px';
-		this.settingHeaderFontFamily = "'Press Start 2P'";
+		this.settingHeaderFontSize = FontSizes.SETTING_HEADER;
+		this.settingHeaderFontFamily = FontFamilies.PRESS_START_2P;
 		this.closeButtonOffsetX = 60;
 		this.closeButtonSpriteName = 'close_button';
 		this.closeButtonScale = 1;
@@ -95,10 +97,10 @@ export class SettingScene extends Phaser.Scene {
 		this.textAudioSlider = this.add.text(
 			this.dialog.x + this.margin * 3,
 			this.dialog.y + this.margin * 10,
-			`Audio:`,
+			UILabels.AUDIO_LABEL,
 			{
-				fontSize: '11px',
-				fontFamily: "'Press Start 2P'",
+				fontSize: FontSizes.SMALL,
+				fontFamily: FontFamilies.PRESS_START_2P,
 			}
 		);
 		this.slider = this.rexUI.add
@@ -114,7 +116,7 @@ export class SettingScene extends Phaser.Scene {
 				thumb: this.rexUI.add.roundRectangle(0, 0, 0, 0, 10, COLOR_LIGHT),
 
 				valuechangeCallback: (value: number) => {
-					this.textAudioSlider!.text = `Audio: ${parseFloat(value.toFixed(1)) * 100}`;
+					this.textAudioSlider!.text = UILabels.AUDIO_LABEL_WITH_VALUE(value);
 					this.neverquestSoundManager!.setVolume(value);
 				},
 				space: {

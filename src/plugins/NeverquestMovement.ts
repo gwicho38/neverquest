@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
+import { Alpha, EntitySpeed, MapLayerNames } from '../consts/Numbers';
 import { NeverquestAnimationManager } from './NeverquestAnimationManager';
 import { NeverquestGamePadController } from './NeverquestGamePadController';
 import { Player } from '../entities/Player';
@@ -136,7 +137,7 @@ export class NeverquestMovement extends AnimationNames {
 		const tileY = Math.floor(playerY / tileSize);
 
 		// Check if the tile at player position is water
-		const waterLayer = map.getLayer('water') || map.getLayer('Water');
+		const waterLayer = map.getLayer(MapLayerNames.WATER_LOWERCASE) || map.getLayer(MapLayerNames.WATER_CAPITALIZED);
 		if (waterLayer) {
 			const tile = map.getTileAt(tileX, tileY, false, waterLayer);
 			return tile !== null;
@@ -164,7 +165,7 @@ export class NeverquestMovement extends AnimationNames {
 		} else if (!shouldBeSwimming && wasSwimming) {
 			// Exit swimming mode
 			this.player.isSwimming = false;
-			this.player.speed = this.player.baseSpeed || 200;
+			this.player.speed = this.player.baseSpeed || EntitySpeed.BASE;
 			this.updateBodyMaxSpeed(this.player.speed);
 			console.log('Player left water - swimming mode deactivated');
 		}
@@ -179,7 +180,7 @@ export class NeverquestMovement extends AnimationNames {
 			// Disable running when swimming
 			if (this.player && this.player.isRunning) {
 				this.player.isRunning = false;
-				this.player.speed = this.player.baseSpeed || 200;
+				this.player.speed = this.player.baseSpeed || EntitySpeed.BASE;
 				this.updateBodyMaxSpeed(this.player.speed);
 				console.log('[NeverquestMovement] Running disabled (swimming)');
 			}
@@ -205,7 +206,9 @@ export class NeverquestMovement extends AnimationNames {
 			const previousRunning = this.player.isRunning;
 			const previousCanAtack = this.player.canAtack;
 			this.player.isRunning = !this.player.isRunning;
-			this.player.speed = this.player.isRunning ? this.player.runSpeed || 300 : this.player.baseSpeed || 200;
+			this.player.speed = this.player.isRunning
+				? this.player.runSpeed || EntitySpeed.RUN
+				: this.player.baseSpeed || EntitySpeed.BASE;
 			this.updateBodyMaxSpeed(this.player.speed);
 			console.log(
 				`[NeverquestMovement] Running toggled: ${previousRunning} -> ${this.player.isRunning} - Speed: ${this.player.speed}, MaxSpeed: ${(this.player.container.body as Phaser.Physics.Arcade.Body).maxSpeed}, canAtack: ${previousCanAtack} -> ${this.player.canAtack}`
@@ -303,7 +306,7 @@ export class NeverquestMovement extends AnimationNames {
 						const force = this.stick.force;
 						const angle = this.stick.angle;
 
-						if (force > 0.1) {
+						if (force > Alpha.LOW) {
 							const velocityX = Math.cos(angle) * this.player.speed * force;
 							const velocityY = Math.sin(angle) * this.player.speed * force;
 

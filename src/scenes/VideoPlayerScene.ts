@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
 import { NeverquestSoundManager } from '../plugins/NeverquestSoundManager';
+import { NumericColors } from '../consts/Colors';
+import { Alpha } from '../consts/Numbers';
 
 export class VideoPlayerScene extends Phaser.Scene {
 	background: Phaser.GameObjects.RenderTexture | null;
@@ -21,13 +23,13 @@ export class VideoPlayerScene extends Phaser.Scene {
 		});
 
 		this.background = null;
-		this.backgroundColor = 0x000000;
+		this.backgroundColor = NumericColors.BLACK;
 		this.alpha = 0.5;
 		this.video = null;
 		this.closeButton = null;
 		this.videoId = '';
 		this.closeButtonSpriteName = 'close_button';
-		this.closeButtonScale = 0.3;
+		this.closeButtonScale = Alpha.LIGHT;
 		this.closeButtonMarginX = 50;
 		this.closeButtonMarginY = 30;
 		this.neverquestSoundManager = null;

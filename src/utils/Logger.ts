@@ -2,6 +2,9 @@
  * Comprehensive logging system for Neverquest
  */
 
+import { ErrorMessages, DebugMessages } from '../consts/Messages';
+import { LoggerValues } from '../consts/Numbers';
+
 export enum LogLevel {
 	ERROR = 0,
 	WARN = 1,
@@ -23,7 +26,7 @@ class Logger {
 	private static instance: Logger;
 	private logLevel: LogLevel = LogLevel.INFO;
 	private logBuffer: LogEntry[] = [];
-	private maxBufferSize = 300;
+	private maxBufferSize = LoggerValues.MAX_BUFFER_SIZE;
 	private categories: Set<string> = new Set();
 	private enabledCategories: Set<string> = new Set(['*']);
 	private isProduction = process.env.NODE_ENV === 'production';
@@ -61,7 +64,7 @@ class Logger {
 	private setupErrorHandlers(): void {
 		if (typeof window !== 'undefined') {
 			window.addEventListener('error', (event) => {
-				this.error('Global', 'Uncaught error', {
+				this.error('Global', ErrorMessages.UNCAUGHT_ERROR, {
 					message: event.message,
 					filename: event.filename,
 					lineno: event.lineno,
@@ -71,7 +74,7 @@ class Logger {
 			});
 
 			window.addEventListener('unhandledrejection', (event) => {
-				this.error('Global', 'Unhandled promise rejection', {
+				this.error('Global', ErrorMessages.UNHANDLED_PROMISE, {
 					reason: event.reason,
 				});
 			});
@@ -199,7 +202,7 @@ class Logger {
 	logMemoryUsage(): void {
 		if (typeof window !== 'undefined' && (window.performance as any).memory) {
 			const memory = (window.performance as any).memory;
-			this.debug('Memory', 'Memory usage', {
+			this.debug('Memory', DebugMessages.MEMORY_USAGE, {
 				usedJSHeapSize: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
 				totalJSHeapSize: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
 				limit: `${(memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,

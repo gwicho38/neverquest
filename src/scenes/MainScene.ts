@@ -6,6 +6,9 @@ import { NeverquestEnvironmentParticles } from '../plugins/NeverquestEnvironment
 import { NeverquestEnemyZones } from '../plugins/NeverquestEnemyZones';
 import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
+import { HexColors, NumericColors } from '../consts/Colors';
+import { Alpha, Scale, CameraValues, Depth } from '../consts/Numbers';
+import { UILabels, SaveMessages, FontFamily } from '../consts/Messages';
 
 export class MainScene extends Phaser.Scene {
 	player: any;
@@ -41,7 +44,13 @@ export class MainScene extends Phaser.Scene {
 		// Handle return from Upside Down with a flash effect
 		if (data && data.fromUpsideDown) {
 			this.cameras.main.once('camerafadeincomplete', () => {
-				this.cameras.main.flash(500, 200, 200, 255, false);
+				this.cameras.main.flash(
+					CameraValues.FLASH_DURATION,
+					CameraValues.FLASH_RED,
+					CameraValues.FLASH_GREEN,
+					255,
+					false
+				);
 			});
 		}
 	}
@@ -59,7 +68,7 @@ export class MainScene extends Phaser.Scene {
 		//     this.scale.startFullscreen();
 		// }
 
-		this.cameras.main.setZoom(2.5);
+		this.cameras.main.setZoom(CameraValues.ZOOM_CLOSE);
 
 		this.mapCreator = new NeverquestMapCreator(this);
 		this.mapCreator.create();
@@ -94,7 +103,7 @@ export class MainScene extends Phaser.Scene {
 
 		// this.outlineEffect = new NeverquestOutlineEffect(this);
 
-		this.sound.volume = 0.35;
+		this.sound.volume = Alpha.MEDIUM_LIGHT;
 		this.themeSound = this.sound.add('path_to_lake_land', {
 			loop: true,
 		});
@@ -141,7 +150,7 @@ export class MainScene extends Phaser.Scene {
 				if (saveData) {
 					this.saveManager!.applySaveData(saveData);
 				} else {
-					this.saveManager!.showSaveNotification('No checkpoint found', true);
+					this.saveManager!.showSaveNotification(SaveMessages.NO_CHECKPOINT_FOUND, true);
 				}
 			}
 			// Debug: Manual auto-save trigger with F6
@@ -179,11 +188,11 @@ export class MainScene extends Phaser.Scene {
 		// Create mysterious portal particles
 		this.upsideDownPortalParticles = this.add.particles(portalX, portalY, 'particle_warp', {
 			speed: { min: 30, max: 70 },
-			scale: { start: 1.2, end: 0 },
-			alpha: { start: 0.7, end: 0 },
+			scale: { start: Scale.SLIGHTLY_LARGE, end: 0 },
+			alpha: { start: Alpha.HIGH, end: 0 },
 			lifespan: 1500,
 			frequency: 15,
-			tint: [0x4a0080, 0x0000ff, 0x8000ff],
+			tint: [NumericColors.PURPLE_DARK, NumericColors.BLUE, NumericColors.PURPLE_BRIGHT],
 			blendMode: 'ADD',
 			radial: true,
 			angle: { min: 0, max: 360 },
@@ -193,18 +202,18 @@ export class MainScene extends Phaser.Scene {
 				quantity: 15,
 			},
 		});
-		this.upsideDownPortalParticles.setDepth(500);
+		this.upsideDownPortalParticles.setDepth(Depth.EFFECTS);
 
 		// Add dark portal center
-		const portalCore = this.add.ellipse(portalX, portalY, 40, 60, 0x000020, 0.5);
-		portalCore.setDepth(499);
+		const portalCore = this.add.ellipse(portalX, portalY, 40, 60, NumericColors.BLUE_DARK, Alpha.HALF);
+		portalCore.setDepth(Depth.UPSIDE_DOWN_PORTAL_CORE);
 
 		// Pulsing effect for the portal
 		this.tweens.add({
 			targets: portalCore,
-			scaleX: 1.3,
-			scaleY: 1.3,
-			alpha: 0.7,
+			scaleX: Scale.MEDIUM_LARGE,
+			scaleY: Scale.MEDIUM_LARGE,
+			alpha: Alpha.HIGH,
 			duration: 2000,
 			yoyo: true,
 			repeat: -1,
@@ -213,8 +222,8 @@ export class MainScene extends Phaser.Scene {
 
 		// Add mysterious energy lines
 		const energyLines = this.add.graphics();
-		energyLines.lineStyle(2, 0x4a0080, 0.5);
-		energyLines.setDepth(498);
+		energyLines.lineStyle(2, NumericColors.PURPLE_DARK, Alpha.HALF);
+		energyLines.setDepth(Depth.UPSIDE_DOWN_PORTAL_ENERGY);
 
 		// Draw energy lines emanating from portal
 		for (let i = 0; i < 8; i++) {
@@ -233,7 +242,7 @@ export class MainScene extends Phaser.Scene {
 		// Animate energy lines
 		this.tweens.add({
 			targets: energyLines,
-			alpha: { from: 0.3, to: 0.8 },
+			alpha: { from: Alpha.LIGHT, to: Alpha.VERY_HIGH },
 			duration: 1500,
 			yoyo: true,
 			repeat: -1,
@@ -241,21 +250,21 @@ export class MainScene extends Phaser.Scene {
 		});
 
 		// Add floating text hint
-		const portalText = this.add.text(portalX, portalY - 70, 'Strange Portal', {
+		const portalText = this.add.text(portalX, portalY - 70, UILabels.STRANGE_PORTAL, {
 			fontSize: '10px',
-			fontFamily: '"Press Start 2P"',
-			color: '#b090ff',
-			stroke: '#000000',
+			fontFamily: `"${FontFamily.PIXEL}"`,
+			color: HexColors.PURPLE_LIGHT,
+			stroke: HexColors.BLACK,
 			strokeThickness: 2,
 		});
 		portalText.setOrigin(0.5, 0.5);
-		portalText.setDepth(501);
+		portalText.setDepth(Depth.UPSIDE_DOWN_PORTAL_TEXT);
 
 		// Floating animation for text
 		this.tweens.add({
 			targets: portalText,
 			y: portalY - 75,
-			alpha: { from: 0.6, to: 1 },
+			alpha: { from: Alpha.MEDIUM_HIGH, to: 1 },
 			duration: 2500,
 			yoyo: true,
 			repeat: -1,
@@ -297,24 +306,24 @@ export class MainScene extends Phaser.Scene {
 		}
 
 		// Portal activation sound
-		const portalSound = this.sound.add('start_game', { volume: 0.6 });
+		const portalSound = this.sound.add('start_game', { volume: Alpha.MEDIUM_HIGH });
 		portalSound.play();
 
 		// Add whoosh or electrical sound if available
 		if (this.sound.get('electric_shock')) {
-			const electricSound = this.sound.add('electric_shock', { volume: 0.3 });
+			const electricSound = this.sound.add('electric_shock', { volume: Alpha.LIGHT });
 			electricSound.play();
 		}
 
 		// Dark fade with purple tint
-		this.cameras.main.fadeOut(300, 30, 0, 50);
+		this.cameras.main.fadeOut(CameraValues.FADE_NORMAL, 30, 0, 50);
 
 		// Distortion effect
 		this.tweens.add({
 			targets: this.cameras.main,
-			zoom: 3,
-			rotation: -0.05,
-			duration: 300,
+			zoom: CameraValues.ZOOM_VERY_CLOSE,
+			rotation: -Alpha.VERY_LOW,
+			duration: CameraValues.FADE_NORMAL,
 			ease: 'Power2',
 		});
 

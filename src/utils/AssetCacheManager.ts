@@ -3,6 +3,9 @@
  * Handles caching, preloading, and optimization of game assets
  */
 
+import { AssetCacheValues } from '../consts/Numbers';
+import { ErrorMessages, UrlPrefixes } from '../consts/Messages';
+
 export interface AssetInfo {
 	key: string;
 	url: string;
@@ -18,7 +21,8 @@ export class AssetCacheManager {
 	private static instance: AssetCacheManager;
 	private cache: Map<string, any> = new Map();
 	private assetInfo: Map<string, AssetInfo> = new Map();
-	private maxCacheSize = 100 * 1024 * 1024; // 100MB
+	private maxCacheSize =
+		AssetCacheValues.MAX_CACHE_SIZE_MB * AssetCacheValues.BYTES_PER_KB * AssetCacheValues.BYTES_PER_KB; // 100MB
 	private currentCacheSize = 0;
 	private preloadQueue: string[] = [];
 	private isPreloading = false;
@@ -100,7 +104,7 @@ export class AssetCacheManager {
 
 		const info = this.assetInfo.get(key);
 		if (!info) {
-			throw new Error(`Asset not registered: ${key}`);
+			throw new Error(ErrorMessages.ASSET_NOT_REGISTERED(key));
 		}
 
 		try {
@@ -119,7 +123,7 @@ export class AssetCacheManager {
 	private async fetchAsset(info: AssetInfo): Promise<any> {
 		const response = await fetch(info.url);
 		if (!response.ok) {
-			throw new Error(`Failed to fetch asset: ${response.statusText}`);
+			throw new Error(ErrorMessages.ASSET_FETCH_FAILED(response.statusText));
 		}
 
 		switch (info.type) {
@@ -177,7 +181,7 @@ export class AssetCacheManager {
 
 		// Remove oldest entries until we're under the limit
 		for (const [key, info] of entries) {
-			if (this.currentCacheSize <= this.maxCacheSize * 0.8) break;
+			if (this.currentCacheSize <= this.maxCacheSize * AssetCacheValues.CACHE_CLEANUP_THRESHOLD) break;
 
 			this.cache.delete(key);
 			info.cached = false;
@@ -224,7 +228,7 @@ export class AssetCacheManager {
 	public clearCache(): void {
 		// Revoke object URLs to free memory
 		for (const asset of this.cache.values()) {
-			if (typeof asset === 'string' && asset.startsWith('blob:')) {
+			if (typeof asset === 'string' && asset.startsWith(UrlPrefixes.BLOB)) {
 				URL.revokeObjectURL(asset);
 			}
 		}

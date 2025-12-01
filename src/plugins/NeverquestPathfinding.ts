@@ -5,6 +5,8 @@
 
 import EasyStar from 'easystarjs';
 import Phaser from 'phaser';
+import { NumericColors } from '../consts/Colors';
+import { Alpha } from '../consts/Numbers';
 
 export interface PathfindingOptions {
 	/**
@@ -241,7 +243,7 @@ export class NeverquestPathfinding {
 	 * @param graphics Phaser graphics object to draw on
 	 * @param alpha Alpha transparency (default: 0.3)
 	 */
-	public debugDraw(graphics: Phaser.GameObjects.Graphics, alpha: number = 0.3): void {
+	public debugDraw(graphics: Phaser.GameObjects.Graphics, alpha: number = Alpha.LIGHT): void {
 		graphics.clear();
 
 		for (let y = 0; y < this.grid.length; y++) {
@@ -250,10 +252,10 @@ export class NeverquestPathfinding {
 
 				if (this.grid[y][x] === 0) {
 					// Walkable - green
-					graphics.fillStyle(0x00ff00, alpha);
+					graphics.fillStyle(NumericColors.GREEN, alpha);
 				} else {
 					// Blocked - red
-					graphics.fillStyle(0xff0000, alpha);
+					graphics.fillStyle(NumericColors.RED, alpha);
 				}
 
 				graphics.fillRect(
@@ -270,13 +272,13 @@ export class NeverquestPathfinding {
 	 * Draw a path for debugging
 	 * @param graphics Phaser graphics object to draw on
 	 * @param path The path to draw
-	 * @param color Line color (default: 0xffff00 yellow)
+	 * @param color Line color (default: NumericColors.YELLOW)
 	 * @param lineWidth Line width (default: 2)
 	 */
 	public debugDrawPath(
 		graphics: Phaser.GameObjects.Graphics,
 		path: Phaser.Math.Vector2[],
-		color: number = 0xffff00,
+		color: number = NumericColors.YELLOW,
 		lineWidth: number = 2
 	): void {
 		if (!path || path.length < 2) return;

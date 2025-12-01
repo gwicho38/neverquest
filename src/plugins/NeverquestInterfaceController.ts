@@ -1,4 +1,5 @@
 import { NeverquestOutlineEffect } from './NeverquestOutlineEffect';
+import { ErrorMessages } from '../consts/Messages';
 
 interface InterfaceElement {
 	element: any;
@@ -446,9 +447,7 @@ export class NeverquestInterfaceController {
 	 */
 	hasNoLineData(): boolean {
 		if (!this.interfaceElements[this.currentLinePosition]) {
-			console.error(
-				`This Element line is not available. Check if this line has items, or if the line exists at all.`
-			);
+			console.error(ErrorMessages.INTERFACE_ELEMENT_LINE_NOT_AVAILABLE);
 			return true;
 		} else {
 			return false;

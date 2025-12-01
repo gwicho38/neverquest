@@ -8,6 +8,8 @@ import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
 import { Player } from '../entities/Player';
 import { IGameScene } from '../types/SceneTypes';
+import { CameraValues, Alpha } from '../consts/Numbers';
+import { SaveMessages } from '../consts/Messages';
 
 export class CaveScene extends Phaser.Scene implements IGameScene {
 	public player: Player | null = null;
@@ -31,7 +33,7 @@ export class CaveScene extends Phaser.Scene implements IGameScene {
 	}
 
 	create(): void {
-		this.cameras.main.setZoom(2.5);
+		this.cameras.main.setZoom(CameraValues.ZOOM_CLOSE);
 
 		this.mapCreator = new NeverquestMapCreator(this, 'cave_dungeon');
 		this.mapCreator.create();
@@ -64,7 +66,7 @@ export class CaveScene extends Phaser.Scene implements IGameScene {
 		this.particles = new NeverquestEnvironmentParticles(this, this.mapCreator.map);
 		this.particles.create();
 
-		this.sound.volume = 0.35;
+		this.sound.volume = Alpha.MEDIUM_LIGHT;
 		this.themeSound = this.sound.add('dungeon_ambient', {
 			loop: true,
 		});
@@ -99,7 +101,7 @@ export class CaveScene extends Phaser.Scene implements IGameScene {
 				if (saveData) {
 					this.saveManager.applySaveData(saveData);
 				} else {
-					this.saveManager.showSaveNotification('No checkpoint found', true);
+					this.saveManager.showSaveNotification(SaveMessages.NO_CHECKPOINT_FOUND, true);
 				}
 			}
 		});

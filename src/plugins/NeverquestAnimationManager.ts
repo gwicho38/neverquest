@@ -1,5 +1,6 @@
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
+import { Angles } from '../consts/Numbers';
 import { Player } from '../entities/Player';
 
 /**
@@ -67,14 +68,17 @@ export class NeverquestAnimationManager extends AnimationNames {
 		const formattedAngle = parseFloat(angle.toString()).toFixed(2);
 		const numAngle = parseFloat(formattedAngle);
 
-		if (numAngle > -0.66 && numAngle < 0.66) {
+		if (numAngle > -Angles.ANGLE_THRESHOLD_LOW && numAngle < Angles.ANGLE_THRESHOLD_LOW) {
 			// Right direction
 			this.entity.anims.play(animation + '-' + this.rightAnimationSufix, true);
 			this.entity.flipX = false;
-		} else if (numAngle > -2.33 && numAngle < -0.66) {
+		} else if (numAngle > -Angles.ANGLE_THRESHOLD_HIGH && numAngle < -Angles.ANGLE_THRESHOLD_LOW) {
 			// Up direction
 			this.entity.anims.play(animation + '-' + this.upAnimationSufix, true);
-		} else if ((numAngle < -2.33 && numAngle >= -3.14) || (numAngle <= 3.14 && numAngle > 2.33)) {
+		} else if (
+			(numAngle < -Angles.ANGLE_THRESHOLD_HIGH && numAngle >= -Angles.PI) ||
+			(numAngle <= Angles.PI && numAngle > Angles.ANGLE_THRESHOLD_HIGH)
+		) {
 			// Left direction
 			if (this.entity.anims.animationManager.exists(animation + '-' + this.leftAnimationSufix)) {
 				this.entity.anims.play(animation + '-' + this.leftAnimationSufix, true);
@@ -82,7 +86,7 @@ export class NeverquestAnimationManager extends AnimationNames {
 				this.entity.anims.play(animation + '-' + this.rightAnimationSufix, true);
 				this.entity.flipX = true;
 			}
-		} else if (numAngle <= 2.33 && numAngle > 0.66) {
+		} else if (numAngle <= Angles.ANGLE_THRESHOLD_HIGH && numAngle > Angles.ANGLE_THRESHOLD_LOW) {
 			// Down direction
 			this.entity.anims.play(animation + '-' + this.downAnimationSufix, true);
 		}

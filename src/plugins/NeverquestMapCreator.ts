@@ -1,6 +1,7 @@
 import { PlayerConfig } from '../consts/player/Player';
 import { Player } from '../entities/Player';
 import { TilesetImageConfig } from '../models/TilesetImageConfig';
+import { MapObjectNames } from '../consts/Messages';
 
 /**
  * Interface for Tiled layer properties
@@ -42,7 +43,7 @@ export class NeverquestMapCreator {
 	/**
 	 * The name of the Point Object in the Spawn layer that will define the Spawn point of the player.
 	 */
-	spawnObjectPoint: string = 'Spawn Point';
+	spawnObjectPoint: string = MapObjectNames.SPAWN_POINT;
 
 	/**
 	 * The player texture that will be used to create the Player Sprite in case the Spawn point is defined.

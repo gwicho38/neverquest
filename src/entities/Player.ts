@@ -1,5 +1,7 @@
 import Phaser from 'phaser';
+import { NumericColors } from '../consts/Colors';
 import { ENTITIES } from '../consts/Entities';
+import { EntitySpeed, Alpha, Scale, AnimationTiming } from '../consts/Numbers';
 import { AttributesManager } from '../plugins/attributes/AttributesManager';
 import { NeverquestHUDProgressBar } from '../plugins/HUD/NeverquestHUDProgressBar';
 import { NeverquestHealthBar } from '../plugins/NeverquestHealthBar';
@@ -27,17 +29,17 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public canSwim: boolean = true;
 	public isRunning: boolean = false;
 	public wasShiftDown: boolean = false;
-	public baseSpeed: number = 200;
-	public swimSpeed: number = 100;
-	public runSpeed: number = 300;
+	public baseSpeed: number = EntitySpeed.BASE;
+	public swimSpeed: number = EntitySpeed.SWIM;
+	public runSpeed: number = EntitySpeed.RUN;
 	public isJumping: boolean = false;
 	public canJump: boolean = true;
 	public jumpHeight: number = 16; // Reduced by 20% from 20
-	public jumpDuration: number = 400;
+	public jumpDuration: number = EntitySpeed.SPRINT;
 	public isRolling: boolean = false;
 	public canRoll: boolean = true;
 	public rollDistance: number = 40; // Distance the player rolls
-	public rollDuration: number = 300; // Roll is faster than jump
+	public rollDuration: number = AnimationTiming.TWEEN_NORMAL; // Roll is faster than jump
 
 	// Player-specific properties
 	public attributes: IEntityAttributes;
@@ -115,7 +117,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			0,
 			this.width * 2,
 			this.attributes.baseHealth,
-			-this.width / 2.2,
+			-this.width / Scale.EXTRA_LARGE,
 			this.height / 2
 		);
 
@@ -161,7 +163,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			.particles(this.container.x, this.container.y, this.dustParticleName, {
 				follow: this.container,
 				speed: 2,
-				scale: { start: 0.1, end: 0.25 },
+				scale: { start: Alpha.LOW, end: 0.25 },
 				frequency: 1000,
 				quantity: 20,
 				lifespan: 1000,
@@ -201,7 +203,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		// this.scene.add.existing(this);
 		this.scene.physics.add.existing(this);
 		this.body!.setSize(this.bodyWidth, this.bodyHeight);
-		(this.body as Phaser.Physics.Arcade.Body).offset.y = this.height / 1.8;
+		(this.body as Phaser.Physics.Arcade.Body).offset.y = this.height / Scale.VERY_LARGE;
 		(this.body as Phaser.Physics.Arcade.Body).maxSpeed = this.speed;
 
 		this.scene.add.existing(this.container);
@@ -215,8 +217,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		(this.hitZone.body as Phaser.Physics.Arcade.Body).setSize(this.hitZoneWidth, this.hitZoneHeigth);
 
 		// Debug color lines.
-		(this.container.body as Phaser.Physics.Arcade.Body).debugBodyColor = 0xffffff;
-		(this.body as Phaser.Physics.Arcade.Body).debugBodyColor = 0xffff00;
+		(this.container.body as Phaser.Physics.Arcade.Body).debugBodyColor = NumericColors.WHITE;
+		(this.body as Phaser.Physics.Arcade.Body).debugBodyColor = NumericColors.YELLOW;
 	}
 
 	/**
@@ -290,8 +292,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		// Add a subtle scale effect for visual feedback (reduced to minimize screen shake)
 		this.scene.tweens.add({
 			targets: this.container,
-			scaleX: 0.95,
-			scaleY: 0.95,
+			scaleX: Alpha.NEARLY_FULL,
+			scaleY: Alpha.NEARLY_FULL,
 			duration: this.jumpDuration / 2,
 			yoyo: true,
 			ease: 'Sine.easeInOut',
@@ -385,8 +387,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		// Add slight scale effect for visual feedback
 		this.scene.tweens.add({
 			targets: this.container,
-			scaleX: 0.9,
-			scaleY: 0.9,
+			scaleX: Alpha.ALMOST_OPAQUE,
+			scaleY: Alpha.ALMOST_OPAQUE,
 			duration: this.rollDuration / 2,
 			yoyo: true,
 			ease: 'Sine.easeInOut',

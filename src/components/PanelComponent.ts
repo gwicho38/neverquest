@@ -1,4 +1,5 @@
 import { NeverquestUtils } from '../utils/NeverquestUtils';
+import { FontFamilies, Scale, Dimensions } from '../consts/Numbers';
 
 /**
  * @class
@@ -111,7 +112,7 @@ export class PanelComponent {
 		 * @type { string }
 		 * @default
 		 */
-		this.titleFontFamily = "'Press Start 2P'";
+		this.titleFontFamily = FontFamilies.PRESS_START_2P;
 
 		/**
 		 * The max width of the panel.
@@ -209,13 +210,14 @@ export class PanelComponent {
 			.image(
 				this.panelBackground.x +
 					this.panelBackground.width * this.panelBackground.scaleX -
-					this.verticalBackgroundPadding * 1.5,
-				this.panelBackground.y + this.verticalBackgroundPadding * 1.5,
+					this.verticalBackgroundPadding * Dimensions.PANEL_CLOSE_BUTTON_PADDING_MULTIPLIER,
+				this.panelBackground.y +
+					this.verticalBackgroundPadding * Dimensions.PANEL_CLOSE_BUTTON_PADDING_MULTIPLIER,
 				this.panelCloseTexture
 			)
 			.setInteractive()
 			.setOrigin(0.5, 0.5)
-			.setScale(0.8);
+			.setScale(Scale.SMALL);
 	}
 
 	destroy(): void {

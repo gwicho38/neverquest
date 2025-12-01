@@ -8,6 +8,9 @@ import { AttributeSceneName } from './AttributeScene';
 import { InventorySceneName } from './InventoryScene';
 import { SceneToggleWatcher } from './watchers/SceneToggleWatcher';
 import { Player } from '../entities/Player';
+import { HexColors } from '../consts/Colors';
+import { Dimensions, Scale } from '../consts/Numbers';
+import { UILabels } from '../consts/Messages';
 
 /**
  * Scene for HUD Creation. It contains all the HUD of the game.
@@ -208,7 +211,7 @@ export class HUDScene extends Phaser.Scene {
 		this.settingsSpriteOffsetX = 100;
 		this.settingsSpriteOffsetY = 50;
 		this.inventorySpriteName = 'inventory_box';
-		this.inventorySpriteOffsetX = 150;
+		this.inventorySpriteOffsetX = Dimensions.HUD_INVENTORY_ICON_OFFSET_X;
 		this.inventorySpriteOffsetY = 50;
 		this.inventorySpriteScale = 1;
 		this.settingSceneName = 'SettingScene';
@@ -279,7 +282,7 @@ export class HUDScene extends Phaser.Scene {
 
 		this.attributesBook = this.add
 			.image(
-				this.cameras.main.width - this.baseSpriteOffsetX * 4.1,
+				this.cameras.main.width - this.baseSpriteOffsetX * Scale.HUD_ATTRIBUTES_BOOK_POSITION_MULTIPLIER,
 				this.baseSpriteOffsetY,
 				this.attributesBookSpriteName
 			)
@@ -345,7 +348,7 @@ export class HUDScene extends Phaser.Scene {
 		this.scene.stop(this.attributeSceneName);
 
 		this.level_text = this.add.text(15, 75, 'LvL ' + this.player.attributes.level, {
-			color: '#ffffff',
+			color: HexColors.WHITE,
 		});
 
 		this.createSaveButton();
@@ -369,16 +372,16 @@ export class HUDScene extends Phaser.Scene {
 		this.messageLog = new NeverquestMessageLog(this, logX, logY, logWidth, logHeight);
 
 		// Welcome message
-		this.messageLog.log('✨ Welcome to Neverquest!');
-		this.messageLog.log('🎮 Use arrow keys or WASD to move');
-		this.messageLog.log('⚔️ Press Space to attack nearby enemies');
+		this.messageLog.log(UILabels.WELCOME_MESSAGE);
+		this.messageLog.log(UILabels.WELCOME_CONTROLS);
+		this.messageLog.log(UILabels.WELCOME_ATTACK);
 	}
 
 	createSaveButton(): void {
 		this.saveButton = this.add.text(this.cameras.main.width - 80, 20, 'SAVE', {
 			fontSize: '14px',
-			color: '#ffffff',
-			backgroundColor: '#333333',
+			color: HexColors.WHITE,
+			backgroundColor: HexColors.GRAY_DARK,
 			padding: { x: 8, y: 4 },
 		});
 		this.saveButton.setScrollFactor(0);
@@ -395,10 +398,10 @@ export class HUDScene extends Phaser.Scene {
 			}
 		});
 		this.saveButton.on('pointerover', () => {
-			this.saveButton.setStyle({ backgroundColor: '#555555' });
+			this.saveButton.setStyle({ backgroundColor: HexColors.GRAY_MEDIUM });
 		});
 		this.saveButton.on('pointerout', () => {
-			this.saveButton.setStyle({ backgroundColor: '#333333' });
+			this.saveButton.setStyle({ backgroundColor: HexColors.GRAY_DARK });
 		});
 	}
 
@@ -455,7 +458,7 @@ export class HUDScene extends Phaser.Scene {
 
 		if (this.attributesBook)
 			this.attributesBook.setPosition(
-				this.cameras.main.width - this.baseSpriteOffsetX * 4.1,
+				this.cameras.main.width - this.baseSpriteOffsetX * Scale.HUD_ATTRIBUTES_BOOK_POSITION_MULTIPLIER,
 				this.baseSpriteOffsetY
 			);
 		if (this.attributesShortcutIcon)

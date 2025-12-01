@@ -1,6 +1,9 @@
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { HUDScene } from '../scenes/HUDScene';
+import { HexColors } from '../consts/Colors';
+import { SaveMessages, FontFamily } from '../consts/Messages';
+import { SaveManagerValues, Depth } from '../consts/Numbers';
 
 // Interface for save data structure
 export interface ISaveData {
@@ -80,7 +83,7 @@ export class NeverquestSaveManager {
 		// Also create an immediate save to test functionality
 		if (this.scene && this.scene.time) {
 			this.scene.time.delayedCall(
-				5000,
+				SaveManagerValues.INITIAL_SAVE_TEST_DELAY,
 				() => {
 					console.log('Testing auto-save after 5 seconds for scene:', this.scene.scene.key);
 					this.createCheckpoint();
@@ -206,16 +209,16 @@ export class NeverquestSaveManager {
 			console.log(`Game ${isCheckpoint ? 'checkpoint' : 'save'} successful`);
 
 			if (!isCheckpoint) {
-				this.showSaveNotification('Game Saved');
-				HUDScene.log(this.scene, '💾 Game saved successfully!');
+				this.showSaveNotification(SaveMessages.GAME_SAVED_TITLE);
+				HUDScene.log(this.scene, SaveMessages.GAME_SAVED_MESSAGE);
 			} else {
-				HUDScene.log(this.scene, '💾 Auto-saved');
+				HUDScene.log(this.scene, SaveMessages.AUTO_SAVED_MESSAGE);
 			}
 
 			return true;
 		} catch (error) {
 			console.error('Failed to save game:', error);
-			this.showSaveNotification('Save Failed!', true);
+			this.showSaveNotification(SaveMessages.SAVE_FAILED_TITLE, true);
 			return false;
 		}
 	}
@@ -265,7 +268,7 @@ export class NeverquestSaveManager {
 			return saveData;
 		} catch (error) {
 			console.error('Failed to load game:', error);
-			this.showSaveNotification('Load Failed!', true);
+			this.showSaveNotification(SaveMessages.LOAD_FAILED_TITLE, true);
 			return null;
 		}
 	}
@@ -306,13 +309,13 @@ export class NeverquestSaveManager {
 			}
 
 			console.log('Save data applied successfully');
-			this.showSaveNotification('Game Loaded');
-			HUDScene.log(this.scene, '📂 Game loaded successfully!');
+			this.showSaveNotification(SaveMessages.GAME_LOADED_TITLE);
+			HUDScene.log(this.scene, SaveMessages.GAME_LOADED_MESSAGE);
 
 			return true;
 		} catch (error) {
 			console.error('Failed to apply save data:', error);
-			this.showSaveNotification('Apply Failed!', true);
+			this.showSaveNotification(SaveMessages.APPLY_FAILED_TITLE, true);
 			return false;
 		}
 	}
@@ -321,11 +324,11 @@ export class NeverquestSaveManager {
 	 * Shows a save/load notification to the player
 	 */
 	showSaveNotification(message: string, isError: boolean = false): void {
-		const color = isError ? '#ff4444' : '#44ff44';
+		const color = isError ? HexColors.RED_LIGHT : HexColors.GREEN_LIGHT;
 
 		const notification = this.scene.add.text(this.scene.cameras.main.width / 2, 80, message, {
 			fontSize: '20px',
-			fontFamily: '"Press Start 2P"',
+			fontFamily: `"${FontFamily.PIXEL}"`,
 			color: color,
 			backgroundColor: 'rgba(0, 0, 0, 0.9)',
 			padding: { x: 15, y: 10 },
@@ -333,7 +336,7 @@ export class NeverquestSaveManager {
 
 		notification.setOrigin(0.5);
 		notification.setScrollFactor(0);
-		notification.setDepth(999999);
+		notification.setDepth(Depth.TOP);
 
 		// Fade out after 2 seconds
 		this.scene.tweens.add({

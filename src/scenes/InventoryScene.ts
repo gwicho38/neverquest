@@ -5,6 +5,9 @@ import { Item } from '../entities/Item';
 import { NeverquestInterfaceController } from '../plugins/NeverquestInterfaceController';
 import { NeverquestUtils } from '../utils/NeverquestUtils';
 import { Player } from '../entities/Player';
+import { AnimationTiming, Dimensions, FontFamilies, Scale } from '../consts/Numbers';
+import { WarningMessages } from '../consts/Messages';
+
 export const InventorySceneName = 'InventoryScene';
 
 interface InventorySlot extends Phaser.GameObjects.Image {
@@ -187,7 +190,7 @@ export class InventoryScene extends Phaser.Scene {
 		this.slotMargin = 10;
 		this.slotSize = 53;
 		this.legendHeight = 50;
-		this.titleFontFamily = "'Press Start 2P'";
+		this.titleFontFamily = FontFamilies.PRESS_START_2P;
 		this.inventoryOpenClose = 'inventory_cloth';
 		this.actionButtonSpriteNameDesktop = 'enter_keyboard_key';
 		this.actionButtonSpriteNameConsole = 'buttonA';
@@ -274,10 +277,17 @@ export class InventoryScene extends Phaser.Scene {
 	}
 
 	createInfoBox(slot: InventorySlot): void {
-		this.helpPanel = new InfoBox(this, slot.x + slot.width / 2, slot.y + slot.height / 2, 200, 200, {
-			name: slot.item!.name,
-			description: slot.item!.description,
-		});
+		this.helpPanel = new InfoBox(
+			this,
+			slot.x + slot.width / 2,
+			slot.y + slot.height / 2,
+			Dimensions.INFOBOX_WIDTH,
+			Dimensions.INFOBOX_HEIGHT,
+			{
+				name: slot.item!.name,
+				description: slot.item!.description,
+			}
+		);
 	}
 
 	/**
@@ -479,9 +489,7 @@ export class InventoryScene extends Phaser.Scene {
 		for (let i = 0; i < this.player.items.length; i++) {
 			// Check if we have enough slots
 			if (slotIndex >= this.slots.length) {
-				console.warn(
-					`Not enough inventory slots. Available: ${this.slots.length}, Items: ${this.player.items.length}`
-				);
+				console.warn(WarningMessages.INVENTORY_SLOTS_FULL(this.slots.length, this.player.items.length));
 				break;
 			}
 			const slot = this.slots[slotIndex];
@@ -527,7 +535,7 @@ export class InventoryScene extends Phaser.Scene {
 							return;
 						}
 						const elapsed = Math.abs(time - pointer.upTime);
-						if (elapsed < 350) {
+						if (elapsed < AnimationTiming.DOUBLE_CLICK_TIMEOUT) {
 							this.useItem(slot);
 							time = 0;
 						} else {
@@ -676,8 +684,8 @@ export class InventoryScene extends Phaser.Scene {
 			this.closeButton.setPosition(
 				this.inventoryBackground.x +
 					this.inventoryBackground.width * this.inventoryBackground.scaleX -
-					this.backgroundSlotPadding * 1.5,
-				this.inventoryBackground.y + this.backgroundSlotPadding * 1.5
+					this.backgroundSlotPadding * Scale.LARGE,
+				this.inventoryBackground.y + this.backgroundSlotPadding * Scale.LARGE
 			);
 			if (this.actionButtonLegend)
 				this.actionButtonLegend.setPosition(

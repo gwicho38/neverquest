@@ -1,4 +1,5 @@
 import OutlinePostFx from 'phaser3-rex-plugins/plugins/outlinepipeline.js';
+import { NumericColors } from '../consts/Colors';
 
 /**
  * @class
@@ -18,7 +19,7 @@ export class NeverquestOutlineEffect {
 	 * the color of the outline.
 	 * @default
 	 */
-	outlineColor: number = 0xff0000;
+	outlineColor: number = NumericColors.RED;
 
 	/**
 	 * The outline Thickness. The bigger the number, the bigger the thickness.

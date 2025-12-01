@@ -11,6 +11,7 @@
  */
 
 import { logger, GameLogCategory } from './Logger';
+import { DebugMessages, ErrorMessages } from '../consts/Messages';
 
 interface GameStateDump {
 	metadata: {
@@ -143,7 +144,7 @@ class DebugHelper {
 	private constructor() {
 		this.setupErrorCapture();
 		this.setupKeyboardShortcuts();
-		logger.info(GameLogCategory.SYSTEM, 'DebugHelper initialized');
+		logger.info(GameLogCategory.SYSTEM, DebugMessages.DEBUG_HELPER_INITIALIZED);
 	}
 
 	static getInstance(): DebugHelper {
@@ -158,7 +159,7 @@ class DebugHelper {
 	 */
 	initialize(game: Phaser.Game): void {
 		this.game = game;
-		logger.info(GameLogCategory.SYSTEM, 'DebugHelper connected to game instance');
+		logger.info(GameLogCategory.SYSTEM, DebugMessages.DEBUG_HELPER_CONNECTED);
 	}
 
 	/**
@@ -187,7 +188,7 @@ class DebugHelper {
 			}
 		});
 
-		logger.info(GameLogCategory.SYSTEM, 'Debug shortcuts registered (F9, F10, F11)');
+		logger.info(GameLogCategory.SYSTEM, DebugMessages.DEBUG_SHORTCUTS_REGISTERED);
 	}
 
 	/**
@@ -219,7 +220,9 @@ class DebugHelper {
 		sceneManager.scenes.forEach((scene: any) => {
 			const plugins = Object.keys(scene).filter(
 				(key) =>
-					scene[key] && typeof scene[key] === 'object' && scene[key].constructor?.name?.includes('Neverquest')
+					scene[key] &&
+					typeof scene[key] === 'object' &&
+					scene[key].constructor?.name?.includes(DebugMessages.NEVERQUEST_PLUGIN_PATTERN)
 			);
 
 			scenes.push({
@@ -397,7 +400,7 @@ class DebugHelper {
 			width: config.width,
 			height: config.height,
 			type: config.type,
-			parent: typeof config.parent === 'string' ? config.parent : '[HTMLElement]',
+			parent: typeof config.parent === 'string' ? config.parent : DebugMessages.HTML_ELEMENT_PLACEHOLDER,
 			physics: config.physics
 				? {
 						default: config.physics.default,
@@ -422,7 +425,7 @@ class DebugHelper {
 	 * Create a comprehensive debug dump of the current game state
 	 */
 	dump(): GameStateDump {
-		logger.info(GameLogCategory.SYSTEM, 'Creating debug dump...');
+		logger.info(GameLogCategory.SYSTEM, DebugMessages.CREATING_DEBUG_DUMP);
 
 		const mapInfo = this.getMapInfo();
 		const activeScenes = this.getActiveScenes();
@@ -430,8 +433,8 @@ class DebugHelper {
 		const dump: GameStateDump = {
 			metadata: {
 				timestamp: new Date().toISOString(),
-				version: (this.game?.config as any)?.version || 'unknown',
-				userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : 'unknown',
+				version: (this.game?.config as any)?.version || DebugMessages.UNKNOWN_VERSION,
+				userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : DebugMessages.UNKNOWN_USER_AGENT,
 				viewport: {
 					width: typeof window !== 'undefined' ? window.innerWidth : 0,
 					height: typeof window !== 'undefined' ? window.innerHeight : 0,
@@ -479,7 +482,7 @@ class DebugHelper {
 		console.log('🎬 Active Scene:', dump.metadata.activeScene);
 		console.log('📊 Performance:', dump.metadata.performance);
 		console.log(
-			'🎬 All Scenes:',
+			DebugMessages.ALL_SCENES_HEADER,
 			dump.scenes.filter((s) => s.isActive).map((s) => s.key)
 		);
 		console.log('🗺️  Map:', dump.map);
@@ -488,7 +491,7 @@ class DebugHelper {
 		console.log('❌ Recent Errors:', dump.errors.length);
 		console.groupEnd();
 
-		logger.info(GameLogCategory.SYSTEM, 'Quick debug dump printed to console');
+		logger.info(GameLogCategory.SYSTEM, DebugMessages.QUICK_DEBUG_PRINTED);
 	}
 
 	/**
@@ -506,7 +509,7 @@ class DebugHelper {
 		linkElement.click();
 
 		console.log('✅ Debug dump downloaded:', exportFileDefaultName);
-		logger.info(GameLogCategory.SYSTEM, `Debug dump downloaded: ${exportFileDefaultName}`);
+		logger.info(GameLogCategory.SYSTEM, DebugMessages.DEBUG_DUMP_DOWNLOADED(exportFileDefaultName));
 	}
 
 	/**
@@ -519,10 +522,10 @@ class DebugHelper {
 		try {
 			await navigator.clipboard.writeText(dataStr);
 			console.log('✅ Debug dump copied to clipboard');
-			logger.info(GameLogCategory.SYSTEM, 'Debug dump copied to clipboard');
+			logger.info(GameLogCategory.SYSTEM, DebugMessages.DEBUG_DUMP_COPIED);
 		} catch (err) {
 			console.error('❌ Failed to copy to clipboard:', err);
-			logger.error(GameLogCategory.SYSTEM, 'Failed to copy debug dump to clipboard', err);
+			logger.error(GameLogCategory.SYSTEM, DebugMessages.DEBUG_DUMP_COPY_FAILED, err);
 		}
 	}
 
@@ -655,7 +658,7 @@ class DebugHelper {
 				};
 			}
 		} catch (e) {
-			playerBounds = 'Error getting bounds';
+			playerBounds = ErrorMessages.ERROR_GETTING_BOUNDS;
 		}
 
 		let playerTileX: number;
@@ -758,17 +761,17 @@ class DebugHelper {
 				relativePlayer: {
 					x: relativePlayerX,
 					y: relativePlayerY,
-					note: 'Relative to CLAMPED range (actual rendered tiles)',
+					note: DebugMessages.RELATIVE_TO_CLAMPED_NOTE,
 				},
 				actualTileRangeSize: {
 					x: actualTileRangeX,
 					y: actualTileRangeY,
-					note: 'Size of CLAMPED range (fills the minimap)',
+					note: DebugMessages.SIZE_OF_CLAMPED_NOTE,
 				},
 				markerPosition: {
 					raw: { x: markerX, y: markerY },
 					clamped: { x: clampedMarkerX, y: clampedMarkerY },
-					note: 'Calculated from CLAMPED range (aligned with tiles)',
+					note: DebugMessages.CALCULATED_FROM_CLAMPED_NOTE,
 				},
 			},
 		};

@@ -1,6 +1,8 @@
 import { ConsumableBonus } from '../models/ConsumableBonus';
 import { NeverquestEntityTextDisplay } from './NeverquestEntityTextDisplay';
 import { HUDScene } from '../scenes/HUDScene';
+import { ConsumableMessages } from '../consts/Messages';
+import { ConsumableManagerValues } from '../consts/Numbers';
 
 /**
  * This class is responsible for Manage all the consumable actions.
@@ -66,7 +68,7 @@ export class NeverquestConsumableManager {
 				this.neverquestEntityTextDisplay.displayDamage(healAmount, player, false, true);
 				player.scene.sound.play(item.useSfx);
 				// Log item usage
-				HUDScene.log(player.scene, `💚 Used ${item.name}! Restored ${healAmount} HP`);
+				HUDScene.log(player.scene, ConsumableMessages.USED_ITEM_HP_RESTORE(item.name, healAmount));
 				break;
 			}
 			case 'sp':
@@ -106,7 +108,7 @@ export class NeverquestConsumableManager {
 					player.scene.sound.play(item.useSfx);
 					consumableBonus.timer.reset({
 						callbackScope: this,
-						delay: consumableBonus.time * 300, // Time to restore the attributes to it's default value.
+						delay: consumableBonus.time * ConsumableManagerValues.BUFF_DURATION_MULTIPLIER, // Time to restore the attributes to it's default value.
 						callback: this.changeStats, // Callback
 						args: [player, consumableBonus, -1], // Params
 					});
@@ -123,7 +125,7 @@ export class NeverquestConsumableManager {
 					player.scene.sound.play(item.useSfx);
 					bonusStatus.timer = player.scene.time.addEvent({
 						callbackScope: this,
-						delay: bonusStatus.time * 300, // Time to restore the attributes to it's default value.
+						delay: bonusStatus.time * ConsumableManagerValues.BUFF_DURATION_MULTIPLIER, // Time to restore the attributes to it's default value.
 						callback: this.changeStats, // Callback
 						args: [player, bonusStatus, -1], // Params
 					});

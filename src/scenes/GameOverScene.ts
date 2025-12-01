@@ -1,4 +1,7 @@
 import Phaser from 'phaser';
+import { HexColors, NumericColors } from '../consts/Colors';
+import { Depth, Dimensions, Scale } from '../consts/Numbers';
+import { UILabels, SaveMessages } from '../consts/Messages';
 
 export class GameOverScene extends Phaser.Scene {
 	playerLevel: number | null;
@@ -30,101 +33,101 @@ export class GameOverScene extends Phaser.Scene {
 		const height = this.cameras.main.height;
 
 		// Semi-transparent black background
-		const overlay = this.add.rectangle(width / 2, height / 2, width, height, 0x000000, 0.85);
+		const overlay = this.add.rectangle(width / 2, height / 2, width, height, NumericColors.BLACK, 0.85);
 		overlay.setScrollFactor(0);
-		overlay.setDepth(1000);
+		overlay.setDepth(Depth.UI);
 
 		// Game Over title
 		this.gameOverText = this.add
 			.text(width / 2, height / 3, 'GAME OVER', {
 				fontSize: '64px',
-				color: '#ff0000',
+				color: HexColors.RED,
 				fontFamily: 'Arial',
-				stroke: '#000000',
+				stroke: HexColors.BLACK,
 				strokeThickness: 6,
 			})
 			.setOrigin(0.5)
 			.setScrollFactor(0)
-			.setDepth(1001);
+			.setDepth(Depth.UI_OVERLAY);
 
 		// Player level display
 		if (this.playerLevel !== null) {
 			this.add
-				.text(width / 2, height / 2 - 40, `You reached Level ${this.playerLevel}`, {
+				.text(width / 2, height / 2 - 40, UILabels.GAME_OVER_LEVEL_REACHED(this.playerLevel), {
 					fontSize: '24px',
-					color: '#ffffff',
+					color: HexColors.WHITE,
 					fontFamily: 'Arial',
 				})
 				.setOrigin(0.5)
 				.setScrollFactor(0)
-				.setDepth(1001);
+				.setDepth(Depth.UI_OVERLAY);
 		}
 
 		// Restart button
 		this.restartButton = this.add
 			.text(width / 2, height / 2 + 20, '[R] RESTART GAME', {
 				fontSize: '28px',
-				color: '#ffffff',
+				color: HexColors.WHITE,
 				fontFamily: 'Arial',
-				backgroundColor: '#333333',
+				backgroundColor: HexColors.GRAY_DARK,
 				padding: { x: 20, y: 10 },
 			})
 			.setOrigin(0.5)
 			.setScrollFactor(0)
-			.setDepth(1001)
+			.setDepth(Depth.UI_OVERLAY)
 			.setInteractive({ useHandCursor: true });
 
 		// Load checkpoint button
 		this.loadCheckpointButton = this.add
 			.text(width / 2, height / 2 + 80, '[C] LOAD CHECKPOINT', {
 				fontSize: '28px',
-				color: '#ffffff',
+				color: HexColors.WHITE,
 				fontFamily: 'Arial',
-				backgroundColor: '#333333',
+				backgroundColor: HexColors.GRAY_DARK,
 				padding: { x: 20, y: 10 },
 			})
 			.setOrigin(0.5)
 			.setScrollFactor(0)
-			.setDepth(1001)
+			.setDepth(Depth.UI_OVERLAY)
 			.setInteractive({ useHandCursor: true });
 
 		// Main menu button
 		this.mainMenuButton = this.add
-			.text(width / 2, height / 2 + 140, '[ESC] MAIN MENU', {
+			.text(width / 2, height / 2 + Dimensions.BUTTON_SPACING_LARGE, '[ESC] MAIN MENU', {
 				fontSize: '28px',
-				color: '#ffffff',
+				color: HexColors.WHITE,
 				fontFamily: 'Arial',
-				backgroundColor: '#333333',
+				backgroundColor: HexColors.GRAY_DARK,
 				padding: { x: 20, y: 10 },
 			})
 			.setOrigin(0.5)
 			.setScrollFactor(0)
-			.setDepth(1001)
+			.setDepth(Depth.UI_OVERLAY)
 			.setInteractive({ useHandCursor: true });
 
 		// Button hover effects
 		this.restartButton.on('pointerover', () => {
-			this.restartButton!.setStyle({ backgroundColor: '#555555' });
+			this.restartButton!.setStyle({ backgroundColor: HexColors.GRAY_MEDIUM });
 		});
 
 		this.restartButton.on('pointerout', () => {
-			this.restartButton!.setStyle({ backgroundColor: '#333333' });
+			this.restartButton!.setStyle({ backgroundColor: HexColors.GRAY_DARK });
 		});
 
 		this.loadCheckpointButton.on('pointerover', () => {
-			this.loadCheckpointButton!.setStyle({ backgroundColor: '#555555' });
+			this.loadCheckpointButton!.setStyle({ backgroundColor: HexColors.GRAY_MEDIUM });
 		});
 
 		this.loadCheckpointButton.on('pointerout', () => {
-			this.loadCheckpointButton!.setStyle({ backgroundColor: '#333333' });
+			this.loadCheckpointButton!.setStyle({ backgroundColor: HexColors.GRAY_DARK });
 		});
 
 		this.mainMenuButton.on('pointerover', () => {
-			this.mainMenuButton!.setStyle({ backgroundColor: '#555555' });
+			this.mainMenuButton!.setStyle({ backgroundColor: HexColors.GRAY_MEDIUM });
 		});
 
 		this.mainMenuButton.on('pointerout', () => {
-			this.mainMenuButton!.setStyle({ backgroundColor: '#333333' });
+			this.mainMenuButton!.setStyle({ backgroundColor: HexColors.GRAY_DARK });
 		});
 
 		// Button click handlers
@@ -165,7 +168,7 @@ export class GameOverScene extends Phaser.Scene {
 		// Pulsing effect for game over text
 		this.tweens.add({
 			targets: this.gameOverText,
-			scale: { from: 1, to: 1.1 },
+			scale: { from: 1, to: Scale.SLIGHTLY_LARGE_PULSE },
 			duration: 1000,
 			yoyo: true,
 			repeat: -1,
@@ -228,14 +231,14 @@ export class GameOverScene extends Phaser.Scene {
 			console.warn('[GameOverScene] No checkpoint available');
 			// Show a message to the user
 			const noCheckpointText = this.add
-				.text(this.cameras.main.width / 2, this.cameras.main.height - 100, 'No checkpoint available!', {
+				.text(this.cameras.main.width / 2, this.cameras.main.height - 100, SaveMessages.NO_CHECKPOINT_FOUND, {
 					fontSize: '24px',
-					color: '#ff6666',
+					color: HexColors.RED_SOFT,
 					fontFamily: 'Arial',
 				})
 				.setOrigin(0.5)
 				.setScrollFactor(0)
-				.setDepth(1002);
+				.setDepth(Depth.UI_OVERLAY + 1);
 
 			// Fade out the message after 2 seconds
 			this.tweens.add({

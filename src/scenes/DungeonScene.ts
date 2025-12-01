@@ -8,6 +8,18 @@ import { NeverquestLineOfSight } from '../plugins/NeverquestLineOfSight';
 import { NeverquestLightingManager } from '../plugins/NeverquestLightingManager';
 import { Enemy } from '../entities/Enemy';
 import { PlayerConfig } from '../consts/player/Player';
+import { NumericColors, HexColors } from '../consts/Colors';
+import {
+	Dimensions,
+	AnimationTiming,
+	Alpha,
+	CameraValues,
+	Depth,
+	AudioValues,
+	Scale,
+	ParticleValues,
+} from '../consts/Numbers';
+import { GameMessages } from '../consts/Messages';
 
 export class DungeonScene extends Phaser.Scene {
 	dungeon!: NeverquestDungeonGenerator;
@@ -65,7 +77,7 @@ export class DungeonScene extends Phaser.Scene {
 		);
 
 		this.cameras.main.startFollow(this.player.container);
-		this.cameras.main.setZoom(2.5);
+		this.cameras.main.setZoom(CameraValues.ZOOM_CLOSE);
 
 		// Set camera bounds to match the map size so camera doesn't go beyond the map edges
 		this.cameras.main.setBounds(0, 0, this.dungeon.map.widthInPixels, this.dungeon.map.heightInPixels);
@@ -105,7 +117,7 @@ export class DungeonScene extends Phaser.Scene {
 
 		this.physics.add.collider(this.player.container, this.enemies);
 
-		this.sound.volume = 0.4;
+		this.sound.volume = AudioValues.VOLUME_DUNGEON;
 
 		this.themeSong = this.sound.add('dark_theme', {
 			loop: true,
@@ -123,10 +135,10 @@ export class DungeonScene extends Phaser.Scene {
 
 		// Initialize dynamic lighting system for atmospheric dungeons
 		this.lighting = new NeverquestLightingManager(this, {
-			ambientDarkness: 0.3, // Reduced from 0.9 for better visibility
-			defaultLightRadius: 180, // Increased from 120 for larger light area
+			ambientDarkness: Alpha.ALMOST_OPAQUE, // Reduced from default for better visibility
+			defaultLightRadius: Dimensions.LIGHT_RADIUS_SMALL, // Base light radius
 			enableFlicker: true,
-			lightColor: 0xffaa66, // Warm orange torch light
+			lightColor: NumericColors.ORANGE_LIGHT, // Warm orange torch light
 		});
 		this.lighting.create();
 
@@ -160,7 +172,7 @@ export class DungeonScene extends Phaser.Scene {
 				if (saveData) {
 					this.saveManager.applySaveData(saveData);
 				} else {
-					this.saveManager.showSaveNotification('No checkpoint found', true);
+					this.saveManager.showSaveNotification(GameMessages.NO_CHECKPOINT_FOUND, true);
 				}
 			}
 		});
@@ -180,15 +192,15 @@ export class DungeonScene extends Phaser.Scene {
 
 		// Add glowing circle background for better visibility
 		const exitGlow = this.add.graphics();
-		exitGlow.fillStyle(0x00ff88, 0.2);
+		exitGlow.fillStyle(NumericColors.GREEN_EXIT, Alpha.MEDIUM_LIGHT);
 		exitGlow.fillCircle(exitX, exitY, 40);
-		exitGlow.setDepth(5);
+		exitGlow.setDepth(Depth.GROUND);
 
 		// Pulse the glow
 		this.tweens.add({
 			targets: exitGlow,
-			alpha: 0.1,
-			scale: 1.1,
+			alpha: Alpha.LOW,
+			scale: Scale.SLIGHTLY_LARGE_PULSE,
 			duration: 1200,
 			yoyo: true,
 			repeat: -1,
@@ -198,14 +210,14 @@ export class DungeonScene extends Phaser.Scene {
 		// Add animated particles around the stairs (green upward particles)
 		const particlesConfig: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig = {
 			angle: { min: -100, max: -80 }, // Upward angle
-			frequency: 150, // More frequent particles
+			frequency: ParticleValues.FREQUENCY_MODERATE, // More frequent particles
 			speed: { min: 30, max: 60 },
 			x: { min: -12, max: 12 },
 			y: { min: -12, max: 12 },
-			lifespan: { min: 1000, max: 2000 },
-			scale: { start: 1.5, end: 0.3 }, // Larger starting scale
-			alpha: { start: 1.0, end: 0 },
-			tint: 0x00ff88, // Bright green-cyan for exit
+			lifespan: { min: ParticleValues.LIFESPAN_LONG, max: ParticleValues.LIFESPAN_VERY_LONG },
+			scale: { start: Scale.LARGE, end: Alpha.LIGHT }, // Larger starting scale
+			alpha: { start: Alpha.OPAQUE, end: Alpha.TRANSPARENT },
+			tint: NumericColors.GREEN_EXIT, // Bright green-cyan for exit
 		};
 
 		this.add.particles(exitX, exitY, 'particle_warp', particlesConfig);
@@ -215,7 +227,7 @@ export class DungeonScene extends Phaser.Scene {
 
 		// Add audio cue for portal (humming sound)
 		const portalSound = this.sound.add('dungeon_ambient', {
-			volume: 0.3,
+			volume: Alpha.LIGHT,
 			loop: true,
 		});
 		portalSound.play();
@@ -236,20 +248,20 @@ export class DungeonScene extends Phaser.Scene {
 		const exitLabel = this.add
 			.text(x, y - 45, 'EXIT', {
 				fontSize: '24px', // Increased from 16px
-				color: '#00ffaa', // Brighter green
+				color: HexColors.GREEN_CYAN, // Brighter green
 				fontStyle: 'bold',
-				stroke: '#000000',
+				stroke: HexColors.BLACK,
 				strokeThickness: 4,
 			})
 			.setOrigin(0.5)
-			.setDepth(100);
+			.setDepth(Depth.PLAYER);
 
 		// Pulse the label more dramatically
 		this.tweens.add({
 			targets: exitLabel,
-			alpha: 0.6,
-			scale: 1.2,
-			duration: 700,
+			alpha: Alpha.MEDIUM_HIGH,
+			scale: Scale.SLIGHTLY_LARGE,
+			duration: AnimationTiming.TWEEN_VERY_SLOW,
 			yoyo: true,
 			repeat: -1,
 			ease: 'Sine.easeInOut',
@@ -267,13 +279,13 @@ export class DungeonScene extends Phaser.Scene {
 			const arrow = this.add
 				.text(pos.x, pos.y, '↑', {
 					fontSize: '40px', // Increased from 32px
-					color: '#00ffaa', // Brighter green
+					color: HexColors.GREEN_CYAN, // Brighter green
 					fontStyle: 'bold',
-					stroke: '#000000',
+					stroke: HexColors.BLACK,
 					strokeThickness: 3,
 				})
 				.setOrigin(0.5)
-				.setDepth(100);
+				.setDepth(Depth.PLAYER);
 
 			// Animate arrows bobbing up and down with staggered timing
 			this.tweens.add({
@@ -283,25 +295,25 @@ export class DungeonScene extends Phaser.Scene {
 				yoyo: true,
 				repeat: -1,
 				ease: 'Sine.easeInOut',
-				delay: index * 200, // Stagger animations
+				delay: index * AnimationTiming.TWEEN_FAST, // Stagger animations
 			});
 
 			// Pulse alpha with staggered timing
 			this.tweens.add({
 				targets: arrow,
-				alpha: 0.3,
+				alpha: Alpha.LIGHT,
 				duration: 1000,
 				yoyo: true,
 				repeat: -1,
 				ease: 'Sine.easeInOut',
-				delay: index * 200,
+				delay: index * AnimationTiming.TWEEN_FAST,
 			});
 		});
 	}
 
 	exitDungeon(): void {
 		// Fade out
-		this.cameras.main.fade(300);
+		this.cameras.main.fade(CameraValues.FADE_NORMAL);
 		this.cameras.main.once('camerafadeoutcomplete', () => {
 			// Stop sounds
 			if (this.themeSong) {
@@ -361,9 +373,9 @@ export class DungeonScene extends Phaser.Scene {
 				const worldY = tileY * this.dungeon.tileHeight + this.dungeon.tileHeight / 2;
 
 				// Add a wall torch light
-				this.lighting.addStaticLight(worldX, worldY, 140, {
-					color: 0xff8844, // Warm orange
-					intensity: 0.9,
+				this.lighting.addStaticLight(worldX, worldY, Dimensions.LIGHT_RADIUS_MEDIUM, {
+					color: NumericColors.ORANGE_TORCH, // Warm orange
+					intensity: Alpha.ALMOST_OPAQUE,
 					flicker: true,
 					flickerAmount: 4,
 				});
@@ -374,33 +386,6 @@ export class DungeonScene extends Phaser.Scene {
 	}
 
 	update(): void {
-		// Performance profiling - log every 60 frames
-		const frameCount = this.game.loop.frame;
-		const startTime = performance.now();
-
-		this.fog.updateFog();
-		const fogTime = performance.now();
-
-		// Update player light to follow player
-		if (this.player && this.lighting) {
-			this.lighting.setPlayerLight(this.player.container.x, this.player.container.y);
-		}
-
-		// Update lighting system
-		if (this.lighting) {
-			this.lighting.update();
-		}
-		const lightingTime = performance.now();
-
-		const totalTime = lightingTime - startTime;
-
-		// Log performance every 60 frames
-		if (frameCount % 60 === 0) {
-			console.log('[DungeonScene] Performance breakdown:');
-			console.log(`  Fog update: ${(fogTime - startTime).toFixed(2)}ms`);
-			console.log(`  Lighting update: ${(lightingTime - fogTime).toFixed(2)}ms`);
-			console.log(`  Total update: ${totalTime.toFixed(2)}ms`);
-			console.log(`  Enemy count: ${this.enemies.length}`);
-		}
+		return;
 	}
 }

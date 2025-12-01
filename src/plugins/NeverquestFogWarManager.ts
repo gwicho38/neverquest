@@ -1,3 +1,6 @@
+import { NumericColors } from '../consts/Colors';
+import { Alpha, Depth, Scale } from '../consts/Numbers';
+
 /**
  * @class
  */
@@ -102,21 +105,21 @@ export class NeverquestFogWarManager {
 		);
 
 		// fill it with black
-		this.renderTexture.fill(0x000000, 0.7);
-		this.noVisionRT.fill(0x000000, 1);
+		this.renderTexture.fill(NumericColors.BLACK, Alpha.HIGH);
+		this.noVisionRT.fill(NumericColors.BLACK, Alpha.OPAQUE);
 
 		// draw the floorLayer into it
 		// this.rt.draw(this.shadow);
 
 		// set a dark blue tint
-		this.renderTexture.setTint(0x0a2948);
-		this.noVisionRT.setTint(0x0a2948);
+		this.renderTexture.setTint(NumericColors.BLUE_DARK);
+		this.noVisionRT.setTint(NumericColors.BLUE_DARK);
 
-		this.renderTexture.depth = 999999;
-		this.noVisionRT.depth = 999999;
+		this.renderTexture.depth = Depth.TOP;
+		this.noVisionRT.depth = Depth.TOP;
 
 		this.imageMask = this.scene.add.image(this.player.container.x, this.player.container.y, this.maskTextureName);
-		this.imageMask.scale = 1.5;
+		this.imageMask.scale = Scale.LARGE;
 		this.imageMask.visible = false;
 
 		// this.renderTexture.mask.invertAlpha = true;
@@ -145,8 +148,8 @@ export class NeverquestFogWarManager {
 
 		// Perform expensive fog update operations
 		this.renderTexture!.clear();
-		this.renderTexture!.fill(0x000000, 0.7);
-		this.renderTexture!.setTint(0x0a2948);
+		this.renderTexture!.fill(NumericColors.BLACK, Alpha.HIGH);
+		this.renderTexture!.setTint(NumericColors.BLUE_DARK);
 
 		this.imageMask.x = this.player.container.x;
 		this.imageMask.y = this.player.container.y;

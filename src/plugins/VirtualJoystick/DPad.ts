@@ -6,6 +6,7 @@
 
 import BaseStick from './BaseStick';
 import CONST from './const';
+import { JoystickDebugLabels } from '../../consts/Numbers';
 
 /**
  * A `DPad` is a virtual joystick. It belongs to the Virtual Joystick Plugin which is responsible for creating and updating it.
@@ -339,10 +340,10 @@ export default class DPad extends BaseStick {
 			text.setText([
 				'X: ' + this.x,
 				'Y: ' + this.y,
-				'Direction: ' + this._directions[this.direction].substr(4),
+				JoystickDebugLabels.DIRECTION_PREFIX + this._directions[this.direction].substr(4),
 				'',
-				'Distance: ' + this.distance,
-				'Quadrant: ' + this.quadrant,
+				JoystickDebugLabels.DISTANCE_PREFIX + this.distance,
+				JoystickDebugLabels.QUADRANT_PREFIX + this.quadrant,
 				'Octant: ' + this.octant,
 			]);
 		}

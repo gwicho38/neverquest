@@ -1,4 +1,6 @@
 import Phaser from 'phaser';
+import { FontFamily, IntroSceneText } from '../consts/Messages';
+import { IntroSceneValues } from '../consts/Numbers';
 
 /**
  * The Introduction Scene.
@@ -120,12 +122,12 @@ export class IntroScene extends Phaser.Scene {
 
 		this.logoTextFontSize = 35;
 		this.phaserLogoSpriteName = 'logo_phaser';
-		this.phaserLogoText = 'Proudly created with';
-		this.logoPhaserFontFamily = "'Press Start 2P'";
+		this.phaserLogoText = IntroSceneText.PHASER_LOGO_TEXT;
+		this.logoPhaserFontFamily = `'${FontFamily.PIXEL}'`;
 		this.neverquestLogo = 'neverquest_candle';
-		this.neverquestLogoText = 'Neverquest Game Studio';
+		this.neverquestLogoText = IntroSceneText.STUDIO_NAME;
 		this.particlesSpriteName = 'flares';
-		this.neverquestLogoFontFamily = "'Press Start 2P'";
+		this.neverquestLogoFontFamily = `'${FontFamily.PIXEL}'`;
 		this.neverquestLogoFontSize = '25px';
 		this.isMobile = null;
 		this.tweensCompleted = 0;
@@ -183,7 +185,7 @@ export class IntroScene extends Phaser.Scene {
 		this.logo_phaser = this.add.image(this.centerX, this.centerY, this.phaserLogoSpriteName);
 		this.logo_phaser.alpha = 0;
 
-		if (this.scale.height / this.logo_phaser.height > 0.7) {
+		if (this.scale.height / this.logo_phaser.height > IntroSceneValues.LOGO_SCALE_THRESHOLD) {
 			this.logo_phaser.setScale(0.5);
 		}
 
@@ -259,7 +261,7 @@ export class IntroScene extends Phaser.Scene {
 			alpha: { from: 0, to: 1 },
 			duration: 2000,
 			yoyo: true,
-			delay: 4000, // Start after the first tween completes
+			delay: IntroSceneValues.NEVERQUEST_LOGO_DELAY, // Start after the first tween completes
 			onComplete: () => {
 				this.onTweenComplete();
 			},

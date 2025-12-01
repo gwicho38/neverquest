@@ -4,6 +4,8 @@
  */
 
 import Phaser from 'phaser';
+import { NumericColors } from '../consts/Colors';
+import { Alpha, SpecialNumbers } from '../consts/Numbers';
 
 export interface LineSegment {
 	x1: number;
@@ -275,7 +277,7 @@ export class NeverquestLineOfSight {
 		const dy = y2 - y1;
 
 		const det = dx * rayDirY - dy * rayDirX;
-		if (Math.abs(det) < 0.001) {
+		if (Math.abs(det) < SpecialNumbers.LINE_OF_SIGHT_PARALLEL_THRESHOLD) {
 			return null; // Parallel
 		}
 
@@ -299,7 +301,7 @@ export class NeverquestLineOfSight {
 	 * @param sourceY Vision source Y
 	 * @param sourceAngle Direction facing (radians)
 	 * @param options Vision cone options
-	 * @param color Fill color (default: 0xffff00 yellow)
+	 * @param color Fill color (default: NumericColors.YELLOW)
 	 * @param alpha Alpha transparency (default: 0.3)
 	 */
 	public debugDrawVisionCone(
@@ -308,8 +310,8 @@ export class NeverquestLineOfSight {
 		sourceY: number,
 		sourceAngle: number,
 		options: VisionConeOptions = {},
-		color: number = 0xffff00,
-		alpha: number = 0.3
+		color: number = NumericColors.YELLOW,
+		alpha: number = Alpha.LIGHT
 	): void {
 		const polygon = this.calculateVisionPolygon(sourceX, sourceY, sourceAngle, options);
 
@@ -331,19 +333,19 @@ export class NeverquestLineOfSight {
 		const endX = sourceX + Math.cos(sourceAngle) * indicatorLength;
 		const endY = sourceY + Math.sin(sourceAngle) * indicatorLength;
 
-		graphics.lineStyle(2, 0xff0000, 1);
+		graphics.lineStyle(2, NumericColors.RED, 1);
 		graphics.lineBetween(sourceX, sourceY, endX, endY);
 	}
 
 	/**
 	 * Draw all obstacles for debugging
 	 * @param graphics Graphics object to draw on
-	 * @param color Line color (default: 0xff0000 red)
+	 * @param color Line color (default: NumericColors.RED)
 	 * @param alpha Alpha transparency (default: 0.5)
 	 */
 	public debugDrawObstacles(
 		graphics: Phaser.GameObjects.Graphics,
-		color: number = 0xff0000,
+		color: number = NumericColors.RED,
 		alpha: number = 0.5
 	): void {
 		graphics.lineStyle(1, color, alpha);

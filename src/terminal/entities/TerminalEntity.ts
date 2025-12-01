@@ -1,5 +1,6 @@
 import { IBaseEntity } from '../../entities/BaseEntity';
 import { IEntityAttributes } from '../../entities/EntityAttributes';
+import { EntitySpeed, TerminalEntityValues } from '../../consts/Numbers';
 
 /**
  * Terminal representation of a game entity
@@ -18,9 +19,9 @@ export class TerminalEntity implements IBaseEntity {
 	public isSwimming: boolean = false;
 	public canSwim: boolean = true;
 	public isRunning: boolean = false;
-	public baseSpeed: number = 200;
-	public swimSpeed: number = 100;
-	public runSpeed: number = 300;
+	public baseSpeed: number = EntitySpeed.BASE;
+	public swimSpeed: number = EntitySpeed.SWIM;
+	public runSpeed: number = EntitySpeed.RUN;
 
 	// Terminal-specific properties
 	public x: number;
@@ -82,9 +83,9 @@ export class TerminalEntity implements IBaseEntity {
 	 */
 	private getCurrentSymbol(): string {
 		if (this.isPlayer) {
-			// Use animated frame if recently moved (within 200ms)
+			// Use animated frame if recently moved
 			const timeSinceMove = Date.now() - this.lastMoveTime;
-			if (timeSinceMove < 200) {
+			if (timeSinceMove < TerminalEntityValues.WALK_ANIMATION_DURATION) {
 				return this.walkingFrames[this.animationFrame];
 			}
 			// Default to standing still

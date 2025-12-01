@@ -1,4 +1,5 @@
 import { ENTITIES } from '../consts/Entities';
+import { Alpha, AnimationTiming, Depth, FontFamilies, SpriteOrigins } from '../consts/Numbers';
 
 /**
  * This class is responsible for displaying the damage that an entity receives.
@@ -20,7 +21,7 @@ export class NeverquestEntityTextDisplay {
 	 * Font family to be used. It has to be included in your Phaser project.
 	 * @default
 	 */
-	fontFamily: string = '"Press Start 2P"';
+	fontFamily: string = FontFamilies.PRESS_START_2P;
 
 	/**
 	 * Color of the font.
@@ -56,7 +57,7 @@ export class NeverquestEntityTextDisplay {
 	 * The amount of time that the vertical movement will take to finish.
 	 * @default
 	 */
-	verticalMovementDuration: number = 300;
+	verticalMovementDuration: number = AnimationTiming.TWEEN_NORMAL;
 
 	/**
 	 * Space between lines of the dialog text.
@@ -103,7 +104,7 @@ export class NeverquestEntityTextDisplay {
 		if (isCritical) {
 			// this.fontColor = this.criticalDamageColor;
 			criticalSprite = this.scene.add.sprite(position.x, position.y, 'critical_2x');
-			criticalSprite.setDepth(3000); // Ensure it's on top
+			criticalSprite.setDepth(Depth.DAMAGE_TEXT); // Ensure it's on top
 			console.log('[EntityTextDisplay] Critical sprite created:', {
 				x: criticalSprite.x,
 				y: criticalSprite.y,
@@ -125,7 +126,7 @@ export class NeverquestEntityTextDisplay {
 		});
 
 		damageSprite.setOrigin(0.5, 1);
-		damageSprite.setDepth(3000); // Ensure it's on top
+		damageSprite.setDepth(Depth.DAMAGE_TEXT); // Ensure it's on top
 
 		console.log('[EntityTextDisplay] Damage text created:', {
 			text: damageSprite.text,
@@ -139,14 +140,14 @@ export class NeverquestEntityTextDisplay {
 
 		if (criticalSprite) {
 			if (damage.toString().length < 3) {
-				criticalSprite.setOrigin(0.55, 0.65);
-				criticalSprite.setScale(0.7);
+				criticalSprite.setOrigin(SpriteOrigins.CRITICAL_SHORT_X, SpriteOrigins.CRITICAL_SHORT_Y);
+				criticalSprite.setScale(Alpha.HIGH);
 			} else {
-				criticalSprite.setOrigin(0.55, 0.57);
+				criticalSprite.setOrigin(SpriteOrigins.CRITICAL_LONG_X, SpriteOrigins.CRITICAL_LONG_Y);
 			}
 		}
 
-		damageSprite.setScale(0.4);
+		damageSprite.setScale(Alpha.MEDIUM);
 
 		this.scene.add.tween({
 			targets: [damageSprite, criticalSprite],

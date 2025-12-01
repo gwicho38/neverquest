@@ -7,6 +7,18 @@ import { NeverquestWarp } from '../plugins/NeverquestWarp';
 import { NeverquestObjectMarker } from '../plugins/NeverquestObjectMarker';
 import AnimatedTiles from '../plugins/AnimatedTiles';
 import { NeverquestEnemyZones } from '../plugins/NeverquestEnemyZones';
+import { HexColors, NumericColors } from '../consts/Colors';
+import {
+	Alpha,
+	Scale,
+	AnimationTiming,
+	CameraValues,
+	Depth,
+	ParticleValues,
+	AudioValues,
+	FontSizes,
+} from '../consts/Numbers';
+import { UILabels, FontFamily } from '../consts/Messages';
 
 /**
  * The Upside Down World Scene - An eerie alternate dimension inspired by Stranger Things
@@ -60,7 +72,7 @@ export class UpsideDownScene extends Phaser.Scene {
 
 	create(): void {
 		// Set up the dark atmosphere
-		this.cameras.main.setZoom(2.5);
+		this.cameras.main.setZoom(CameraValues.ZOOM_CLOSE);
 
 		// Create map using the same tilemap as MainScene but with different rendering
 		this.mapCreator = new NeverquestMapCreator(this);
@@ -72,8 +84,8 @@ export class UpsideDownScene extends Phaser.Scene {
 			this.map.layers.forEach((layer) => {
 				if (layer.tilemapLayer) {
 					// Dark purple-blue tint for the Upside Down effect
-					layer.tilemapLayer.setTint(0x4a3a5a);
-					layer.tilemapLayer.setAlpha(0.85);
+					layer.tilemapLayer.setTint(NumericColors.PURPLE_FOG_MEDIUM);
+					layer.tilemapLayer.setAlpha(Alpha.TILEMAP_DARK);
 				}
 			});
 		}
@@ -87,13 +99,13 @@ export class UpsideDownScene extends Phaser.Scene {
 		if (this.player && this.player.container) {
 			this.player.container.list.forEach((child: any) => {
 				if (child.setTint) {
-					child.setTint(0x8a7a9a);
+					child.setTint(NumericColors.PURPLE_MUTED);
 				}
 			});
 		}
 
 		// Set up camera to follow player with slight lag for disorienting effect
-		this.cameras.main.startFollow(this.player.container, false, 0.05, 0.05);
+		this.cameras.main.startFollow(this.player.container, false, Alpha.VERY_LOW, Alpha.VERY_LOW);
 
 		// Add a dark overlay for atmosphere
 		this.createDarkOverlay();
@@ -130,10 +142,10 @@ export class UpsideDownScene extends Phaser.Scene {
 		(this.sys as any).animatedTiles.init(this.map);
 
 		// Add eerie background music/ambient sound
-		this.sound.volume = 0.4;
+		this.sound.volume = Alpha.MEDIUM;
 		this.themeSound = this.sound.add('dungeon_ambience', {
 			loop: true,
-			volume: 0.7,
+			volume: Alpha.HIGH,
 		});
 
 		// If dungeon_ambience doesn't exist, use any dark ambient sound
@@ -141,9 +153,9 @@ export class UpsideDownScene extends Phaser.Scene {
 			// Use a different sound or create ambient with existing sounds
 			this.themeSound = this.sound.add('path_to_lake_land', {
 				loop: true,
-				volume: 0.3,
-				rate: 0.7, // Slow it down for creepy effect
-				detune: -500, // Lower pitch for darkness
+				volume: Alpha.LIGHT,
+				rate: Alpha.HIGH, // Slow it down for creepy effect
+				detune: AudioValues.DETUNE_DARK, // Lower pitch for darkness
 			});
 		}
 
@@ -162,7 +174,7 @@ export class UpsideDownScene extends Phaser.Scene {
 		this.createDistortionEffects();
 
 		// Fade in from black for dramatic entrance
-		this.cameras.main.fadeIn(500, 0, 0, 0);
+		this.cameras.main.fadeIn(CameraValues.FADE_SLOW, 0, 0, 0);
 
 		// Add escape key handler
 		this.input.keyboard?.on('keydown-ESC', () => {
@@ -175,14 +187,21 @@ export class UpsideDownScene extends Phaser.Scene {
 	 */
 	private createDarkOverlay(): void {
 		const { width, height } = this.cameras.main;
-		this.darkOverlay = this.add.rectangle(width / 2, height / 2, width * 2, height * 2, 0x000000, 0.4);
+		this.darkOverlay = this.add.rectangle(
+			width / 2,
+			height / 2,
+			width * 2,
+			height * 2,
+			NumericColors.BLACK,
+			Alpha.MEDIUM
+		);
 		this.darkOverlay.setScrollFactor(0);
-		this.darkOverlay.setDepth(900);
+		this.darkOverlay.setDepth(Depth.DARK_OVERLAY);
 
 		// Add pulsing effect to the darkness
 		this.tweens.add({
 			targets: this.darkOverlay,
-			alpha: { from: 0.3, to: 0.5 },
+			alpha: { from: Alpha.LIGHT, to: Alpha.HALF },
 			duration: 3000,
 			yoyo: true,
 			repeat: -1,
@@ -202,37 +221,37 @@ export class UpsideDownScene extends Phaser.Scene {
 			y: { min: -height, max: height * 2 },
 			lifespan: 8000,
 			speed: { min: 10, max: 30 },
-			scale: { start: 0.8, end: 0.3 },
-			alpha: { start: 0.6, end: 0 },
+			scale: { start: Scale.SMALL, end: Alpha.LIGHT },
+			alpha: { start: Alpha.MEDIUM_HIGH, end: Alpha.TRANSPARENT },
 			blendMode: 'ADD',
 			frequency: 20,
-			tint: 0x6a5a7a,
+			tint: NumericColors.PURPLE_FOG_LIGHT,
 			emitZone: {
 				type: 'random',
 				source: new Phaser.Geom.Rectangle(-width, -height, width * 3, height * 3),
 			},
 		});
 		this.ashParticles.setScrollFactor(1);
-		this.ashParticles.setDepth(899);
+		this.ashParticles.setDepth(Depth.PARTICLES_HIGH);
 
 		// Mysterious floating particles (like from the show)
 		const floatingParticles = this.add.particles(0, 0, 'particle_warp', {
-			x: { min: -width / 2, max: width * 1.5 },
-			y: { min: -height / 2, max: height * 1.5 },
+			x: { min: -width / 2, max: width * Scale.LARGE },
+			y: { min: -height / 2, max: height * Scale.LARGE },
 			lifespan: 12000,
 			speed: { min: 5, max: 15 },
-			scale: { start: 1.2, end: 0.5 },
-			alpha: { start: 0.3, end: 0 },
+			scale: { start: Scale.SLIGHTLY_LARGE, end: Alpha.HALF },
+			alpha: { start: Alpha.LIGHT, end: Alpha.TRANSPARENT },
 			frequency: 50,
-			tint: 0x4a3a8a,
+			tint: NumericColors.PURPLE_FOG_MEDIUM,
 			gravityY: -10,
 			emitZone: {
 				type: 'random',
 				source: new Phaser.Geom.Rectangle(-width / 2, -height / 2, width * 2, height * 2),
 			},
 		});
-		floatingParticles.setScrollFactor(0.9);
-		floatingParticles.setDepth(898);
+		floatingParticles.setScrollFactor(Alpha.ALMOST_OPAQUE);
+		floatingParticles.setDepth(Depth.PARTICLES_MID);
 		this.floatingParticles.push(floatingParticles);
 
 		// Dense fog effect using leaves particle with modifications
@@ -242,9 +261,9 @@ export class UpsideDownScene extends Phaser.Scene {
 			lifespan: 15000,
 			speed: { min: 15, max: 25 },
 			scale: { start: 3, end: 5 },
-			alpha: { start: 0.15, end: 0 },
+			alpha: { start: Alpha.FOG_START, end: Alpha.TRANSPARENT },
 			frequency: 100,
-			tint: 0x2a2a4a,
+			tint: NumericColors.PURPLE_FOG_DARK,
 			blendMode: 'MULTIPLY',
 			angle: { min: 0, max: 360 },
 			rotate: { min: -20, max: 20 },
@@ -253,8 +272,8 @@ export class UpsideDownScene extends Phaser.Scene {
 				source: new Phaser.Geom.Rectangle(-width, -height, width * 3, height * 3),
 			},
 		});
-		this.fogParticles.setScrollFactor(0.95);
-		this.fogParticles.setDepth(897);
+		this.fogParticles.setScrollFactor(Alpha.NEARLY_FULL);
+		this.fogParticles.setDepth(Depth.PARTICLES_LOW);
 	}
 
 	/**
@@ -270,12 +289,12 @@ export class UpsideDownScene extends Phaser.Scene {
 			const alpha = progress * 0.08;
 			const thickness = 20 + i * 10;
 
-			this.vignette.lineStyle(thickness, 0x000000, alpha);
+			this.vignette.lineStyle(thickness, NumericColors.BLACK, alpha);
 			this.vignette.strokeRect(thickness / 2, thickness / 2, width - thickness, height - thickness);
 		}
 
 		this.vignette.setScrollFactor(0);
-		this.vignette.setDepth(950);
+		this.vignette.setDepth(Depth.VIGNETTE);
 	}
 
 	/**
@@ -292,11 +311,11 @@ export class UpsideDownScene extends Phaser.Scene {
 		// Visual portal effect using particles
 		this.portalParticles = this.add.particles(portalX, portalY, 'particle_warp', {
 			speed: { min: 50, max: 100 },
-			scale: { start: 1.5, end: 0 },
-			alpha: { start: 0.8, end: 0 },
-			lifespan: 1000,
+			scale: { start: Scale.LARGE, end: Alpha.TRANSPARENT },
+			alpha: { start: Alpha.VERY_HIGH, end: Alpha.TRANSPARENT },
+			lifespan: ParticleValues.LIFESPAN_LONG,
 			frequency: 10,
-			tint: [0x8a4a9a, 0x6a3a7a, 0x4a2a5a],
+			tint: [NumericColors.PURPLE_EXPLORED, NumericColors.PURPLE_FOG_LIGHT, NumericColors.PURPLE_FOG_DARK],
 			blendMode: 'ADD',
 			radial: true,
 			angle: { min: 0, max: 360 },
@@ -306,18 +325,18 @@ export class UpsideDownScene extends Phaser.Scene {
 				quantity: 20,
 			},
 		});
-		this.portalParticles.setDepth(800);
+		this.portalParticles.setDepth(Depth.PORTAL_SPRITE);
 
 		// Add a glowing portal sprite or shape
-		const portalGlow = this.add.ellipse(portalX, portalY, 50, 70, 0x8a4a9a, 0.3);
-		portalGlow.setDepth(799);
+		const portalGlow = this.add.ellipse(portalX, portalY, 50, 70, NumericColors.PURPLE_EXPLORED, Alpha.LIGHT);
+		portalGlow.setDepth(Depth.PORTAL);
 
 		// Pulsing effect for the portal
 		this.tweens.add({
 			targets: portalGlow,
-			scaleX: 1.2,
-			scaleY: 1.2,
-			alpha: 0.5,
+			scaleX: Scale.SLIGHTLY_LARGE,
+			scaleY: Scale.SLIGHTLY_LARGE,
+			alpha: Alpha.HALF,
 			duration: 1500,
 			yoyo: true,
 			repeat: -1,
@@ -345,21 +364,21 @@ export class UpsideDownScene extends Phaser.Scene {
 		}
 
 		// Add floating text hint above portal
-		const portalText = this.add.text(portalX, portalY - 60, 'Return Portal', {
-			fontSize: '12px',
-			fontFamily: '"Press Start 2P"',
-			color: '#8a6a9a',
-			stroke: '#000000',
+		const portalText = this.add.text(portalX, portalY - 60, UILabels.RETURN_PORTAL, {
+			fontSize: FontSizes.PORTAL_TEXT,
+			fontFamily: `"${FontFamily.PIXEL}"`,
+			color: HexColors.PURPLE_DARK,
+			stroke: HexColors.BLACK,
 			strokeThickness: 2,
 		});
 		portalText.setOrigin(0.5, 0.5);
-		portalText.setDepth(801);
+		portalText.setDepth(Depth.PORTAL_TEXT);
 
 		// Floating animation for text
 		this.tweens.add({
 			targets: portalText,
 			y: portalY - 65,
-			duration: 2000,
+			duration: ParticleValues.LIFESPAN_VERY_LONG,
 			yoyo: true,
 			repeat: -1,
 			ease: 'Sine.easeInOut',
@@ -375,16 +394,16 @@ export class UpsideDownScene extends Phaser.Scene {
 			delay: 8000,
 			callback: () => {
 				// Subtle camera shake
-				this.cameras.main.shake(300, 0.003);
+				this.cameras.main.shake(AnimationTiming.TWEEN_NORMAL, Alpha.CAMERA_SHAKE);
 
 				// Flash effect
-				this.cameras.main.flash(200, 50, 30, 70, false);
+				this.cameras.main.flash(CameraValues.FADE_FAST, 50, 30, 70, false);
 
 				// Temporary zoom distortion
 				this.tweens.add({
 					targets: this.cameras.main,
-					zoom: 2.4,
-					duration: 150,
+					zoom: CameraValues.ZOOM_DISTORTION,
+					duration: AnimationTiming.HIT_FLASH_DURATION,
 					yoyo: true,
 					ease: 'Sine.easeInOut',
 				});
@@ -411,16 +430,16 @@ export class UpsideDownScene extends Phaser.Scene {
 			this.cameras.main.height / 2,
 			this.cameras.main.width * 2,
 			this.cameras.main.height * 2,
-			0xffffff,
-			0.1
+			NumericColors.WHITE,
+			Alpha.LOW
 		);
 		glitchOverlay.setScrollFactor(0);
-		glitchOverlay.setDepth(1000);
+		glitchOverlay.setDepth(Depth.UI);
 
 		// Rapid flashing
 		this.tweens.add({
 			targets: glitchOverlay,
-			alpha: { from: 0.3, to: 0 },
+			alpha: { from: Alpha.LIGHT, to: Alpha.TRANSPARENT },
 			duration: 50,
 			repeat: 3,
 			onComplete: () => glitchOverlay.destroy(),
@@ -444,18 +463,18 @@ export class UpsideDownScene extends Phaser.Scene {
 		}
 
 		// Portal activation sound
-		const portalSound = this.sound.add('start_game', { volume: 0.5 });
+		const portalSound = this.sound.add('start_game', { volume: Alpha.HALF });
 		portalSound.play();
 
 		// Swirl/fade effect
-		this.cameras.main.fadeOut(500, 60, 30, 80);
+		this.cameras.main.fadeOut(CameraValues.FADE_SLOW, 60, 30, 80);
 
 		// Zoom effect
 		this.tweens.add({
 			targets: this.cameras.main,
-			zoom: 3.5,
-			rotation: 0.1,
-			duration: 500,
+			zoom: CameraValues.ZOOM_PORTAL_EXIT,
+			rotation: Alpha.LOW,
+			duration: CameraValues.FADE_SLOW,
 			ease: 'Power2',
 		});
 
@@ -530,7 +549,7 @@ export class UpsideDownScene extends Phaser.Scene {
 			const velocityY = this.player.body?.velocity.y || 0;
 
 			// Make fog react slightly to player movement
-			this.fogParticles.setParticleSpeed(15 - velocityX * 0.05, 25 + velocityX * 0.05);
+			this.fogParticles.setParticleSpeed(15 - velocityX * Alpha.VERY_LOW, 25 + velocityX * Alpha.VERY_LOW);
 		}
 	}
 }

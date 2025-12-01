@@ -2,6 +2,7 @@ import { AttributeSceneName } from '../scenes/AttributeScene';
 import { InventorySceneName } from '../scenes/InventoryScene';
 import { SceneToggleWatcher } from '../scenes/watchers/SceneToggleWatcher';
 import { NeverquestBattleManager } from './NeverquestBattleManager';
+import { DebugMessages } from '../consts/Messages';
 
 /**
  * @class
@@ -80,7 +81,7 @@ export class NeverquestKeyboardMouseController {
 				if (!attackAllowed) {
 					const failedConditions = [
 						!this.player && 'no player',
-						this.player && !this.player.active && 'not active',
+						this.player && !this.player.active && DebugMessages.PLAYER_NOT_ACTIVE,
 						this.player && !this.player.canAtack && 'canAtack=false',
 						this.player && !this.player.canMove && 'canMove=false',
 						this.player && this.player.isSwimming && 'swimming',

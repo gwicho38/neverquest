@@ -7,6 +7,8 @@ import { Player } from './Player';
 import { IItemConfig, IInventoryItem } from '../types/ItemTypes';
 import { BuffType } from '../models/BuffType';
 import { ItemType } from '../models/ItemType';
+import { ErrorMessages } from '../consts/Messages';
+import { Scale } from '../consts/Numbers';
 
 export class Item extends Phaser.Physics.Arcade.Sprite {
 	public scene: Phaser.Scene;
@@ -26,7 +28,7 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
 	constructor(scene: Phaser.Scene, x: number, y: number, id: number) {
 		const itemConfig: IItemConfig | undefined = DB_SEED_ITEMS.find((i) => i.id === id);
 		if (!itemConfig) {
-			throw new Error(`Item config not found for id: ${id}`);
+			throw new Error(ErrorMessages.ITEM_CONFIG_NOT_FOUND(id));
 		}
 
 		super(scene, x, y, itemConfig.texture);
@@ -68,7 +70,7 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
 					props: {
 						x: playerEntity.container.x,
 						y: playerEntity.container.y,
-						scale: 0.2,
+						scale: Scale.ITEM_PICKUP,
 					},
 					onComplete: (tween: Phaser.Tweens.Tween) => {
 						if (tween.totalProgress === 1) {

@@ -3,6 +3,9 @@ import { NineSlice } from 'phaser3-nineslice';
 import { Player } from '../entities/Player';
 import { NeverquestTypingSoundManager } from './NeverquestTypingSoundManager';
 import { NeverquestVideoOpener } from './NeverquestVideoOpener';
+import { NumericColors } from '../consts/Colors';
+import { Alpha, Scale, AnimationTiming, Depth, FontFamilies, DialogBox } from '../consts/Numbers';
+import { DialogBoxMessages } from '../consts/Messages';
 
 // Interface for dialog chat data
 export interface IDialogChat {
@@ -135,7 +138,7 @@ export class NeverquestDialogBox {
 		/**
 		 * Dialog height.
 		 */
-		this.dialogHeight = 150;
+		this.dialogHeight = DialogBox.HEIGHT;
 
 		/**
 		 * Margin of the dialog. Used to make spaces in the dialog.
@@ -155,7 +158,7 @@ export class NeverquestDialogBox {
 		/**
 		 * Default family of the font.
 		 */
-		this.fontFamily = "'Press Start 2P'";
+		this.fontFamily = FontFamilies.PRESS_START_2P;
 
 		/**
 		 * Default font size.
@@ -289,10 +292,13 @@ export class NeverquestDialogBox {
 			dialogY,
 			this.cameraWidth - this.margin * 2,
 			this.dialogHeight,
-			0x000000, // Black color
-			0.9 // 90% opacity
+			NumericColors.BLACK,
+			Alpha.ALMOST_OPAQUE
 		);
-		dialogBg.setOrigin(0, 0).setScrollFactor(0, 0).setDepth(999998);
+		dialogBg
+			.setOrigin(0, 0)
+			.setScrollFactor(0, 0)
+			.setDepth(Depth.TOP - 1);
 		dialogBg.visible = false;
 
 		this.dialog = this.scene.add.nineslice(
@@ -312,8 +318,8 @@ export class NeverquestDialogBox {
 		(this.dialog as any).backgroundRect = dialogBg;
 
 		// Tint the dialog box black to make the paper texture dark
-		this.dialog.setTint(0x000000);
-		this.dialog.setScrollFactor(0, 0).setOrigin(0, 0).setDepth(999999);
+		this.dialog.setTint(NumericColors.BLACK);
+		this.dialog.setScrollFactor(0, 0).setOrigin(0, 0).setDepth(Depth.TOP);
 		this.dialog.visible = false;
 	}
 
@@ -328,7 +334,7 @@ export class NeverquestDialogBox {
 		);
 		this.leftPortraitImage.setScrollFactor(0, 0);
 		this.leftPortraitImage.setOrigin(0, 0);
-		this.leftPortraitImage.setDepth(999999);
+		this.leftPortraitImage.setDepth(Depth.TOP);
 		this.leftPortraitImage.visible = false;
 
 		this.rightPortraitImage = this.scene.add.image(
@@ -338,7 +344,7 @@ export class NeverquestDialogBox {
 		);
 		this.rightPortraitImage.setScrollFactor(0, 0);
 		this.rightPortraitImage.setOrigin(1, 0);
-		this.rightPortraitImage.setDepth(999999);
+		this.rightPortraitImage.setDepth(Depth.TOP);
 		this.rightPortraitImage.visible = false;
 
 		this.leftNameText = this.scene.add.text(
@@ -353,7 +359,7 @@ export class NeverquestDialogBox {
 		);
 		this.leftNameText.setScrollFactor(0, 0);
 		this.leftNameText.setOrigin(0, 0);
-		this.leftNameText.setDepth(999999);
+		this.leftNameText.setDepth(Depth.TOP);
 		this.leftNameText.visible = false;
 
 		this.rightNameText = this.scene.add.text(
@@ -368,7 +374,7 @@ export class NeverquestDialogBox {
 		);
 		this.rightNameText.setScrollFactor(0, 0);
 		this.rightNameText.setOrigin(1, 0);
-		this.rightNameText.setDepth(999999);
+		this.rightNameText.setDepth(Depth.TOP);
 		this.rightNameText.visible = false;
 	}
 
@@ -380,7 +386,7 @@ export class NeverquestDialogBox {
 			.image(this.cameraWidth - this.margin * 4, this.cameraHeight - this.margin * 4, this.actionButtonSpriteName)
 			.setScrollFactor(0, 0)
 			.setOrigin(0.5, 0.5)
-			.setDepth(999999);
+			.setDepth(Depth.TOP);
 
 		this.actionButton.visible = false;
 
@@ -388,7 +394,7 @@ export class NeverquestDialogBox {
 			.sprite(this.cameraWidth / 2, this.cameraHeight / 2, this.interactionSpriteName)
 			.setScrollFactor(0, 0)
 			.setOrigin(0.5, 0.5)
-			.setDepth(999999);
+			.setDepth(Depth.TOP);
 
 		this.interactionIcon.visible = false;
 		this.interactionIcon.anims.play(this.animationIteractionIconName);
@@ -760,16 +766,21 @@ export class NeverquestDialogBox {
 	 */
 	createText(): void {
 		console.log('[NeverquestDialogBox] createText called - creating new textMessage element');
-		this.dialog.textMessage = this.scene.add.text(this.margin * 2, this.dialog.y + this.margin * 2.5, '', {
-			wordWrap: {
-				width: this.textWidth,
-			},
-			fontSize: this.fontSize,
-			fontFamily: this.fontFamily,
-			color: this.fontColor.rgba,
-		}) as IDialogTextMessage;
+		this.dialog.textMessage = this.scene.add.text(
+			this.margin * 2,
+			this.dialog.y + this.margin * DialogBox.MARGIN_MULTIPLIER_TEXT_Y,
+			'',
+			{
+				wordWrap: {
+					width: this.textWidth,
+				},
+				fontSize: this.fontSize,
+				fontFamily: this.fontFamily,
+				color: this.fontColor.rgba,
+			}
+		) as IDialogTextMessage;
 
-		this.dialog.textMessage.setScrollFactor(0, 0).setDepth(999999).setOrigin(0, 0);
+		this.dialog.textMessage.setScrollFactor(0, 0).setDepth(Depth.TOP).setOrigin(0, 0);
 		console.log('[NeverquestDialogBox] textMessage created successfully', {
 			exists: !!this.dialog.textMessage,
 			active: this.dialog.textMessage?.active,
@@ -785,7 +796,7 @@ export class NeverquestDialogBox {
 		if (this.currentChat?.left) {
 			if (this.currentChat.leftName) {
 				this.leftNameText.visible = true;
-				this.leftNameText.setText(` ${this.currentChat.leftName}: `);
+				this.leftNameText.setText(DialogBoxMessages.LEFT_NAME_PREFIX(this.currentChat.leftName));
 			} else {
 				this.leftNameText.visible = false;
 			}
@@ -800,7 +811,7 @@ export class NeverquestDialogBox {
 		}
 
 		if (this.currentChat?.right) {
-			this.rightNameText.setText(` ${this.currentChat.rightName}: `);
+			this.rightNameText.setText(DialogBoxMessages.RIGHT_NAME_PREFIX(this.currentChat.rightName!));
 			this.rightPortraitImage.setTexture(this.currentChat.rightPortraitName!);
 			this.rightNameText.visible = true;
 			this.rightPortraitImage.visible = true;
@@ -813,10 +824,10 @@ export class NeverquestDialogBox {
 	 * Reset speaker opacity
 	 */
 	resetSpeakersAlpha(): void {
-		this.leftNameText.alpha = 0.5;
-		this.leftPortraitImage.alpha = 0.5;
-		this.rightNameText.alpha = 0.5;
-		this.rightPortraitImage.alpha = 0.5;
+		this.leftNameText.alpha = Alpha.HALF;
+		this.leftPortraitImage.alpha = Alpha.HALF;
+		this.rightNameText.alpha = Alpha.HALF;
+		this.rightPortraitImage.alpha = Alpha.HALF;
 	}
 
 	/**

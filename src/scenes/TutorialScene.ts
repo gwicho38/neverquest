@@ -6,6 +6,7 @@ import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
 import { NeverquestObjectMarker } from '../plugins/NeverquestObjectMarker';
 import { NeverquestWarp } from '../plugins/NeverquestWarp';
 import { Player } from '../entities/Player';
+import { CameraValues } from '../consts/Numbers';
 
 export class TutorialScene extends Phaser.Scene {
 	public player!: Player;
@@ -32,7 +33,7 @@ export class TutorialScene extends Phaser.Scene {
 		];
 		map.create();
 		this.cameras.main.startFollow(this.player.container);
-		this.cameras.main.setZoom(2.5);
+		this.cameras.main.setZoom(CameraValues.ZOOM_CLOSE);
 
 		// Note: Do not set camera bounds for infinite maps (tutorial uses infinite: true)
 		// Infinite maps have negative coordinate chunks and setting bounds would break movement

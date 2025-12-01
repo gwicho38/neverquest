@@ -141,7 +141,7 @@ describe('SettingScene', () => {
 			expect(scene.settingHeaderMarginTop).toBe(115);
 			expect(scene.settingHeaderText).toBe('Settings');
 			expect(scene.settingHeaderFontSize).toBe('18px');
-			expect(scene.settingHeaderFontFamily).toBe("'Press Start 2P'");
+			expect(scene.settingHeaderFontFamily).toBe('"Press Start 2P"');
 		});
 
 		it('should initialize close button properties', () => {
@@ -302,7 +302,7 @@ describe('SettingScene', () => {
 				'Audio:',
 				expect.objectContaining({
 					fontSize: '11px',
-					fontFamily: "'Press Start 2P'",
+					fontFamily: '"Press Start 2P"',
 				})
 			);
 		});

@@ -4,6 +4,8 @@
  */
 
 import Phaser from 'phaser';
+import { NumericColors } from '../consts/Colors';
+import { Alpha, Depth } from '../consts/Numbers';
 
 export interface LightSource {
 	x: number;
@@ -42,7 +44,7 @@ export interface LightingOptions {
 
 	/**
 	 * Light color tint (0xRRGGBB)
-	 * Default: 0xffaa66 (warm orange)
+	 * Default: NumericColors.ORANGE_LIGHT (warm orange)
 	 */
 	lightColor?: number;
 
@@ -94,11 +96,11 @@ export class NeverquestLightingManager {
 
 		// Set default options
 		this.options = {
-			ambientDarkness: options.ambientDarkness ?? 0.85,
+			ambientDarkness: options.ambientDarkness ?? Alpha.TILEMAP_DARK,
 			defaultLightRadius: options.defaultLightRadius ?? 100,
 			enableFlicker: options.enableFlicker ?? true,
 			flickerAmount: options.flickerAmount ?? 5,
-			lightColor: options.lightColor ?? 0xffaa66,
+			lightColor: options.lightColor ?? NumericColors.ORANGE_LIGHT,
 			smoothGradient: options.smoothGradient ?? true,
 			updateFrequency: options.updateFrequency ?? 1,
 		};
@@ -125,7 +127,7 @@ export class NeverquestLightingManager {
 
 		// Create lighting render texture (light sources)
 		this.lightingLayer = this.scene.add.renderTexture(0, 0, width * 2, height * 2);
-		this.lightingLayer.setDepth(1001); // Above darkness
+		this.lightingLayer.setDepth(Depth.UI_OVERLAY); // Above darkness
 		this.lightingLayer.setScrollFactor(0);
 
 		// Create mask graphics for rendering lights
@@ -199,7 +201,7 @@ export class NeverquestLightingManager {
 		const width = this.scene.scale.width;
 		const height = this.scene.scale.height;
 
-		this.darknessLayer.fillStyle(0x000000, this.options.ambientDarkness);
+		this.darknessLayer.fillStyle(NumericColors.BLACK, this.options.ambientDarkness);
 		this.darknessLayer.fillRect(0, 0, width, height);
 	}
 
@@ -381,8 +383,8 @@ export class NeverquestLightingManager {
 			x,
 			y,
 			radius,
-			color: options.color || 0xffaa66,
-			intensity: options.intensity || 0.8,
+			color: options.color || NumericColors.ORANGE_LIGHT,
+			intensity: options.intensity || Alpha.VERY_HIGH,
 			flicker: options.flicker ?? true,
 			flickerAmount: options.flickerAmount || 3,
 		};
@@ -399,7 +401,7 @@ export class NeverquestLightingManager {
 			x,
 			y,
 			radius,
-			color: options.color || 0xaaccff,
+			color: options.color || NumericColors.BLUE_SKY,
 			intensity: options.intensity || 1.0,
 			flicker: options.flicker ?? false,
 		};

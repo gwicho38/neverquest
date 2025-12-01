@@ -6,6 +6,8 @@
 
 import CONST from './const';
 import EventEmitter from 'eventemitter3';
+import { NumericColors } from '../../consts/Colors';
+import { Angles, Alpha, JoystickDebugLabels } from '../../consts/Numbers';
 
 /**
  * A `BaseStick` is the base virtual joystick class that all other types of stick extend from.
@@ -189,7 +191,7 @@ export default class BaseStick extends EventEmitter {
 		 * @type {number}
 		 * @private
 		 */
-		this._deadZone = distance * 0.1;
+		this._deadZone = distance * Alpha.LOW;
 
 		/**
 		 * Internal calculation var.
@@ -335,16 +337,16 @@ export default class BaseStick extends EventEmitter {
 		let quadrant = 1;
 
 		if (angleFull < 0) {
-			angleFull += 360;
+			angleFull += Angles.FULL;
 		}
 
-		if (angleFull >= 45 && angleFull < 135) {
+		if (angleFull >= Angles.DOWN_RIGHT && angleFull < Angles.DOWN_LEFT) {
 			quadrant = 1;
 			this.direction = Phaser.DOWN;
-		} else if (angleFull >= 135 && angleFull < 225) {
+		} else if (angleFull >= Angles.DOWN_LEFT && angleFull < Angles.UP_LEFT) {
 			quadrant = 2;
 			this.direction = Phaser.LEFT;
-		} else if (angleFull >= 225 && angleFull < 315) {
+		} else if (angleFull >= Angles.UP_LEFT && angleFull < Angles.UP_RIGHT) {
 			quadrant = 3;
 			this.direction = Phaser.UP;
 		} else {
@@ -354,7 +356,7 @@ export default class BaseStick extends EventEmitter {
 
 		this.angleFull = angleFull;
 		this.quadrant = quadrant;
-		this.octant = 45 * Math.round(angleFull / 45);
+		this.octant = Angles.DOWN_RIGHT * Math.round(angleFull / Angles.DOWN_RIGHT);
 	}
 
 	/**
@@ -597,13 +599,13 @@ export default class BaseStick extends EventEmitter {
 		if (graphics) {
 			graphics.clear();
 
-			graphics.lineStyle(2, 0xff0000);
+			graphics.lineStyle(2, NumericColors.RED);
 			graphics.strokeCircleShape(this.baseHitArea);
 
-			graphics.lineStyle(2, 0x00ff00);
+			graphics.lineStyle(2, NumericColors.GREEN);
 			graphics.strokeCircleShape(this.stickHitArea);
 
-			graphics.lineStyle(2, 0xffff00);
+			graphics.lineStyle(2, NumericColors.YELLOW);
 			graphics.strokeLineShape(this.line);
 		}
 
@@ -613,11 +615,11 @@ export default class BaseStick extends EventEmitter {
 				'ForceX: ' + this.forceX.toFixed(2),
 				'ForceY: ' + this.forceY.toFixed(2),
 				'',
-				'Rotation: ' + this.rotation.toFixed(2),
+				JoystickDebugLabels.ROTATION_PREFIX + this.rotation.toFixed(2),
 				'Angle: ' + this.angle.toFixed(2),
 				'',
-				'Distance: ' + this.distance,
-				'Quadrant: ' + this.quadrant,
+				JoystickDebugLabels.DISTANCE_PREFIX + this.distance,
+				JoystickDebugLabels.QUADRANT_PREFIX + this.quadrant,
 				'Octant: ' + this.octant,
 			]);
 		}

@@ -1,4 +1,7 @@
 import Phaser from 'phaser';
+import { HexColors, NumericColors } from '../../consts/Colors';
+import { UILabels, MessageKeywords } from '../../consts/Messages';
+import { Alpha } from '../../consts/Numbers';
 
 /**
  * Message log for displaying game events, combat results, and notifications
@@ -32,16 +35,16 @@ export class NeverquestMessageLog {
 
 		// Create semi-transparent background
 		this.background = this.scene.add.graphics();
-		this.background.fillStyle(0x000000, 0.7);
+		this.background.fillStyle(NumericColors.BLACK, Alpha.HIGH);
 		this.background.fillRoundedRect(0, 0, width, height, 8);
-		this.background.lineStyle(2, 0x444444, 1);
+		this.background.lineStyle(2, NumericColors.GRAY_DARK, 1);
 		this.background.strokeRoundedRect(0, 0, width, height, 8);
 		this.container.add(this.background);
 
 		// Create title text
-		const titleText = this.scene.add.text(this.padding, this.padding, '⚔️ Game Log', {
+		const titleText = this.scene.add.text(this.padding, this.padding, UILabels.GAME_LOG_TITLE_WITH_ICON, {
 			fontSize: '14px',
-			color: '#ffff00',
+			color: HexColors.YELLOW,
 			fontStyle: 'bold',
 		});
 		this.container.add(titleText);
@@ -50,7 +53,7 @@ export class NeverquestMessageLog {
 		for (let i = 0; i < this.maxMessages; i++) {
 			const messageText = this.scene.add.text(this.padding, this.padding + 25 + i * this.lineHeight, '', {
 				fontSize: '12px',
-				color: '#ffffff',
+				color: HexColors.WHITE,
 				wordWrap: { width: width - this.padding * 2 },
 			});
 			this.messages.push(messageText);
@@ -61,7 +64,7 @@ export class NeverquestMessageLog {
 	/**
 	 * Add a message to the log
 	 */
-	public log(message: string, color: string = '#ffffff'): void {
+	public log(message: string, _color: string = HexColors.WHITE): void {
 		// Add to history
 		this.messageHistory.push(message);
 
@@ -86,19 +89,19 @@ export class NeverquestMessageLog {
 	 * Get color based on message content
 	 */
 	private getMessageColor(message: string): string {
-		if (message.includes('defeated') || message.includes('victory')) {
-			return '#00ff00'; // Green for success
+		if (message.includes(MessageKeywords.DEFEATED) || message.includes(MessageKeywords.VICTORY)) {
+			return HexColors.GREEN; // Green for success
 		}
-		if (message.includes('damage') || message.includes('attack')) {
-			return '#ff4444'; // Red for combat
+		if (message.includes(MessageKeywords.DAMAGE) || message.includes(MessageKeywords.ATTACK)) {
+			return HexColors.RED_LIGHT; // Red for combat
 		}
-		if (message.includes('heal') || message.includes('restored')) {
-			return '#44ff44'; // Light green for healing
+		if (message.includes(MessageKeywords.HEAL) || message.includes(MessageKeywords.RESTORED)) {
+			return HexColors.GREEN_LIGHT; // Light green for healing
 		}
-		if (message.includes('level up') || message.includes('XP')) {
-			return '#ffff00'; // Yellow for progression
+		if (message.includes(MessageKeywords.LEVEL_UP) || message.includes(MessageKeywords.XP)) {
+			return HexColors.YELLOW; // Yellow for progression
 		}
-		return '#ffffff'; // White for general messages
+		return HexColors.WHITE; // White for general messages
 	}
 
 	/**
