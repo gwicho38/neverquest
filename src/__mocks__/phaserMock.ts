@@ -183,6 +183,7 @@ const Phaser = {
 				x: number;
 				y: number;
 				texture: any;
+				frame: any;
 				anims: any;
 				body: any;
 				flipX: boolean;
@@ -195,8 +196,10 @@ const Phaser = {
 					this.x = x || 0;
 					this.y = y || 0;
 					this.texture = { key: texture };
+					this.frame = { name: 'down' };
 					this.anims = {
 						play: jest.fn(),
+						exists: jest.fn(() => true),
 						currentAnim: { key: '' },
 						animationManager: {
 							exists: jest.fn(() => true),
@@ -208,6 +211,7 @@ const Phaser = {
 						width: 32,
 						height: 32,
 						immovable: false,
+						offset: { x: 0, y: 0 },
 						setVelocity: jest.fn(),
 						setSize: jest.fn(),
 						setOffset: jest.fn(),
@@ -267,6 +271,18 @@ const Phaser = {
 					}
 					return false;
 				}
+				play(key: string, ignoreIfPlaying?: boolean): this {
+					if (this.anims) {
+						this.anims.play(key, ignoreIfPlaying);
+					}
+					return this;
+				}
+				setTint(_color?: number): this {
+					return this;
+				}
+				clearTint(): this {
+					return this;
+				}
 				destroy(): void {
 					this._events.clear();
 					this.active = false;
@@ -286,6 +302,7 @@ const Phaser = {
 			x: number;
 			y: number;
 			texture: any;
+			frame: any;
 			anims: any;
 			flipX: boolean;
 			visible: boolean;
@@ -297,8 +314,10 @@ const Phaser = {
 				this.x = x || 0;
 				this.y = y || 0;
 				this.texture = { key: texture };
+				this.frame = { name: 'down' };
 				this.anims = {
 					play: jest.fn(),
+					exists: jest.fn(() => true),
 					currentAnim: { key: '' },
 					animationManager: {
 						exists: jest.fn(() => true),
@@ -357,6 +376,18 @@ const Phaser = {
 				}
 				return false;
 			}
+			play(key: string, ignoreIfPlaying?: boolean): this {
+				if (this.anims) {
+					this.anims.play(key, ignoreIfPlaying);
+				}
+				return this;
+			}
+			setTint(_color?: number): this {
+				return this;
+			}
+			clearTint(): this {
+				return this;
+			}
 		},
 		Container: class Container {
 			scene: any;
@@ -375,6 +406,7 @@ const Phaser = {
 				this.body = {
 					velocity: { x: 0, y: 0 },
 					maxSpeed: 100,
+					offset: { x: 0, y: 0 },
 					setVelocity: jest.fn(),
 					setSize: jest.fn(),
 					setOffset: jest.fn(),
@@ -388,6 +420,21 @@ const Phaser = {
 				return this;
 			}
 			remove(): this {
+				return this;
+			}
+			setDepth(_depth?: number): this {
+				return this;
+			}
+			setScrollFactor(_x?: number, _y?: number): this {
+				return this;
+			}
+			setOrigin(_x?: number, _y?: number): this {
+				return this;
+			}
+			setSize(_width?: number, _height?: number): this {
+				return this;
+			}
+			setPosition(_x?: number, _y?: number): this {
 				return this;
 			}
 			on(event: string, fn: (...args: any[]) => any, context?: any): this {
@@ -637,6 +684,14 @@ const Phaser = {
 					};
 					scene.add = {
 						existing: jest.fn((obj: any) => obj),
+						particles: jest.fn(() => ({
+							on: false,
+							start: jest.fn(),
+							stop: jest.fn(),
+							destroy: jest.fn(),
+							setDepth: jest.fn().mockReturnThis(),
+							setScrollFactor: jest.fn().mockReturnThis(),
+						})),
 						zone: jest.fn(() => {
 							const zone = {
 								x: 0,
@@ -645,7 +700,12 @@ const Phaser = {
 								height: 0,
 								body: {
 									velocity: { x: 0, y: 0 },
+									maxSpeed: 100,
+									offset: { x: 0, y: 0 },
 									enable: true,
+									setSize: jest.fn(),
+									setVelocity: jest.fn(),
+									setOffset: jest.fn(),
 								},
 								setSize: jest.fn().mockReturnThis(),
 								setOrigin: jest.fn().mockReturnThis(),
@@ -716,6 +776,7 @@ const Phaser = {
 										width: 32,
 										height: 32,
 										immovable: false,
+										offset: { x: 0, y: 0 },
 										setVelocity: jest.fn(),
 										setSize: jest.fn(),
 										setOffset: jest.fn(),
@@ -724,6 +785,43 @@ const Phaser = {
 									};
 								}
 								return obj;
+							}),
+							sprite: jest.fn(() => {
+								const sprite = {
+									x: 0,
+									y: 0,
+									alpha: 1,
+									depth: 0,
+									visible: true,
+									active: true,
+									body: {
+										velocity: { x: 0, y: 0 },
+										maxSpeed: 100,
+										width: 32,
+										height: 32,
+										offset: { x: 0, y: 0 },
+										setSize: jest.fn(),
+										setVelocity: jest.fn(),
+										setOffset: jest.fn(),
+										enable: true,
+									},
+									anims: {
+										play: jest.fn(),
+										exists: jest.fn(() => true),
+									},
+									setDepth: jest.fn().mockReturnThis(),
+									setOrigin: jest.fn().mockReturnThis(),
+									setScrollFactor: jest.fn().mockReturnThis(),
+									setVisible: jest.fn().mockReturnThis(),
+									setActive: jest.fn().mockReturnThis(),
+									setRotation: jest.fn().mockReturnThis(),
+									setPosition: jest.fn().mockReturnThis(),
+									destroy: jest.fn(),
+									on: jest.fn().mockReturnThis(),
+									off: jest.fn().mockReturnThis(),
+									once: jest.fn().mockReturnThis(),
+								};
+								return sprite;
 							}),
 							overlap: jest.fn(),
 							collider: jest.fn(),

@@ -22,6 +22,9 @@ describe('NeverquestConsumableManager', () => {
 					...config,
 				})),
 			},
+			scene: {
+				get: jest.fn().mockReturnValue(null),
+			},
 		};
 
 		// Create mock player

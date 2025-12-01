@@ -9,7 +9,10 @@ import { NeverquestDialogBox } from '../../plugins/NeverquestDialogBox';
 const mockScene: any = {
 	add: {
 		nineslice: jest.fn(() => ({
-			setScrollFactor: jest.fn(() => ({ setOrigin: jest.fn(() => ({ setDepth: jest.fn() })) })),
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			setTint: jest.fn().mockReturnThis(),
 			scaleX: 1,
 			scaleY: 1,
 			width: 800,
@@ -20,25 +23,44 @@ const mockScene: any = {
 			textMessage: null as any,
 		})),
 		image: jest.fn(() => ({
-			setScrollFactor: jest.fn(() => ({ setOrigin: jest.fn(() => ({ setDepth: jest.fn() })) })),
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
 			visible: false,
 			x: 0,
 			y: 0,
 			height: 50,
 		})),
 		text: jest.fn(() => ({
-			setScrollFactor: jest.fn(() => ({ setOrigin: jest.fn(() => ({ setDepth: jest.fn() })) })),
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
 			visible: false,
 			alpha: 0.5,
-			setText: jest.fn(),
+			setText: jest.fn().mockReturnThis(),
 			text: '',
-			setPosition: jest.fn(),
-			setStyle: jest.fn(),
+			setPosition: jest.fn().mockReturnThis(),
+			setStyle: jest.fn().mockReturnThis(),
 		})),
 		sprite: jest.fn(() => ({
-			setScrollFactor: jest.fn(() => ({ setOrigin: jest.fn(() => ({ setDepth: jest.fn() })) })),
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
 			visible: false,
 			anims: { play: jest.fn() },
+		})),
+		rectangle: jest.fn(() => ({
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			setFillStyle: jest.fn().mockReturnThis(),
+			setStrokeStyle: jest.fn().mockReturnThis(),
+			setTint: jest.fn().mockReturnThis(),
+			visible: false,
+			x: 0,
+			y: 0,
+			width: 800,
+			height: 150,
 		})),
 	},
 	cameras: {
@@ -46,7 +68,11 @@ const mockScene: any = {
 	},
 	input: {
 		keyboard: {
-			addKey: jest.fn(() => ({ isDown: false })),
+			addKey: jest.fn(() => ({
+				isDown: false,
+				on: jest.fn(),
+				off: jest.fn(),
+			})),
 		},
 		gamepad: null,
 	},
@@ -63,6 +89,12 @@ const mockScene: any = {
 	},
 	time: {
 		addEvent: jest.fn(),
+	},
+	sound: {
+		add: jest.fn(() => ({
+			volume: 0.5,
+			play: jest.fn(),
+		})),
 	},
 };
 
