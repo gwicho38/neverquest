@@ -46,6 +46,8 @@ const Phaser = {
 						buttons: [],
 						axes: [],
 						connected: true,
+						leftStick: { x: 0, y: 0 },
+						rightStick: { x: 0, y: 0 },
 						on: jest.fn(),
 						off: jest.fn(),
 						once: jest.fn(),
@@ -364,6 +366,7 @@ const Phaser = {
 					setVelocity: jest.fn(),
 					setSize: jest.fn(),
 					setOffset: jest.fn(),
+					setAcceleration: jest.fn(),
 					enable: true,
 				};
 				this.active = true;

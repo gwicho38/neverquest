@@ -1,8 +1,8 @@
 import { Enemy } from '../../entities/Enemy';
 import { ENTITIES } from '../../consts/Entities';
 
-// Use centralized Phaser mock
-jest.mock('phaser');
+// NOTE: Don't use jest.mock('phaser') - the mock is already set up via moduleNameMapper in jest.config.js!
+// Using jest.mock('phaser') would auto-mock and overwrite the properly configured mock.
 
 // Mock other dependencies
 jest.mock('../../plugins/NeverquestAnimationManager');
@@ -28,7 +28,24 @@ describe('Enemy', () => {
 			},
 			physics: {
 				add: {
-					existing: jest.fn(),
+					existing: jest.fn((obj: any) => {
+						// Set up body on the object like Phaser does
+						if (!obj.body) {
+							obj.body = {
+								velocity: { x: 0, y: 0 },
+								maxSpeed: 100,
+								width: 32,
+								height: 32,
+								immovable: false,
+								setVelocity: jest.fn(),
+								setSize: jest.fn(),
+								setOffset: jest.fn(),
+								setAcceleration: jest.fn(),
+								enable: true,
+							};
+						}
+						return obj;
+					}),
 				},
 				overlapCirc: jest.fn((): any[] => []),
 				overlap: jest.fn(),
@@ -44,6 +61,9 @@ describe('Enemy', () => {
 			},
 			anims: {
 				create: jest.fn(),
+			},
+			time: {
+				now: Date.now(),
 			},
 		};
 	});

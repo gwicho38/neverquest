@@ -1,7 +1,7 @@
 import { Item } from '../../entities/Item';
 
-// Use centralized Phaser mock
-jest.mock('phaser');
+// NOTE: Don't use jest.mock('phaser') - the mock is already set up via moduleNameMapper in jest.config.js!
+// Using jest.mock('phaser') would auto-mock and overwrite the properly configured mock.
 
 // Mock other dependencies
 jest.mock('../../plugins/NeverquestConsumableManager');

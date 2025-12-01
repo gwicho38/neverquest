@@ -40,6 +40,8 @@ describe('NeverquestMovement', () => {
 						buttons: [],
 						axes: [],
 						connected: true,
+						leftStick: { x: 0, y: 0 },
+						rightStick: { x: 0, y: 0 },
 					},
 					on: jest.fn(),
 					off: jest.fn(),
