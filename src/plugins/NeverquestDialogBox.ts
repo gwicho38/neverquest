@@ -257,7 +257,7 @@ export class NeverquestDialogBox {
 		// Add ESC key to close dialog
 		const escKey = this.scene.input.keyboard!.addKey(Phaser.Input.Keyboard.KeyCodes.ESC);
 		escKey.on('down', () => {
-			if (this.chat && this.chat.length > 0 && this.isDialogVisible) {
+			if (this.chat && this.chat.length > 0 && this.dialog.visible) {
 				console.log('[NeverquestDialogBox] ESC pressed - closing dialog');
 				this.hideDialog();
 			}

@@ -14,6 +14,7 @@ const Phaser = {
 		physics: any;
 		events: any;
 		sound: any;
+		sys: any;
 
 		constructor() {
 			this.add = {
@@ -152,6 +153,15 @@ const Phaser = {
 				})),
 				play: jest.fn(),
 				stopAll: jest.fn(),
+			};
+			this.sys = {
+				game: {
+					device: {
+						os: {
+							desktop: true,
+						},
+					},
+				},
 			};
 		}
 	},

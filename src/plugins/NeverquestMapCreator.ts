@@ -102,7 +102,7 @@ export class NeverquestMapCreator {
 			const currentLayer = this.map!.createLayer(layer.name, this.map!.tilesets);
 
 			// For infinite maps with negative coordinates, increase cull padding to ensure tiles render properly
-			if (this.map!.infinite) {
+			if ((this.map as any).infinite) {
 				currentLayer!.setCullPadding(4, 4); // Render 4 extra tiles in each direction
 			}
 
