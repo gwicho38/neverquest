@@ -1,0 +1,347 @@
+import { IQuestConfig } from '../../../types/QuestTypes';
+import { QuestObjectiveType } from '../../../models/QuestObjectiveType';
+
+/**
+ * NEVERQUEST - SIDE QUESTS
+ * Optional quests that provide additional content, rewards, and world-building.
+ */
+export const SIDE_QUESTS: IQuestConfig[] = [
+	{
+		id: 101,
+		name: "The Lumberjack's Axe",
+		description: 'A lumberjack lost his prized axe in the forest. Help him find it.',
+		questGiver: 'Lumberjack',
+		questGiverLocation: 'Overworld',
+		type: 'side',
+		level: 1,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: "Find the Lumberjack's Axe",
+				targetId: 50, // Lost Axe item
+				targetCount: 1,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 2,
+				type: QuestObjectiveType.DELIVER_ITEM,
+				description: 'Return the axe to the Lumberjack',
+				targetId: 50,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 75,
+			gold: 30,
+			items: [{ id: 1, count: 5 }],
+		},
+		dialogueStart: 'My axe! I dropped it somewhere in these woods. Can you help me find it?',
+		dialogueComplete: 'My axe! Thank you so much! Here, take this as thanks.',
+		repeatable: false,
+	},
+	{
+		id: 102,
+		name: 'Mushroom Collector',
+		description: 'An alchemist needs rare mushrooms for her potions. Collect them from the cave.',
+		questGiver: 'Alchemist',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 2,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: 'Collect 10 Glowing Mushrooms',
+				targetId: 51, // Glowing Mushroom item
+				targetCount: 10,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 100,
+			gold: 50,
+			items: [{ id: 52, count: 3 }], // Special potion
+		},
+		dialogueStart: 'I need glowing mushrooms for my potions. They grow in the cave - but beware the bats!',
+		dialogueComplete: 'Perfect specimens! Here, take these potions I brewed.',
+		repeatable: true,
+	},
+	{
+		id: 103,
+		name: 'Beast Hunter',
+		description: 'Prove yourself as a hunter by defeating various creatures.',
+		questGiver: 'Hunter',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 5,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.KILL_ENEMY,
+				description: 'Defeat 5 rats',
+				targetId: 1,
+				targetCount: 5,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 2,
+				type: QuestObjectiveType.KILL_ENEMY,
+				description: 'Defeat 5 bats',
+				targetId: 2,
+				targetCount: 5,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 3,
+				type: QuestObjectiveType.KILL_ENEMY,
+				description: 'Defeat 3 ogres',
+				targetId: 3,
+				targetCount: 3,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 300,
+			gold: 150,
+			items: [{ id: 60, count: 1 }], // Hunter's Bow
+		},
+		dialogueStart: 'Think you can hunt? Prove it by taking down rats, bats, and ogres!',
+		dialogueComplete: 'Impressive! You are a true hunter. Take this bow - you earned it.',
+		repeatable: false,
+	},
+	{
+		id: 104,
+		name: 'The Mysterious Stranger',
+		description: 'A hooded stranger offers you a challenge: survive 5 minutes in the dungeon without healing.',
+		questGiver: 'Mysterious Stranger',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 8,
+		prerequisites: [6], // Must have completed first dungeon
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.SURVIVE,
+				description: 'Survive 5 minutes in the dungeon without using healing items',
+				targetCount: 300, // 300 seconds
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 500,
+			gold: 300,
+			items: [{ id: 70, count: 1 }], // Shadow Cloak
+		},
+		dialogueStart: 'I challenge you: survive the dungeon for 5 minutes without healing. Can you do it?',
+		dialogueComplete: 'Remarkable! You have true skill. This cloak will serve you well.',
+		repeatable: false,
+	},
+	{
+		id: 105,
+		name: 'Lost and Found',
+		description: 'Villagers have lost various items. Help them recover their belongings.',
+		questGiver: 'Town Crier',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 3,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: "Find the Baker's Ring",
+				targetId: 53,
+				targetCount: 1,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 2,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: "Find the Farmer's Hat",
+				targetId: 54,
+				targetCount: 1,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 3,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: "Find the Blacksmith's Hammer",
+				targetId: 55,
+				targetCount: 1,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 200,
+			gold: 100,
+		},
+		dialogueStart: 'Several villagers have lost precious items. Can you help find them?',
+		dialogueComplete: 'You found everything! The villagers are so grateful!',
+		repeatable: false,
+	},
+
+	{
+		id: 106,
+		name: 'Training Day',
+		description: 'Complete basic training to improve your combat skills.',
+		questGiver: 'Training Master',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 1,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.KILL_ENEMY,
+				description: 'Defeat 3 training dummies',
+				targetId: 100, // Training dummy enemy
+				targetCount: 3,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 2,
+				type: QuestObjectiveType.LEVEL_UP,
+				description: 'Reach level 2',
+				targetCount: 2,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 50,
+			gold: 20,
+			items: [{ id: 1, count: 3 }],
+		},
+		dialogueStart: 'Ready to train? Show me what you can do!',
+		dialogueComplete: 'Good work! You show promise.',
+		repeatable: false,
+	},
+	{
+		id: 107,
+		name: 'Dungeon Delver',
+		description: 'Complete 5 different dungeons to prove your adventuring skills.',
+		questGiver: 'Explorer Guild Master',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 10,
+		prerequisites: [6],
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COMPLETE_DUNGEON,
+				description: 'Complete 5 dungeons',
+				targetCount: 5,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 1000,
+			gold: 500,
+			items: [{ id: 80, count: 1 }], // Dungeon Explorer Badge
+		},
+		dialogueStart: 'Think you can master the dungeons? Complete 5 and join our elite explorers!',
+		dialogueComplete: 'Incredible! You are now an elite member of the Explorer Guild!',
+		repeatable: false,
+	},
+	{
+		id: 108,
+		name: 'The Collector',
+		description: 'A wealthy collector seeks rare treasures. Find them in dungeons.',
+		questGiver: 'Wealthy Collector',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 7,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: 'Find 3 Ancient Artifacts',
+				targetId: 85,
+				targetCount: 3,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 400,
+			gold: 400,
+		},
+		dialogueStart: 'I seek ancient artifacts from the dungeons. Find them and I will pay handsomely!',
+		dialogueComplete: 'Marvelous! These will make fine additions to my collection!',
+		repeatable: true,
+	},
+	{
+		id: 109,
+		name: 'Speed Runner',
+		description: 'Complete a dungeon in under 5 minutes.',
+		questGiver: 'Speed Champion',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 12,
+		prerequisites: [6],
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COMPLETE_DUNGEON,
+				description: 'Complete a dungeon in under 5 minutes',
+				targetCount: 1,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 800,
+			gold: 300,
+			items: [{ id: 90, count: 1 }], // Speed Boots
+		},
+		dialogueStart: 'Speed is everything! Complete a dungeon in under 5 minutes and prove your worth!',
+		dialogueComplete: 'Lightning fast! These boots will make you even faster!',
+		repeatable: false,
+	},
+	{
+		id: 110,
+		name: 'Master Chef',
+		description: 'Collect ingredients and learn to cook powerful meals.',
+		questGiver: 'Master Chef',
+		questGiverLocation: 'Town',
+		type: 'side',
+		level: 4,
+		objectives: [
+			{
+				id: 1,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: 'Collect 5 Wild Berries',
+				targetId: 91,
+				targetCount: 5,
+				currentCount: 0,
+				completed: false,
+			},
+			{
+				id: 2,
+				type: QuestObjectiveType.COLLECT_ITEM,
+				description: 'Collect 3 Fresh Meat',
+				targetId: 92,
+				targetCount: 3,
+				currentCount: 0,
+				completed: false,
+			},
+		],
+		rewards: {
+			xp: 250,
+			gold: 100,
+			items: [{ id: 93, count: 5 }], // Cooked Meals
+		},
+		dialogueStart: 'Want to learn cooking? Bring me berries and meat, and I will teach you!',
+		dialogueComplete: 'Excellent ingredients! Here are some meals I prepared for you.',
+		repeatable: true,
+	},
+];
