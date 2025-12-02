@@ -4,6 +4,7 @@
 
 import Phaser from 'phaser';
 import { SpellWheelScene, SpellWheelSceneName } from '../../scenes/SpellWheelScene';
+import { getUnlockedSpells } from '../../consts/Spells';
 
 // Mock Phaser Math functions
 (Phaser.Math as any).DegToRad = jest.fn((deg: number) => deg * (Math.PI / 180));
@@ -213,8 +214,6 @@ describe('SpellWheelScene', () => {
 		});
 
 		it('should get unlocked spells', () => {
-			const { getUnlockedSpells } = require('../../consts/Spells');
-
 			scene.create();
 
 			expect(getUnlockedSpells).toHaveBeenCalled();

@@ -3,6 +3,12 @@
  */
 
 import { CaveScene } from '../../scenes/CaveScene';
+import { NeverquestMapCreator } from '../../plugins/NeverquestMapCreator';
+import { NeverquestWarp } from '../../plugins/NeverquestWarp';
+import { NeverquestObjectMarker } from '../../plugins/NeverquestObjectMarker';
+import { NeverquestEnvironmentParticles } from '../../plugins/NeverquestEnvironmentParticles';
+import { NeverquestEnemyZones } from '../../plugins/NeverquestEnemyZones';
+import { NeverquestSaveManager } from '../../plugins/NeverquestSaveManager';
 
 // Mock dependencies
 jest.mock('../../plugins/AnimatedTiles', () => jest.fn());
@@ -103,7 +109,7 @@ describe('CaveScene', () => {
 
 		(scene as any).input = {
 			keyboard: {
-				on: jest.fn().mockImplementation((event: string, handler: Function) => {
+				on: jest.fn().mockImplementation((_event: string, handler: (...args: any[]) => void) => {
 					mockKeyboardHandler = handler;
 				}),
 			},
@@ -155,8 +161,6 @@ describe('CaveScene', () => {
 		});
 
 		it('should create map with correct name', () => {
-			const { NeverquestMapCreator } = require('../../plugins/NeverquestMapCreator');
-
 			scene.create();
 
 			expect(NeverquestMapCreator).toHaveBeenCalledWith(scene, 'cave_dungeon');
@@ -175,16 +179,12 @@ describe('CaveScene', () => {
 		});
 
 		it('should create warps', () => {
-			const { NeverquestWarp } = require('../../plugins/NeverquestWarp');
-
 			scene.create();
 
 			expect(NeverquestWarp).toHaveBeenCalled();
 		});
 
 		it('should create interactive markers', () => {
-			const { NeverquestObjectMarker } = require('../../plugins/NeverquestObjectMarker');
-
 			scene.create();
 
 			expect(NeverquestObjectMarker).toHaveBeenCalled();
@@ -228,8 +228,6 @@ describe('CaveScene', () => {
 		});
 
 		it('should create environment particles', () => {
-			const { NeverquestEnvironmentParticles } = require('../../plugins/NeverquestEnvironmentParticles');
-
 			scene.create();
 
 			expect(NeverquestEnvironmentParticles).toHaveBeenCalled();
@@ -244,8 +242,6 @@ describe('CaveScene', () => {
 		});
 
 		it('should create enemy zones', () => {
-			const { NeverquestEnemyZones } = require('../../plugins/NeverquestEnemyZones');
-
 			scene.create();
 
 			expect(NeverquestEnemyZones).toHaveBeenCalled();
@@ -253,8 +249,6 @@ describe('CaveScene', () => {
 		});
 
 		it('should create save manager', () => {
-			const { NeverquestSaveManager } = require('../../plugins/NeverquestSaveManager');
-
 			scene.create();
 
 			expect(NeverquestSaveManager).toHaveBeenCalledWith(scene);

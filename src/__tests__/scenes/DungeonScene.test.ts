@@ -3,6 +3,14 @@
  */
 
 import { DungeonScene } from '../../scenes/DungeonScene';
+import { NeverquestDungeonGenerator } from '../../plugins/NeverquestDungeonGenerator';
+import { NeverquestPathfinding } from '../../plugins/NeverquestPathfinding';
+import { NeverquestLineOfSight } from '../../plugins/NeverquestLineOfSight';
+import { NeverquestFogWarManager } from '../../plugins/NeverquestFogWarManager';
+import { NeverquestLightingManager } from '../../plugins/NeverquestLightingManager';
+import { NeverquestSaveManager } from '../../plugins/NeverquestSaveManager';
+import { Player } from '../../entities/Player';
+import { Enemy } from '../../entities/Enemy';
 
 // Mock Phaser
 jest.mock('phaser', () => {
@@ -198,7 +206,7 @@ describe('DungeonScene', () => {
 				setZoom: jest.fn(),
 				setBounds: jest.fn(),
 				fade: jest.fn(),
-				once: jest.fn().mockImplementation((event: string, callback: Function) => {
+				once: jest.fn().mockImplementation((_event: string, callback: (...args: any[]) => void) => {
 					mockFadeCompleteCallback = callback;
 				}),
 			},
@@ -217,7 +225,7 @@ describe('DungeonScene', () => {
 
 		(scene as any).input = {
 			keyboard: {
-				on: jest.fn().mockImplementation((event: string, handler: Function) => {
+				on: jest.fn().mockImplementation((_event: string, handler: (...args: any[]) => void) => {
 					mockKeyboardHandler = handler;
 				}),
 			},
@@ -291,8 +299,6 @@ describe('DungeonScene', () => {
 
 	describe('create', () => {
 		it('should create dungeon generator', () => {
-			const { NeverquestDungeonGenerator } = require('../../plugins/NeverquestDungeonGenerator');
-
 			scene.create();
 
 			expect(NeverquestDungeonGenerator).toHaveBeenCalledWith(scene);
@@ -300,8 +306,6 @@ describe('DungeonScene', () => {
 		});
 
 		it('should initialize pathfinding system', () => {
-			const { NeverquestPathfinding } = require('../../plugins/NeverquestPathfinding');
-
 			scene.create();
 
 			expect(NeverquestPathfinding).toHaveBeenCalledWith(
@@ -317,16 +321,12 @@ describe('DungeonScene', () => {
 		});
 
 		it('should initialize line of sight system', () => {
-			const { NeverquestLineOfSight } = require('../../plugins/NeverquestLineOfSight');
-
 			scene.create();
 
 			expect(NeverquestLineOfSight).toHaveBeenCalled();
 		});
 
 		it('should create player at map center', () => {
-			const { Player } = require('../../entities/Player');
-
 			scene.create();
 
 			expect(Player).toHaveBeenCalledWith(
@@ -378,8 +378,6 @@ describe('DungeonScene', () => {
 		});
 
 		it('should create enemies in rooms', () => {
-			const { Enemy } = require('../../entities/Enemy');
-
 			scene.create();
 
 			// 2 rooms * 5 enemies per room = 10 enemies
@@ -396,8 +394,6 @@ describe('DungeonScene', () => {
 		});
 
 		it('should create fog of war', () => {
-			const { NeverquestFogWarManager } = require('../../plugins/NeverquestFogWarManager');
-
 			scene.create();
 
 			expect(NeverquestFogWarManager).toHaveBeenCalled();
@@ -405,8 +401,6 @@ describe('DungeonScene', () => {
 		});
 
 		it('should create lighting system', () => {
-			const { NeverquestLightingManager } = require('../../plugins/NeverquestLightingManager');
-
 			scene.create();
 
 			expect(NeverquestLightingManager).toHaveBeenCalled();
@@ -414,8 +408,6 @@ describe('DungeonScene', () => {
 		});
 
 		it('should create save manager', () => {
-			const { NeverquestSaveManager } = require('../../plugins/NeverquestSaveManager');
-
 			scene.create();
 
 			expect(NeverquestSaveManager).toHaveBeenCalledWith(scene);

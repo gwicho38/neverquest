@@ -3,6 +3,10 @@
  */
 
 import { TutorialScene } from '../../scenes/TutorialScene';
+import { NeverquestMapCreator } from '../../plugins/NeverquestMapCreator';
+import { NeverquestEnvironmentParticles } from '../../plugins/NeverquestEnvironmentParticles';
+import { NeverquestObjectMarker } from '../../plugins/NeverquestObjectMarker';
+import { NeverquestWarp } from '../../plugins/NeverquestWarp';
 
 // Mock dependencies
 jest.mock('../../plugins/AnimatedTiles', () => jest.fn());
@@ -93,8 +97,6 @@ describe('TutorialScene', () => {
 
 	describe('create', () => {
 		it('should create map with correct name', () => {
-			const { NeverquestMapCreator } = require('../../plugins/NeverquestMapCreator');
-
 			scene.create();
 
 			expect(NeverquestMapCreator).toHaveBeenCalledWith(scene);
@@ -113,8 +115,6 @@ describe('TutorialScene', () => {
 		});
 
 		it('should create environment particles', () => {
-			const { NeverquestEnvironmentParticles } = require('../../plugins/NeverquestEnvironmentParticles');
-
 			scene.create();
 
 			expect(NeverquestEnvironmentParticles).toHaveBeenCalledWith(scene, expect.anything());
@@ -135,16 +135,12 @@ describe('TutorialScene', () => {
 		});
 
 		it('should create interactive markers', () => {
-			const { NeverquestObjectMarker } = require('../../plugins/NeverquestObjectMarker');
-
 			scene.create();
 
 			expect(NeverquestObjectMarker).toHaveBeenCalled();
 		});
 
 		it('should create warps', () => {
-			const { NeverquestWarp } = require('../../plugins/NeverquestWarp');
-
 			scene.create();
 
 			expect(NeverquestWarp).toHaveBeenCalled();

@@ -3,6 +3,7 @@
  */
 
 import { VideoPlayerScene } from '../../scenes/VideoPlayerScene';
+import { NeverquestSoundManager } from '../../plugins/NeverquestSoundManager';
 
 // Mock dependencies
 jest.mock('../../plugins/NeverquestSoundManager', () => ({
@@ -108,8 +109,6 @@ describe('VideoPlayerScene', () => {
 
 	describe('preload', () => {
 		it('should create sound manager', () => {
-			const { NeverquestSoundManager } = require('../../plugins/NeverquestSoundManager');
-
 			scene.preload();
 
 			expect(NeverquestSoundManager).toHaveBeenCalledWith(scene);

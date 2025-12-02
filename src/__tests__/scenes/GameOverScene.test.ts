@@ -101,7 +101,7 @@ describe('GameOverScene', () => {
 		};
 
 		(scene as any).time = {
-			delayedCall: jest.fn().mockImplementation((delay: number, callback: Function) => {
+			delayedCall: jest.fn().mockImplementation((_delay: number, callback: (...args: any[]) => void) => {
 				callback();
 			}),
 		};
