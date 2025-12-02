@@ -33,6 +33,11 @@ const mockScene: any = {
 			},
 		},
 	},
+	events: {
+		on: jest.fn(),
+		off: jest.fn(),
+		emit: jest.fn(),
+	},
 };
 
 const mockPlayer: any = {
@@ -105,21 +110,26 @@ describe('NeverquestKeyboardMouseController Input Blocking', () => {
 		expect(mockBattleManager.atack).not.toHaveBeenCalled();
 	});
 
-	test('should allow Space key attack when player can attack and move', () => {
+	test('should allow Space key jump when player can jump and move', () => {
+		// Space is for jump, not attack - J key is for attack
+		mockPlayer.canJump = true;
+		mockPlayer.jump = jest.fn();
 		const keyEvent = { keyCode: 32 }; // Space key
 
 		keydownHandler(keyEvent);
 
-		expect(mockBattleManager.atack).toHaveBeenCalledWith(mockPlayer);
+		expect(mockPlayer.jump).toHaveBeenCalled();
 	});
 
-	test('should block Space key attack when dialog is active (canMove = false)', () => {
+	test('should block Space key jump when player cannot move (dialog active)', () => {
 		mockPlayer.canMove = false; // Simulates dialog active state
+		mockPlayer.canJump = true;
+		mockPlayer.jump = jest.fn();
 		const keyEvent = { keyCode: 32 }; // Space key
 
 		keydownHandler(keyEvent);
 
-		expect(mockBattleManager.atack).not.toHaveBeenCalled();
+		expect(mockPlayer.jump).not.toHaveBeenCalled();
 	});
 
 	test('should allow K key block when player can block and move', () => {

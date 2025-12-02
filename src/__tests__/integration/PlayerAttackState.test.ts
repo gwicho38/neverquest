@@ -89,13 +89,13 @@ describe('Player Attack State Integration Tests', () => {
 			battleManager.atack(player);
 			expect(player.canAtack).toBe(false);
 
-			// Wait for animation completion (1000ms timeout fallback)
+			// Wait for timeout fallback (2600ms) + buffer
 			setTimeout(() => {
 				expect(player.canAtack).toBe(true);
 				expect(player.isAtacking).toBe(false);
 				done();
-			}, 1100);
-		});
+			}, 2800);
+		}, 10000);
 
 		test('canAtack should remain true during movement', () => {
 			player.canAtack = true;
@@ -182,7 +182,7 @@ describe('Player Attack State Integration Tests', () => {
 			battleManager.atack(player);
 			expect(player.canAtack).toBe(false);
 
-			// Wait for completion
+			// Wait for completion (2600ms fallback + buffer)
 			setTimeout(() => {
 				expect(player.canAtack).toBe(true);
 
@@ -190,12 +190,12 @@ describe('Player Attack State Integration Tests', () => {
 				battleManager.atack(player);
 				expect(player.canAtack).toBe(false);
 
-				// Wait for completion
+				// Wait for completion (2600ms fallback + buffer)
 				setTimeout(() => {
 					expect(player.canAtack).toBe(true);
 					done();
-				}, 1100);
-			}, 1100);
-		}, 3000);
+				}, 2800);
+			}, 2800);
+		}, 10000);
 	});
 });

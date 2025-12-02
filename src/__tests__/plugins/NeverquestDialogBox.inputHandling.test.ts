@@ -4,6 +4,9 @@
  */
 
 import { NeverquestDialogBox } from '../../plugins/NeverquestDialogBox';
+import Phaser from 'phaser';
+
+// NOTE: Don't use jest.mock('phaser') - the mock is already set up via moduleNameMapper in jest.config.js!
 
 // Mock Phaser objects
 const mockScene: any = {
@@ -124,6 +127,9 @@ describe('NeverquestDialogBox Input Handling', () => {
 		// Reset mock calls
 		jest.clearAllMocks();
 
+		// Reset JustDown mock
+		(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(false);
+
 		dialogBox = new NeverquestDialogBox(mockScene, mockPlayer);
 		dialogBox.create();
 	});
@@ -134,8 +140,9 @@ describe('NeverquestDialogBox Input Handling', () => {
 		dialogBox.isOverlapingChat = true;
 		dialogBox.showRandomChat = true;
 
-		// Mock button press
+		// Mock button press (JustDown returns true for new press)
 		dialogBox.keyObj = { isDown: true };
+		(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(true);
 
 		// Simulate button press to open dialog
 		dialogBox.checkButtonDown();
@@ -163,8 +170,9 @@ describe('NeverquestDialogBox Input Handling', () => {
 		mockPlayer.canBlock = false;
 		mockPlayer.container.body.maxSpeed = 0;
 
-		// Mock button press
+		// Mock button press (JustDown returns true for new press)
 		dialogBox.keyObj = { isDown: true };
+		(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(true);
 
 		// Simulate button press to close dialog
 		dialogBox.checkButtonDown();

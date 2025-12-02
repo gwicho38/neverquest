@@ -132,7 +132,7 @@ export class NeverquestMapCreator {
 			);
 		}
 
-		if (this.collisionLayer) {
+		if (this.collisionLayer && (this.scene as any)[PlayerConfig.variableName]) {
 			this.scene.physics.add.collider(
 				(this.scene as any)[PlayerConfig.variableName].container,
 				this.collisionLayer

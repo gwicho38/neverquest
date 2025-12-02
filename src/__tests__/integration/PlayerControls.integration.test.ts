@@ -15,6 +15,9 @@ describe('Player Controls Integration Tests', () => {
 	beforeEach(() => {
 		// Create comprehensive mock scene
 		mockScene = {
+			scene: {
+				get: jest.fn().mockReturnValue(null),
+			},
 			add: {
 				text: jest.fn().mockReturnValue({
 					setText: jest.fn().mockReturnThis(),
@@ -43,6 +46,10 @@ describe('Player Controls Integration Tests', () => {
 					visible: false,
 					x: 0,
 					y: 0,
+					anims: {
+						play: jest.fn().mockReturnThis(),
+						stop: jest.fn().mockReturnThis(),
+					},
 				}),
 				nineslice: jest.fn().mockReturnValue({
 					setOrigin: jest.fn().mockReturnThis(),
@@ -50,11 +57,27 @@ describe('Player Controls Integration Tests', () => {
 					setPosition: jest.fn().mockReturnThis(),
 					setScrollFactor: jest.fn().mockReturnThis(),
 					setSize: jest.fn().mockReturnThis(),
+					setTint: jest.fn().mockReturnThis(),
 					destroy: jest.fn(),
 					visible: false,
 					x: 0,
 					y: 0,
 					scaleX: 1,
+				}),
+				rectangle: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					setPosition: jest.fn().mockReturnThis(),
+					setScrollFactor: jest.fn().mockReturnThis(),
+					setFillStyle: jest.fn().mockReturnThis(),
+					setStrokeStyle: jest.fn().mockReturnThis(),
+					setTint: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+					visible: false,
+					x: 0,
+					y: 0,
+					width: 800,
+					height: 150,
 				}),
 			},
 			input: {
@@ -64,6 +87,8 @@ describe('Player Controls Integration Tests', () => {
 					removeListener: jest.fn(),
 					addKey: jest.fn().mockReturnValue({
 						isDown: false,
+						on: jest.fn(),
+						off: jest.fn(),
 					}),
 				},
 			},
@@ -83,8 +108,14 @@ describe('Player Controls Integration Tests', () => {
 				}),
 			},
 			events: {
+				on: jest.fn(),
+				off: jest.fn(),
 				once: jest.fn(),
 				emit: jest.fn(),
+			},
+			scale: {
+				on: jest.fn(),
+				off: jest.fn(),
 			},
 			sound: {
 				add: jest.fn().mockReturnValue({
@@ -128,10 +159,19 @@ describe('Player Controls Integration Tests', () => {
 		battleManager = new NeverquestBattleManager();
 	});
 
+	// Helper to simulate opening dialog (button press + checkButtonDown)
+	const openDialogWithButtonPress = () => {
+		const original = dialogBox.checkButtonsJustPressed;
+		dialogBox.checkButtonsJustPressed = jest.fn().mockReturnValue(true);
+		dialogBox.checkButtonDown();
+		dialogBox.checkButtonsJustPressed = original;
+	};
+
 	describe('Dialog and Block Interaction', () => {
 		it('should not allow blocking during dialog', () => {
-			// Open dialog
+			// Queue dialog and simulate button press to open it
 			dialogBox.openDialogModal('Test message', jest.fn());
+			openDialogWithButtonPress();
 
 			// Verify player abilities are disabled
 			expect(mockPlayer.canMove).toBe(false);
@@ -151,8 +191,9 @@ describe('Player Controls Integration Tests', () => {
 			expect(mockPlayer.isBlocking).toBe(true);
 			expect(mockPlayer.canMove).toBe(false);
 
-			// Open dialog while blocking
+			// Queue dialog and simulate button press to open it while blocking
 			dialogBox.openDialogModal('Test message', jest.fn());
+			openDialogWithButtonPress();
 
 			// Stop blocking
 			battleManager.stopBlock(mockPlayer);
@@ -164,16 +205,14 @@ describe('Player Controls Integration Tests', () => {
 		});
 
 		it('should properly restore abilities after dialog closes', () => {
-			// Open and close dialog
+			// Queue dialog and open it
 			dialogBox.openDialogModal('Test message', jest.fn());
+			openDialogWithButtonPress();
 			expect(mockPlayer.canMove).toBe(false);
 
 			// Close dialog (simulate pressing space on final page)
-			dialogBox.chat = [{ message: 'Test', index: 0 }];
-			dialogBox.currentChat = dialogBox.chat[0];
-			dialogBox.dialog.visible = true;
 			dialogBox.dialog.textMessage = { active: true, text: 'Test' } as any;
-			dialogBox.checkButtonDown();
+			openDialogWithButtonPress(); // Press button to close
 
 			// Abilities should be restored
 			expect(mockPlayer.canMove).toBe(true);
@@ -184,16 +223,14 @@ describe('Player Controls Integration Tests', () => {
 
 	describe('Dialog State Management', () => {
 		it('should not reopen dialog after closing', () => {
-			// Open dialog
+			// Queue and open dialog
 			dialogBox.openDialogModal('Test message', jest.fn());
+			openDialogWithButtonPress();
 			expect(dialogBox.dialog.visible).toBe(true);
 
-			// Close dialog
-			dialogBox.dialog.visible = true;
+			// Close dialog by pressing button on final page
 			dialogBox.dialog.textMessage = { active: true, text: 'Test' } as any;
-			dialogBox.chat = [{ message: 'Test', index: 0 }];
-			dialogBox.currentChat = dialogBox.chat[0];
-			dialogBox.checkButtonDown();
+			openDialogWithButtonPress();
 
 			// Dialog should be closed and state cleaned up
 			expect(dialogBox.dialog.visible).toBe(false);

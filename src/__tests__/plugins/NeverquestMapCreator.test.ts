@@ -45,6 +45,8 @@ describe('NeverquestMapCreator', () => {
 					collider: jest.fn(),
 				},
 			},
+			// PlayerConfig.variableName = 'player', initially null
+			// Individual tests set this up when needed
 			player: null,
 		};
 
@@ -69,6 +71,15 @@ describe('NeverquestMapCreator', () => {
 	});
 
 	describe('create', () => {
+		beforeEach(() => {
+			// Set up spawn point and player mock for tests that call create()
+			// This is needed because collision layer setup requires player.container
+			const spawnPoint = { name: 'Spawn Point', x: 100, y: 200 };
+			mockMap.findObject.mockReturnValue(spawnPoint);
+			const mockPlayer = { container: {} };
+			(Player as any as jest.Mock).mockImplementation(() => mockPlayer);
+		});
+
 		it('should create tilemap', () => {
 			mapCreator.create();
 			expect(mockScene.make.tilemap).toHaveBeenCalledWith({ key: 'testmap' });
@@ -127,7 +138,7 @@ describe('NeverquestMapCreator', () => {
 			mapCreator.create();
 
 			expect(mockMap.findObject).toHaveBeenCalledWith('spawn', expect.any(Function));
-			expect(Player).toHaveBeenCalledWith(mockScene, 100, 200, 'player');
+			expect(Player).toHaveBeenCalledWith(mockScene, 100, 200, 'character', mockMap);
 			expect(mockScene.player).toBeDefined();
 		});
 
@@ -172,6 +183,14 @@ describe('NeverquestMapCreator', () => {
 	});
 
 	describe('tileset configuration', () => {
+		beforeEach(() => {
+			// Set up spawn point and player mock for tests that call create()
+			const spawnPoint = { name: 'Spawn Point', x: 100, y: 200 };
+			mockMap.findObject.mockReturnValue(spawnPoint);
+			const mockPlayer = { container: {} };
+			(Player as any as jest.Mock).mockImplementation(() => mockPlayer);
+		});
+
 		it('should have default tileset images', () => {
 			expect(mapCreator.tilesetImages).toHaveLength(3);
 			expect(mapCreator.tilesetImages[0].tilesetName).toBe('base');
@@ -187,6 +206,14 @@ describe('NeverquestMapCreator', () => {
 	});
 
 	describe('layer properties', () => {
+		beforeEach(() => {
+			// Set up spawn point and player mock for tests that call create()
+			const spawnPoint = { name: 'Spawn Point', x: 100, y: 200 };
+			mockMap.findObject.mockReturnValue(spawnPoint);
+			const mockPlayer = { container: {} };
+			(Player as any as jest.Mock).mockImplementation(() => mockPlayer);
+		});
+
 		it('should handle layers without properties', () => {
 			mockMap.layers = [
 				{

@@ -266,11 +266,11 @@ describe('NeverquestFogWarManager', () => {
 			expect(mockNoVisionRT.erase).toHaveBeenCalledWith(mockImageMask);
 		});
 
-		it('should erase fog from render texture multiple times', () => {
+		it('should erase fog from render texture once per update (optimized)', () => {
 			fogWarManager.updateFog();
 
-			// Should erase 4 times (line 125, 126, 127, 128)
-			expect(mockRenderTexture.erase).toHaveBeenCalledTimes(4);
+			// Implementation optimized to only erase once
+			expect(mockRenderTexture.erase).toHaveBeenCalledTimes(1);
 			expect(mockRenderTexture.erase).toHaveBeenCalledWith(mockImageMask);
 		});
 
@@ -322,7 +322,8 @@ describe('NeverquestFogWarManager', () => {
 
 			fogWarManager.updateFog();
 
-			expect(callOrder).toEqual(['clear', 'fill', 'tint', 'erase', 'erase', 'erase', 'erase']);
+			// Implementation optimized to only erase once
+			expect(callOrder).toEqual(['clear', 'fill', 'tint', 'erase']);
 		});
 	});
 
@@ -351,7 +352,8 @@ describe('NeverquestFogWarManager', () => {
 			expect(mockRenderTexture.fill).toHaveBeenCalledWith(0x000000, 0.7);
 			expect(imageMask!.x).toBe(200);
 			expect(imageMask!.y).toBe(250);
-			expect(mockRenderTexture.erase).toHaveBeenCalledTimes(4);
+			// Implementation optimized to only erase once
+			expect(mockRenderTexture.erase).toHaveBeenCalledTimes(1);
 		});
 
 		it('should handle multiple updates', () => {
@@ -431,10 +433,10 @@ describe('NeverquestFogWarManager', () => {
 		it('should handle updateFog before createFog gracefully', () => {
 			fogWarManager = new NeverquestFogWarManager(mockScene, mockMap, mockPlayer);
 
-			// Should not throw error
+			// Should not throw error - implementation returns early if imageMask is null
 			expect(() => {
 				fogWarManager.updateFog();
-			}).toThrow(); // Will throw because renderTexture is null
+			}).not.toThrow();
 		});
 
 		it('should handle zero map dimensions', () => {

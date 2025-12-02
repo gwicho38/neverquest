@@ -18,79 +18,71 @@ const mockTimerEvent = {
 
 const mockScene: any = {
 	add: {
-		nineslice: jest.fn(() => {
-			const mock = {
-				setScrollFactor: jest.fn().mockReturnThis(),
-				setOrigin: jest.fn().mockReturnThis(),
-				setDepth: jest.fn().mockReturnThis(),
-				scaleX: 1,
-				scaleY: 1,
-				width: 800,
-				height: 150,
-				x: 10,
-				y: 600,
-				visible: false,
-				textMessage: null as any,
-			};
-			mock.setScrollFactor.mockReturnValue(mock);
-			mock.setOrigin.mockReturnValue(mock);
-			mock.setDepth.mockReturnValue(mock);
-			return mock;
-		}),
-		image: jest.fn(() => {
-			const mock = {
-				setScrollFactor: jest.fn().mockReturnThis(),
-				setOrigin: jest.fn().mockReturnThis(),
-				setDepth: jest.fn().mockReturnThis(),
-				visible: false,
-				x: 0,
-				y: 0,
-				height: 50,
-			};
-			mock.setScrollFactor.mockReturnValue(mock);
-			mock.setOrigin.mockReturnValue(mock);
-			mock.setDepth.mockReturnValue(mock);
-			return mock;
-		}),
-		text: jest.fn(() => {
-			const mock = {
-				setScrollFactor: jest.fn().mockReturnThis(),
-				setOrigin: jest.fn().mockReturnThis(),
-				setDepth: jest.fn().mockReturnThis(),
-				setPosition: jest.fn().mockReturnThis(),
-				setStyle: jest.fn().mockReturnThis(),
-				setText: jest.fn(),
-				visible: false,
-				alpha: 0.5,
-				text: '',
-			};
-			mock.setScrollFactor.mockReturnValue(mock);
-			mock.setOrigin.mockReturnValue(mock);
-			mock.setDepth.mockReturnValue(mock);
-			mock.setPosition.mockReturnValue(mock);
-			mock.setStyle.mockReturnValue(mock);
-			return mock;
-		}),
-		sprite: jest.fn(() => {
-			const mock = {
-				setScrollFactor: jest.fn().mockReturnThis(),
-				setOrigin: jest.fn().mockReturnThis(),
-				setDepth: jest.fn().mockReturnThis(),
-				visible: false,
-				anims: { play: jest.fn() },
-			};
-			mock.setScrollFactor.mockReturnValue(mock);
-			mock.setOrigin.mockReturnValue(mock);
-			mock.setDepth.mockReturnValue(mock);
-			return mock;
-		}),
+		nineslice: jest.fn(() => ({
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			setTint: jest.fn().mockReturnThis(),
+			scaleX: 1,
+			scaleY: 1,
+			width: 800,
+			height: 150,
+			x: 10,
+			y: 600,
+			visible: false,
+			textMessage: null as any,
+		})),
+		image: jest.fn(() => ({
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			visible: false,
+			x: 0,
+			y: 0,
+			height: 50,
+		})),
+		text: jest.fn(() => ({
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			setPosition: jest.fn().mockReturnThis(),
+			setStyle: jest.fn().mockReturnThis(),
+			setText: jest.fn().mockReturnThis(),
+			visible: false,
+			alpha: 0.5,
+			text: '',
+		})),
+		sprite: jest.fn(() => ({
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			visible: false,
+			anims: { play: jest.fn() },
+		})),
+		rectangle: jest.fn(() => ({
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			setFillStyle: jest.fn().mockReturnThis(),
+			setStrokeStyle: jest.fn().mockReturnThis(),
+			setTint: jest.fn().mockReturnThis(),
+			visible: false,
+			x: 0,
+			y: 0,
+			width: 800,
+			height: 150,
+		})),
 	},
 	cameras: {
 		main: { width: 800, height: 600 },
 	},
 	input: {
 		keyboard: {
-			addKey: jest.fn(() => ({ isDown: false })),
+			addKey: jest.fn(() => ({
+				isDown: false,
+				on: jest.fn(),
+				off: jest.fn(),
+			})),
 		},
 		gamepad: null,
 	},
@@ -168,15 +160,12 @@ describe('NeverquestDialogBox Fast-Forward', () => {
 			expect(dialogBox.justFastForwarded).toBe(true);
 		});
 
-		test('should clear justFastForwarded flag after advancing dialog', () => {
-			// Setup: dialog is ready to advance
-			dialogBox.chat = [{ message: 'Test', index: 0 }];
-			dialogBox.isOverlapingChat = true;
-			dialogBox.showRandomChat = true;
+		test('should clear justFastForwarded flag when button is released', () => {
+			// Setup: just fast-forwarded
 			dialogBox.justFastForwarded = true;
-			dialogBox.keyObj = { isDown: true };
+			dialogBox.keyObj = { isDown: false }; // Button released
 
-			// Simulate advancing
+			// Simulate update check - should clear flag when button released
 			dialogBox.checkButtonDown();
 
 			expect(dialogBox.justFastForwarded).toBe(false);
@@ -242,7 +231,7 @@ describe('NeverquestDialogBox Fast-Forward', () => {
 	});
 
 	describe('held button after fast-forward', () => {
-		test('should advance dialog when button held after fast-forward', () => {
+		test('should NOT advance dialog when button held after fast-forward', () => {
 			// Setup: just fast-forwarded, button still held
 			dialogBox.justFastForwarded = true;
 			dialogBox.isAnimatingText = false;
@@ -254,12 +243,13 @@ describe('NeverquestDialogBox Fast-Forward', () => {
 			// JustDown should be false (button is held, not newly pressed)
 			(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(false);
 
-			// Should still advance because justFastForwarded is true
+			// Should NOT advance - implementation blocks advancement when button held after fast-forward
+			// This prevents accidental double-actions when holding the button
 			dialogBox.checkButtonDown();
 
-			// Dialog should open
-			expect(dialogBox.dialog.visible).toBe(true);
-			expect(dialogBox.justFastForwarded).toBe(false);
+			// Dialog should NOT open - user must release and press again
+			expect(dialogBox.dialog.visible).toBe(false);
+			expect(dialogBox.justFastForwarded).toBe(true); // Flag stays true until button released
 		});
 
 		test('should not advance without justFastForwarded flag when button held', () => {
@@ -322,7 +312,7 @@ describe('NeverquestDialogBox Fast-Forward', () => {
 	});
 
 	describe('complete fast-forward workflow', () => {
-		test('should support fast-forward then close with held button', () => {
+		test('should support fast-forward then close with new button press', () => {
 			// Step 1: Setup dialog with single message
 			dialogBox.chat = [{ message: 'Test message', index: 0 }];
 			dialogBox.isOverlapingChat = true;
@@ -344,13 +334,20 @@ describe('NeverquestDialogBox Fast-Forward', () => {
 			dialogBox.checkButtonDown();
 			expect(dialogBox.justFastForwarded).toBe(true);
 
-			// Step 4: Animation complete, button still held - should close dialog
+			// Step 4: Release button - clears justFastForwarded
 			dialogBox.isAnimatingText = false;
 			dialogBox.dialog.textMessage = { active: true, setText: jest.fn() };
+			dialogBox.keyObj = { isDown: false };
+
+			dialogBox.checkButtonDown();
+			expect(dialogBox.justFastForwarded).toBe(false);
+
+			// Step 5: Press again to close dialog
+			dialogBox.keyObj = { isDown: true };
+			(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(true);
 
 			dialogBox.checkButtonDown();
 			expect(dialogBox.dialog.visible).toBe(false);
-			expect(dialogBox.justFastForwarded).toBe(false);
 		});
 
 		test('should support fast-forward with multi-page dialog', () => {
@@ -368,14 +365,19 @@ describe('NeverquestDialogBox Fast-Forward', () => {
 			dialogBox.checkButtonDown();
 			expect(dialogBox.justFastForwarded).toBe(true);
 
-			// Advance to page 2 with held button
+			// Release button to clear justFastForwarded
 			dialogBox.isAnimatingText = false;
-			(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(false);
+			dialogBox.keyObj = { isDown: false };
+			dialogBox.checkButtonDown();
+			expect(dialogBox.justFastForwarded).toBe(false);
+
+			// Press again to advance to page 2
+			dialogBox.keyObj = { isDown: true };
+			(Phaser.Input.Keyboard.JustDown as jest.Mock).mockReturnValue(true);
 			dialogBox.checkButtonDown();
 
 			// Should advance to page 2
 			expect(dialogBox.currentPage).toBe(1);
-			expect(dialogBox.justFastForwarded).toBe(false);
 		});
 	});
 

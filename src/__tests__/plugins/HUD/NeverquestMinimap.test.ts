@@ -42,6 +42,7 @@ describe('NeverquestMinimap', () => {
 			clear: jest.fn(),
 			draw: jest.fn(),
 			destroy: jest.fn(),
+			setOrigin: jest.fn().mockReturnThis(),
 		};
 
 		// Mock container

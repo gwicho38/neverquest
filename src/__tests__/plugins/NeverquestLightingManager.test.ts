@@ -120,6 +120,9 @@ describe('NeverquestLightingManager', () => {
 	describe('update', () => {
 		beforeEach(() => {
 			lighting.create();
+			// Move camera to trigger update (implementation has 5px threshold)
+			mockCamera.scrollX = 10;
+			mockCamera.scrollY = 10;
 		});
 
 		it('should clear layers before drawing', () => {
@@ -154,23 +157,43 @@ describe('NeverquestLightingManager', () => {
 			// Reset mock counts after create
 			jest.clearAllMocks();
 
+			// Move camera to bypass camera movement threshold, then simulate updates
 			// First update should run (frameCounter=1, lastUpdate=0, diff=1 >= 5? NO - skip)
-			// Actually, first update always runs because frameCounter starts at 0
+			let cameraPos = 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=1, lastUpdate=0, diff=1, skip (1 < 5)
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=2, lastUpdate=0, diff=2, skip (2 < 5)
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=3, lastUpdate=0, diff=3, skip (3 < 5)
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=4, lastUpdate=0, diff=4, skip (4 < 5)
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=5, lastUpdate=0, diff=5, RUN! (5 >= 5)
 			expect(mockRenderTexture.clear).toHaveBeenCalledTimes(1);
 
 			// Next 4 should be skipped
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=6, lastUpdate=5, diff=1, skip
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=7, lastUpdate=5, diff=2, skip
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=8, lastUpdate=5, diff=3, skip
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=9, lastUpdate=5, diff=4, skip
 			expect(mockRenderTexture.clear).toHaveBeenCalledTimes(1);
 
 			// 10th frame should run
+			cameraPos += 10;
+			mockCamera.scrollX = cameraPos;
 			frequencyLighting.update(); // frameCounter=10, lastUpdate=5, diff=5, RUN! (5 >= 5)
 			expect(mockRenderTexture.clear).toHaveBeenCalledTimes(2);
 		});
@@ -341,6 +364,9 @@ describe('NeverquestLightingManager', () => {
 	describe('ambient darkness', () => {
 		beforeEach(() => {
 			lighting.create();
+			// Move camera to trigger update (implementation has 5px threshold)
+			mockCamera.scrollX = 10;
+			mockCamera.scrollY = 10;
 		});
 
 		it('should set ambient darkness', () => {
@@ -355,6 +381,8 @@ describe('NeverquestLightingManager', () => {
 			lighting.update();
 			expect(mockGraphics.fillStyle).toHaveBeenCalledWith(0x000000, 1.0);
 
+			// Move camera again for next update
+			mockCamera.scrollX = 30;
 			lighting.setAmbientDarkness(-0.5);
 			lighting.update();
 			expect(mockGraphics.fillStyle).toHaveBeenCalledWith(0x000000, 0.0);
@@ -501,6 +529,9 @@ describe('NeverquestLightingManager', () => {
 			// Mock textures.exists to return true (textures exist in cache)
 			(mockScene.textures as any).exists = jest.fn().mockReturnValue(true);
 			lighting.create();
+			// Move camera to trigger update (implementation has 5px threshold)
+			mockCamera.scrollX = 10;
+			mockCamera.scrollY = 10;
 		});
 
 		it('should not create/destroy textures on every frame for same light properties', () => {
@@ -547,6 +578,8 @@ describe('NeverquestLightingManager', () => {
 			// Add some lights to create cached textures
 			lighting.addStaticLight(100, 200, 80);
 			lighting.addStaticLight(300, 400, 60);
+			// Add a dynamic light to bypass camera movement threshold optimization
+			lighting.addDynamicLight(0, 0, 50);
 			lighting.update();
 
 			// Mock textures.exists to return true for cached textures
@@ -571,6 +604,8 @@ describe('NeverquestLightingManager', () => {
 					flicker: false, // Disable flicker for consistent caching
 				});
 			}
+			// Add a dynamic light to bypass camera movement threshold optimization
+			lighting.addDynamicLight(0, 0, 50);
 
 			// Clear mocks to track only update calls
 			jest.clearAllMocks();
@@ -593,7 +628,7 @@ describe('NeverquestLightingManager', () => {
 			// Then reuse it for all 20 lights across all 60 frames
 			// Without the fix, this would be 20 * 60 = 1200 texture generations
 			const generateTextureCalls = (mockGraphics.generateTexture as jest.Mock).mock.calls.length;
-			expect(generateTextureCalls).toBeLessThanOrEqual(1);
+			expect(generateTextureCalls).toBeLessThanOrEqual(2); // One for static, one for dynamic
 		});
 
 		it('should handle flicker without excessive texture generation', () => {

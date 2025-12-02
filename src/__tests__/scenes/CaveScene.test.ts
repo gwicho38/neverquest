@@ -1,0 +1,368 @@
+/**
+ * Tests for CaveScene
+ */
+
+import { CaveScene } from '../../scenes/CaveScene';
+
+// Mock dependencies
+jest.mock('../../plugins/AnimatedTiles', () => jest.fn());
+jest.mock('../../plugins/NeverquestEnvironmentParticles', () => ({
+	NeverquestEnvironmentParticles: jest.fn().mockImplementation(() => ({
+		create: jest.fn(),
+	})),
+}));
+jest.mock('../../plugins/NeverquestMapCreator', () => ({
+	NeverquestMapCreator: jest.fn().mockImplementation(() => ({
+		mapName: 'cave_dungeon',
+		tilesetImages: [] as any[],
+		create: jest.fn(),
+		map: {
+			widthInPixels: 1600,
+			heightInPixels: 1200,
+		},
+	})),
+}));
+jest.mock('../../plugins/NeverquestObjectMarker', () => ({
+	NeverquestObjectMarker: jest.fn().mockImplementation(() => ({
+		create: jest.fn(),
+	})),
+}));
+jest.mock('../../plugins/NeverquestWarp', () => ({
+	NeverquestWarp: jest.fn().mockImplementation(() => ({
+		createWarps: jest.fn(),
+	})),
+}));
+jest.mock('../../plugins/NeverquestEnemyZones', () => ({
+	NeverquestEnemyZones: jest.fn().mockImplementation(() => ({
+		create: jest.fn(),
+	})),
+}));
+jest.mock('../../plugins/NeverquestSaveManager', () => ({
+	NeverquestSaveManager: jest.fn().mockImplementation(() => ({
+		create: jest.fn(),
+		saveGame: jest.fn(),
+		loadGame: jest.fn(),
+		applySaveData: jest.fn(),
+		showSaveNotification: jest.fn(),
+	})),
+}));
+jest.mock('../../entities/Player', () => ({
+	Player: jest.fn(),
+}));
+jest.mock('../../consts/Numbers', () => ({
+	CameraValues: {
+		ZOOM_CLOSE: 2,
+	},
+	Alpha: {
+		MEDIUM_LIGHT: 0.5,
+	},
+}));
+jest.mock('../../consts/Messages', () => ({
+	SaveMessages: {
+		NO_CHECKPOINT_FOUND: 'No checkpoint found',
+	},
+}));
+
+describe('CaveScene', () => {
+	let scene: CaveScene;
+	let mockSound: any;
+	let mockKeyboardHandler: any;
+
+	beforeEach(() => {
+		jest.clearAllMocks();
+
+		mockSound = {
+			play: jest.fn(),
+			stop: jest.fn(),
+		};
+
+		scene = new CaveScene();
+
+		// Setup mock scene properties
+		(scene as any).load = {
+			scenePlugin: jest.fn(),
+		};
+
+		(scene as any).cameras = {
+			main: {
+				startFollow: jest.fn(),
+				setZoom: jest.fn(),
+				setBounds: jest.fn(),
+			},
+		};
+
+		(scene as any).scene = {
+			launch: jest.fn(),
+			get: jest.fn().mockReturnValue({}),
+		};
+
+		(scene as any).sound = {
+			volume: 1,
+			add: jest.fn().mockReturnValue(mockSound),
+		};
+
+		(scene as any).input = {
+			keyboard: {
+				on: jest.fn().mockImplementation((event: string, handler: Function) => {
+					mockKeyboardHandler = handler;
+				}),
+			},
+		};
+
+		(scene as any).sys = {
+			animatedTiles: {
+				init: jest.fn(),
+			},
+		};
+
+		// Mock player with container
+		(scene as any).player = {
+			container: {},
+		};
+	});
+
+	describe('constructor', () => {
+		it('should create scene with key CaveScene', () => {
+			const newScene = new CaveScene();
+			expect((newScene as any).sys?.settings?.key || 'CaveScene').toBe('CaveScene');
+		});
+
+		it('should initialize with null/empty properties', () => {
+			const newScene = new CaveScene();
+			expect(newScene.player).toBeNull();
+			expect(newScene.enemies).toEqual([]);
+		});
+	});
+
+	describe('preload', () => {
+		it('should load animated tiles plugin', () => {
+			scene.preload();
+
+			expect((scene as any).load.scenePlugin).toHaveBeenCalledWith(
+				'animatedTiles',
+				expect.anything(),
+				'animatedTiles',
+				'animatedTiles'
+			);
+		});
+	});
+
+	describe('create', () => {
+		it('should set camera zoom', () => {
+			scene.create();
+
+			expect((scene as any).cameras.main.setZoom).toHaveBeenCalledWith(2);
+		});
+
+		it('should create map with correct name', () => {
+			const { NeverquestMapCreator } = require('../../plugins/NeverquestMapCreator');
+
+			scene.create();
+
+			expect(NeverquestMapCreator).toHaveBeenCalledWith(scene, 'cave_dungeon');
+		});
+
+		it('should start camera following player', () => {
+			scene.create();
+
+			expect((scene as any).cameras.main.startFollow).toHaveBeenCalledWith((scene as any).player.container);
+		});
+
+		it('should set camera bounds to map size', () => {
+			scene.create();
+
+			expect((scene as any).cameras.main.setBounds).toHaveBeenCalledWith(0, 0, 1600, 1200);
+		});
+
+		it('should create warps', () => {
+			const { NeverquestWarp } = require('../../plugins/NeverquestWarp');
+
+			scene.create();
+
+			expect(NeverquestWarp).toHaveBeenCalled();
+		});
+
+		it('should create interactive markers', () => {
+			const { NeverquestObjectMarker } = require('../../plugins/NeverquestObjectMarker');
+
+			scene.create();
+
+			expect(NeverquestObjectMarker).toHaveBeenCalled();
+		});
+
+		it('should launch dialog scene', () => {
+			scene.create();
+
+			expect((scene as any).scene.launch).toHaveBeenCalledWith(
+				'DialogScene',
+				expect.objectContaining({
+					player: expect.anything(),
+					map: expect.anything(),
+					scene: expect.anything(),
+				})
+			);
+		});
+
+		it('should get joystick scene', () => {
+			scene.create();
+
+			expect((scene as any).scene.get).toHaveBeenCalledWith('JoystickScene');
+		});
+
+		it('should launch HUD scene', () => {
+			scene.create();
+
+			expect((scene as any).scene.launch).toHaveBeenCalledWith(
+				'HUDScene',
+				expect.objectContaining({
+					player: expect.anything(),
+					map: expect.anything(),
+				})
+			);
+		});
+
+		it('should initialize animated tiles', () => {
+			scene.create();
+
+			expect((scene as any).sys.animatedTiles.init).toHaveBeenCalled();
+		});
+
+		it('should create environment particles', () => {
+			const { NeverquestEnvironmentParticles } = require('../../plugins/NeverquestEnvironmentParticles');
+
+			scene.create();
+
+			expect(NeverquestEnvironmentParticles).toHaveBeenCalled();
+			expect(scene.particles.create).toHaveBeenCalled();
+		});
+
+		it('should set sound volume and play theme', () => {
+			scene.create();
+
+			expect((scene as any).sound.add).toHaveBeenCalledWith('dungeon_ambient', { loop: true });
+			expect(mockSound.play).toHaveBeenCalled();
+		});
+
+		it('should create enemy zones', () => {
+			const { NeverquestEnemyZones } = require('../../plugins/NeverquestEnemyZones');
+
+			scene.create();
+
+			expect(NeverquestEnemyZones).toHaveBeenCalled();
+			expect(scene.neverquestEnemyZones.create).toHaveBeenCalled();
+		});
+
+		it('should create save manager', () => {
+			const { NeverquestSaveManager } = require('../../plugins/NeverquestSaveManager');
+
+			scene.create();
+
+			expect(NeverquestSaveManager).toHaveBeenCalledWith(scene);
+			expect(scene.saveManager.create).toHaveBeenCalled();
+		});
+
+		it('should setup save keybinds', () => {
+			scene.create();
+
+			expect((scene as any).input.keyboard.on).toHaveBeenCalledWith('keydown', expect.any(Function));
+		});
+	});
+
+	describe('setupSaveKeybinds', () => {
+		beforeEach(() => {
+			scene.create();
+		});
+
+		it('should save game on Ctrl+S', () => {
+			const event = {
+				ctrlKey: true,
+				key: 's',
+				preventDefault: jest.fn(),
+			};
+
+			mockKeyboardHandler(event);
+
+			expect(event.preventDefault).toHaveBeenCalled();
+			expect(scene.saveManager.saveGame).toHaveBeenCalledWith(false);
+		});
+
+		it('should load game on Ctrl+L', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue({ playerHealth: 100 });
+
+			const event = {
+				ctrlKey: true,
+				key: 'l',
+				preventDefault: jest.fn(),
+			};
+
+			mockKeyboardHandler(event);
+
+			expect(event.preventDefault).toHaveBeenCalled();
+			expect(scene.saveManager.loadGame).toHaveBeenCalledWith(false);
+			expect(scene.saveManager.applySaveData).toHaveBeenCalled();
+		});
+
+		it('should not apply save data if load returns null on Ctrl+L', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue(null);
+
+			const event = {
+				ctrlKey: true,
+				key: 'l',
+				preventDefault: jest.fn(),
+			};
+
+			mockKeyboardHandler(event);
+
+			expect(scene.saveManager.applySaveData).not.toHaveBeenCalled();
+		});
+
+		it('should load checkpoint on F5', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue({ playerHealth: 100 });
+
+			const event = {
+				ctrlKey: false,
+				key: 'F5',
+				preventDefault: jest.fn(),
+			};
+
+			mockKeyboardHandler(event);
+
+			expect(event.preventDefault).toHaveBeenCalled();
+			expect(scene.saveManager.loadGame).toHaveBeenCalledWith(true);
+			expect(scene.saveManager.applySaveData).toHaveBeenCalled();
+		});
+
+		it('should show notification if no checkpoint on F5', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue(null);
+
+			const event = {
+				ctrlKey: false,
+				key: 'F5',
+				preventDefault: jest.fn(),
+			};
+
+			mockKeyboardHandler(event);
+
+			expect(scene.saveManager.showSaveNotification).toHaveBeenCalledWith('No checkpoint found', true);
+		});
+	});
+
+	describe('stopSceneMusic', () => {
+		it('should stop theme sound', () => {
+			scene.create();
+			scene.stopSceneMusic();
+
+			expect(mockSound.stop).toHaveBeenCalled();
+		});
+	});
+
+	describe('update', () => {
+		it('should be defined', () => {
+			expect(scene.update).toBeDefined();
+		});
+
+		it('should be callable without error', () => {
+			expect(() => scene.update()).not.toThrow();
+		});
+	});
+});

@@ -579,14 +579,14 @@ describe('MainMenuScene', () => {
 			expect(mockSound.add).toHaveBeenCalledWith('start_game');
 		});
 
-		it('should start MobileCheckScene on fade complete', () => {
+		it('should start MainScene on fade complete', () => {
 			scene.startGame();
 			const onceCall = mockCameras.main.once.mock.calls[0];
 			const fadeCompleteCallback = onceCall[1];
 
 			fadeCompleteCallback();
 
-			expect(mockScene.start).toHaveBeenCalledWith('MobileCheckScene');
+			expect(mockScene.start).toHaveBeenCalledWith('MainScene');
 		});
 
 		it('should stop current scene on fade complete', () => {

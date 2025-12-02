@@ -388,6 +388,9 @@ const Phaser = {
 			clearTint(): this {
 				return this;
 			}
+			setInteractive(): this {
+				return this;
+			}
 		},
 		Container: class Container {
 			scene: any;

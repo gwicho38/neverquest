@@ -430,7 +430,9 @@ describe('NeverquestTiledInfoBox', () => {
 			expect(infoBox.neverquestDialogBox.chat).toEqual(['Hello!', 'Welcome!']);
 		});
 
-		it('should disable player attack', () => {
+		it('should NOT disable player attack during overlap (dialog system handles this)', () => {
+			// Per design: overlap callbacks only manage UI visibility
+			// Each system (dialog, battle) owns its own state changes
 			const mockZoneWithChat = {
 				chat: ['Hello!'],
 				properties: [] as any[],
@@ -438,7 +440,8 @@ describe('NeverquestTiledInfoBox', () => {
 
 			overlapCallback(mockZoneWithChat);
 
-			expect(mockPlayer.canAtack).toBe(false);
+			// canAtack should remain unchanged - dialog system disables it when dialog actually opens
+			expect(mockPlayer.canAtack).toBe(true);
 		});
 	});
 

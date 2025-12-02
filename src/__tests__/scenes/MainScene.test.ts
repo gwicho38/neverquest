@@ -169,6 +169,53 @@ describe('MainScene', () => {
 			expect(freshScene.enemies).toEqual([]);
 			expect(freshScene.neverquestEnemyZones).toBeNull();
 			expect(freshScene.saveManager).toBeNull();
+			expect(freshScene.upsideDownPortal).toBeNull();
+			expect(freshScene.upsideDownPortalParticles).toBeNull();
+		});
+	});
+
+	describe('init()', () => {
+		let mockCameraFadeInCallback: (() => void) | null = null;
+
+		beforeEach(() => {
+			mockCameras.main.once = jest.fn().mockImplementation((event: string, callback: () => void) => {
+				mockCameraFadeInCallback = callback;
+			});
+			mockCameras.main.flash = jest.fn();
+		});
+
+		it('should handle fromUpsideDown flag', () => {
+			scene.init({ fromUpsideDown: true });
+
+			expect(mockCameras.main.once).toHaveBeenCalledWith('camerafadeincomplete', expect.any(Function));
+		});
+
+		it('should trigger flash on fade in complete when coming from UpsideDown', () => {
+			scene.init({ fromUpsideDown: true });
+			if (mockCameraFadeInCallback) {
+				mockCameraFadeInCallback();
+			}
+
+			expect(mockCameras.main.flash).toHaveBeenCalled();
+		});
+
+		it('should not setup flash when not coming from UpsideDown', () => {
+			scene.init({});
+
+			expect(mockCameras.main.once).not.toHaveBeenCalled();
+		});
+
+		it('should handle undefined data', () => {
+			expect(() => scene.init(undefined as any)).not.toThrow();
+		});
+
+		it('should handle null data', () => {
+			expect(() => scene.init(null as any)).not.toThrow();
+		});
+
+		it('should handle data without fromUpsideDown property', () => {
+			scene.init({} as any);
+			expect(mockCameras.main.once).not.toHaveBeenCalled();
 		});
 	});
 
