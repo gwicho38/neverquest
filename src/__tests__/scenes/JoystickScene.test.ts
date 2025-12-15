@@ -350,7 +350,6 @@ describe('JoystickScene', () => {
 			const resizeCall = mockScale.on.mock.calls.find((call: any) => call[0] === 'resize');
 			const handler = resizeCall[1];
 
-			const originalX = scene.buttonA.posX;
 			handler({ width: 1024, height: 768 });
 
 			// Position should be recalculated

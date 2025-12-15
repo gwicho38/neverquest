@@ -276,6 +276,40 @@ describe('NeverquestMovement', () => {
 
 			expect(mockPlayer.isRunning).toBe(false);
 		});
+
+		it('should return to original baseSpeed after toggling shift on then off (bug regression test)', () => {
+			// This test ensures that toggling shift on/off returns to the original baseSpeed
+			// Previously there was a bug where initial speed was 50 but baseSpeed was 200,
+			// so after toggling shift off, speed would be 200 instead of the original 50
+			const initialSpeed = mockPlayer.speed;
+			const baseSpeed = mockPlayer.baseSpeed;
+
+			// Initial speed should equal baseSpeed (this was the bug fix)
+			expect(initialSpeed).toBe(baseSpeed);
+
+			// Toggle running ON (shift down)
+			movement.shiftKey.isDown = true;
+			movement.updateRunningState();
+
+			expect(mockPlayer.isRunning).toBe(true);
+			expect(mockPlayer.speed).toBe(mockPlayer.runSpeed);
+
+			// Release shift (shift up) - this frame shift is still tracked as down
+			movement.shiftKey.isDown = false;
+			movement.updateRunningState();
+
+			// wasShiftDown is now false, so next shift press will toggle
+			expect(mockPlayer.isRunning).toBe(true); // Still running, shift was just released
+
+			// Toggle running OFF (shift down again)
+			movement.shiftKey.isDown = true;
+			movement.updateRunningState();
+
+			expect(mockPlayer.isRunning).toBe(false);
+			// Speed should return to baseSpeed, which should equal the original initial speed
+			expect(mockPlayer.speed).toBe(baseSpeed);
+			expect(mockPlayer.speed).toBe(initialSpeed);
+		});
 	});
 
 	describe('move', () => {
@@ -420,6 +454,7 @@ describe('NeverquestMovement', () => {
 				isRunning: undefined,
 			};
 
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const newMovement = new NeverquestMovement(mockScene, playerWithoutRunning);
 
 			expect(playerWithoutRunning.isRunning).toBe(false);

@@ -5,7 +5,6 @@
 import {
 	SPELLS,
 	SpellType,
-	SpellDefinition,
 	getUnlockedSpells,
 	getSpellsByType,
 	getSpellById,

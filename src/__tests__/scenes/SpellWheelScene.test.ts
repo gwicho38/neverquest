@@ -110,8 +110,10 @@ describe('SpellWheelScene', () => {
 			fillStyle: jest.fn().mockReturnThis(),
 			fillRect: jest.fn().mockReturnThis(),
 			fillCircle: jest.fn().mockReturnThis(),
+			fillRoundedRect: jest.fn().mockReturnThis(),
 			lineStyle: jest.fn().mockReturnThis(),
 			strokeCircle: jest.fn().mockReturnThis(),
+			strokeRoundedRect: jest.fn().mockReturnThis(),
 			setDepth: jest.fn().mockReturnThis(),
 			setAlpha: jest.fn().mockReturnThis(),
 			clear: jest.fn().mockReturnThis(),
@@ -185,9 +187,9 @@ describe('SpellWheelScene', () => {
 			expect(SpellWheelSceneName).toBe('SpellWheelScene');
 		});
 
-		it('should initialize with empty segments', () => {
+		it('should initialize with empty slots', () => {
 			const newScene = new SpellWheelScene();
-			expect((newScene as any).segments).toEqual([]);
+			expect((newScene as any).slots).toEqual([]);
 			expect((newScene as any).selectedIndex).toBe(-1);
 			expect((newScene as any).isOpen).toBe(false);
 		});
@@ -244,6 +246,9 @@ describe('SpellWheelScene', () => {
 			scene.create();
 
 			expect((scene as any).input.on).toHaveBeenCalledWith('pointermove', expect.any(Function));
+			expect((scene as any).input.keyboard.on).toHaveBeenCalledWith('keydown-M', expect.any(Function));
+			expect((scene as any).input.keyboard.on).toHaveBeenCalledWith('keydown-N', expect.any(Function));
+			expect((scene as any).input.keyboard.on).toHaveBeenCalledWith('keydown-COMMA', expect.any(Function));
 			expect((scene as any).input.keyboard.on).toHaveBeenCalledWith('keyup-L', expect.any(Function));
 			expect((scene as any).input.keyboard.on).toHaveBeenCalledWith('keyup-ESC', expect.any(Function));
 		});
@@ -288,11 +293,11 @@ describe('SpellWheelScene', () => {
 		});
 
 		it('should return selected spell when valid selection', () => {
-			// Segments are created in create()
+			// Slots are created in create()
 			(scene as any).selectedIndex = 0;
 
-			// For this test we need to check that segments exist
-			expect((scene as any).segments.length).toBeGreaterThan(0);
+			// For this test we need to check that slots exist
+			expect((scene as any).slots.length).toBeGreaterThan(0);
 		});
 	});
 

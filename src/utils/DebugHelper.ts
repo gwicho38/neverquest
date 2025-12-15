@@ -302,15 +302,23 @@ class DebugHelper {
 								x: camera.scrollX || 0,
 								y: camera.scrollY || 0,
 								zoom: camera.zoom || 1,
-								bounds: camera._bounds?.width
+								bounds: (
+									camera as unknown as {
+										_bounds?: { x: number; y: number; width: number; height: number };
+									}
+								)._bounds?.width
 									? {
-											x: camera._bounds.x || 0,
-											y: camera._bounds.y || 0,
-											width: camera._bounds.width || 0,
-											height: camera._bounds.height || 0,
+											x: (camera as unknown as { _bounds: { x: number } })._bounds.x || 0,
+											y: (camera as unknown as { _bounds: { y: number } })._bounds.y || 0,
+											width:
+												(camera as unknown as { _bounds: { width: number } })._bounds.width ||
+												0,
+											height:
+												(camera as unknown as { _bounds: { height: number } })._bounds.height ||
+												0,
 										}
 									: null,
-								followingPlayer: !!camera._follow,
+								followingPlayer: !!(camera as unknown as { _follow?: unknown })._follow,
 							}
 						: {
 								x: 0,
@@ -657,7 +665,7 @@ class DebugHelper {
 					right: bounds.right,
 				};
 			}
-		} catch (e) {
+		} catch {
 			playerBounds = ErrorMessages.ERROR_GETTING_BOUNDS;
 		}
 

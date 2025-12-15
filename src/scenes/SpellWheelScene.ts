@@ -1,7 +1,8 @@
 /**
  * SpellWheelScene - Radial spell selection UI
- * Similar to weapon wheel in RDR2
  * Activated by holding 'L' key
+ * Select spells with M (left), N (center), comma (right)
+ * Release L to cast selected spell
  */
 
 import Phaser from 'phaser';
@@ -13,12 +14,21 @@ import { SpellEffects } from '../plugins/effects/SpellEffects';
 
 export const SpellWheelSceneName = 'SpellWheelScene';
 
-interface SpellSegment {
+// Spell positions in the horizontal bar
+export enum SpellPosition {
+	LEFT = 0, // M key
+	CENTER = 1, // N key
+	RIGHT = 2, // , (comma) key
+}
+
+interface SpellSlot {
 	spell: SpellDefinition;
+	position: SpellPosition;
 	graphics: Phaser.GameObjects.Graphics;
 	icon: Phaser.GameObjects.Text;
-	startAngle: number;
-	endAngle: number;
+	keyLabel: Phaser.GameObjects.Text;
+	x: number;
+	y: number;
 }
 
 export class SpellWheelScene extends Phaser.Scene {
@@ -28,15 +38,20 @@ export class SpellWheelScene extends Phaser.Scene {
 
 	private overlay!: Phaser.GameObjects.Graphics;
 	private wheelContainer!: Phaser.GameObjects.Container;
-	private segments: SpellSegment[] = [];
+	private slots: SpellSlot[] = [];
 	private centerCircle!: Phaser.GameObjects.Graphics;
 	private selectedSpellText!: Phaser.GameObjects.Text;
 	private manaCostText!: Phaser.GameObjects.Text;
 	private descriptionText!: Phaser.GameObjects.Text;
+	private instructionsText!: Phaser.GameObjects.Text;
 
 	private selectedIndex: number = -1;
 	private spells: SpellDefinition[] = [];
 	private isOpen: boolean = false;
+
+	// Slot positions relative to center (up, right, down, left)
+	private readonly SLOT_RADIUS = 100;
+	private readonly SLOT_SIZE = 60;
 
 	constructor() {
 		super({ key: SpellWheelSceneName });
@@ -48,7 +63,9 @@ export class SpellWheelScene extends Phaser.Scene {
 	}
 
 	create(): void {
-		this.spells = getUnlockedSpells();
+		// Get first 3 unlocked spells (excluding heal)
+		const allUnlocked = getUnlockedSpells().filter((spell) => spell.id !== 'heal');
+		this.spells = allUnlocked.slice(0, 3);
 		this.spellEffects = new SpellEffects(this.parentScene);
 
 		this.createOverlay();
@@ -81,16 +98,16 @@ export class SpellWheelScene extends Phaser.Scene {
 		// Create center circle
 		this.centerCircle = this.add.graphics();
 		this.centerCircle.fillStyle(SpellColors.WHEEL_CENTER, Alpha.OPAQUE);
-		this.centerCircle.fillCircle(0, 0, SpellWheelValues.WHEEL_INNER_RADIUS);
-		this.centerCircle.lineStyle(2, SpellColors.WHEEL_BORDER, Alpha.OPAQUE);
-		this.centerCircle.strokeCircle(0, 0, SpellWheelValues.WHEEL_INNER_RADIUS);
+		this.centerCircle.fillCircle(0, 0, 35);
+		this.centerCircle.lineStyle(3, SpellColors.WHEEL_BORDER, Alpha.OPAQUE);
+		this.centerCircle.strokeCircle(0, 0, 35);
 		this.wheelContainer.add(this.centerCircle);
 
-		// Create spell segments
-		this.createSegments();
+		// Create spell slots in cross pattern
+		this.createSpellSlots();
 
 		// Create info text elements (below the wheel)
-		this.selectedSpellText = this.add.text(0, SpellWheelValues.WHEEL_RADIUS + 30, '', {
+		this.selectedSpellText = this.add.text(0, this.SLOT_RADIUS + 60, '', {
 			fontSize: FontSizes.LARGE,
 			color: HexColors.WHITE,
 			fontStyle: 'bold',
@@ -99,7 +116,7 @@ export class SpellWheelScene extends Phaser.Scene {
 		this.selectedSpellText.setOrigin(0.5);
 		this.wheelContainer.add(this.selectedSpellText);
 
-		this.manaCostText = this.add.text(0, SpellWheelValues.WHEEL_RADIUS + 55, '', {
+		this.manaCostText = this.add.text(0, this.SLOT_RADIUS + 85, '', {
 			fontSize: FontSizes.MEDIUM,
 			color: HexColors.BLUE,
 			align: 'center',
@@ -107,7 +124,7 @@ export class SpellWheelScene extends Phaser.Scene {
 		this.manaCostText.setOrigin(0.5);
 		this.wheelContainer.add(this.manaCostText);
 
-		this.descriptionText = this.add.text(0, SpellWheelValues.WHEEL_RADIUS + 80, '', {
+		this.descriptionText = this.add.text(0, this.SLOT_RADIUS + 110, '', {
 			fontSize: FontSizes.SMALL,
 			color: HexColors.GRAY_LIGHT,
 			align: 'center',
@@ -117,95 +134,89 @@ export class SpellWheelScene extends Phaser.Scene {
 		this.wheelContainer.add(this.descriptionText);
 
 		// Instructions text at top
-		const instructionsText = this.add.text(
+		this.instructionsText = this.add.text(
 			0,
-			-(SpellWheelValues.WHEEL_RADIUS + 40),
-			'Move mouse to select, release L to cast',
+			-(this.SLOT_RADIUS + 50),
+			'Hold L + Press M/N/, to select\nRelease L to cast',
 			{
 				fontSize: FontSizes.SMALL,
 				color: HexColors.GRAY_LIGHT,
 				align: 'center',
 			}
 		);
-		instructionsText.setOrigin(0.5);
-		this.wheelContainer.add(instructionsText);
+		this.instructionsText.setOrigin(0.5);
+		this.wheelContainer.add(this.instructionsText);
 	}
 
-	private createSegments(): void {
-		if (this.spells.length === 0) return;
+	private createSpellSlots(): void {
+		// Position offsets for each slot (horizontal layout: left, center, right)
+		// Keys: M (left), N (center), , (comma - right) - L is reserved for open/close/cast
+		const positions = [
+			{ x: -this.SLOT_RADIUS, y: 0, key: 'M', position: SpellPosition.LEFT },
+			{ x: 0, y: 0, key: 'N', position: SpellPosition.CENTER },
+			{ x: this.SLOT_RADIUS, y: 0, key: ',', position: SpellPosition.RIGHT },
+		];
 
-		const segmentAngle = 360 / this.spells.length;
-		const gapAngle = SpellWheelValues.SEGMENT_GAP;
+		positions.forEach((pos, index) => {
+			if (index >= this.spells.length) return;
 
-		this.spells.forEach((spell, index) => {
-			const startAngle = index * segmentAngle - 90 + gapAngle / 2;
-			const endAngle = (index + 1) * segmentAngle - 90 - gapAngle / 2;
+			const spell = this.spells[index];
 
-			// Create segment graphics
+			// Create slot background
 			const graphics = this.add.graphics();
-			this.drawSegment(graphics, startAngle, endAngle, spell, false);
+			this.drawSlot(graphics, pos.x, pos.y, spell, false);
 			this.wheelContainer.add(graphics);
 
-			// Create spell icon (using emoji/text as placeholder)
-			const iconAngle = ((startAngle + endAngle) / 2) * (Math.PI / 180);
-			const iconX = Math.cos(iconAngle) * SpellWheelValues.SEGMENT_ICON_OFFSET;
-			const iconY = Math.sin(iconAngle) * SpellWheelValues.SEGMENT_ICON_OFFSET;
-
+			// Create spell icon
 			const iconSymbol = this.getSpellIcon(spell);
-			const icon = this.add.text(iconX, iconY, iconSymbol, {
-				fontSize: '24px',
+			const icon = this.add.text(pos.x, pos.y - 5, iconSymbol, {
+				fontSize: '28px',
 				color: spell.color,
 			});
 			icon.setOrigin(0.5);
 			this.wheelContainer.add(icon);
 
-			this.segments.push({
+			// Create key label
+			const keyLabel = this.add.text(pos.x, pos.y + 20, `[${pos.key}]`, {
+				fontSize: FontSizes.SMALL,
+				color: HexColors.WHITE,
+			});
+			keyLabel.setOrigin(0.5);
+			this.wheelContainer.add(keyLabel);
+
+			this.slots.push({
 				spell,
+				position: pos.position,
 				graphics,
 				icon,
-				startAngle,
-				endAngle,
+				keyLabel,
+				x: pos.x,
+				y: pos.y,
 			});
 		});
 	}
 
-	private drawSegment(
+	private drawSlot(
 		graphics: Phaser.GameObjects.Graphics,
-		startAngle: number,
-		endAngle: number,
+		x: number,
+		y: number,
 		spell: SpellDefinition,
-		isHovered: boolean
+		isSelected: boolean
 	): void {
 		graphics.clear();
 
-		const fillColor = isHovered ? getSpellTypeColorNumeric(spell.type) : SpellColors.WHEEL_SEGMENT;
-		const fillAlpha = isHovered ? Alpha.HIGH : Alpha.MEDIUM_HIGH;
+		const fillColor = isSelected ? getSpellTypeColorNumeric(spell.type) : SpellColors.WHEEL_SEGMENT;
+		const fillAlpha = isSelected ? Alpha.HIGH : Alpha.MEDIUM_HIGH;
+		const strokeWidth = isSelected ? 4 : 2;
 
 		graphics.fillStyle(fillColor, fillAlpha);
-		graphics.lineStyle(2, SpellColors.WHEEL_BORDER, Alpha.OPAQUE);
+		graphics.fillRoundedRect(x - this.SLOT_SIZE / 2, y - this.SLOT_SIZE / 2, this.SLOT_SIZE, this.SLOT_SIZE, 12);
 
-		// Draw pie slice
-		graphics.beginPath();
-		graphics.moveTo(0, 0);
-		graphics.arc(
-			0,
-			0,
-			SpellWheelValues.WHEEL_RADIUS,
-			Phaser.Math.DegToRad(startAngle),
-			Phaser.Math.DegToRad(endAngle),
-			false
-		);
-		graphics.closePath();
-		graphics.fillPath();
-		graphics.strokePath();
-
-		// Cut out inner circle
-		graphics.fillStyle(SpellColors.WHEEL_CENTER, Alpha.OPAQUE);
-		graphics.fillCircle(0, 0, SpellWheelValues.WHEEL_INNER_RADIUS);
+		graphics.lineStyle(strokeWidth, isSelected ? 0xffffff : SpellColors.WHEEL_BORDER, Alpha.OPAQUE);
+		graphics.strokeRoundedRect(x - this.SLOT_SIZE / 2, y - this.SLOT_SIZE / 2, this.SLOT_SIZE, this.SLOT_SIZE, 12);
 	}
 
 	private getSpellIcon(spell: SpellDefinition): string {
-		// Use Unicode symbols as placeholder icons
 		switch (spell.id) {
 			case 'fireball':
 				return '🔥';
@@ -233,12 +244,20 @@ export class SpellWheelScene extends Phaser.Scene {
 	}
 
 	private setupInput(): void {
-		// Track mouse movement for selection
-		this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
-			this.updateSelection(pointer);
+		// Keyboard selection (M, N, comma) - L is reserved for open/close/cast
+		this.input.keyboard!.on('keydown-M', () => {
+			this.selectByPosition(SpellPosition.LEFT);
 		});
 
-		// Listen for L key release to cast
+		this.input.keyboard!.on('keydown-N', () => {
+			this.selectByPosition(SpellPosition.CENTER);
+		});
+
+		this.input.keyboard!.on('keydown-COMMA', () => {
+			this.selectByPosition(SpellPosition.RIGHT);
+		});
+
+		// L key release to cast selected spell (L is used to open/close spell wheel)
 		this.input.keyboard!.on('keyup-L', () => {
 			this.castSelectedSpell();
 		});
@@ -247,92 +266,71 @@ export class SpellWheelScene extends Phaser.Scene {
 		this.input.keyboard!.on('keyup-ESC', () => {
 			this.close(false);
 		});
+
+		// Also support mouse movement for selection (optional)
+		this.input.on('pointermove', (pointer: Phaser.Input.Pointer) => {
+			this.updateSelectionFromMouse(pointer);
+		});
 	}
 
-	private updateSelection(pointer: Phaser.Input.Pointer): void {
+	private selectByPosition(position: SpellPosition): void {
+		const slotIndex = this.slots.findIndex((slot) => slot.position === position);
+		if (slotIndex !== -1) {
+			this.setSelection(slotIndex);
+		}
+	}
+
+	private updateSelectionFromMouse(pointer: Phaser.Input.Pointer): void {
 		const { width, height } = this.cameras.main;
 		const centerX = width / 2;
 		const centerY = height / 2;
 
-		// Calculate angle from center
 		const dx = pointer.x - centerX;
 		const dy = pointer.y - centerY;
 		const distance = Math.sqrt(dx * dx + dy * dy);
 
-		// Only select if within wheel bounds
-		if (distance < SpellWheelValues.WHEEL_INNER_RADIUS || distance > SpellWheelValues.WHEEL_RADIUS * 1.5) {
-			this.clearSelection();
+		// Only select if within reasonable vertical distance (horizontal bar)
+		if (Math.abs(dy) > this.SLOT_SIZE || distance > this.SLOT_RADIUS + this.SLOT_SIZE) {
 			return;
 		}
 
-		// Calculate angle in degrees (adjusted for top = 0)
-		let angle = Phaser.Math.RadToDeg(Math.atan2(dy, dx));
-		if (angle < -90) angle += 360; // Normalize to match segment angles
-
-		// Find which segment the angle falls into
-		let newSelectedIndex = -1;
-		for (let i = 0; i < this.segments.length; i++) {
-			const segment = this.segments[i];
-			let start = segment.startAngle;
-			let end = segment.endAngle;
-
-			// Handle wraparound
-			if (start > end) {
-				if (angle >= start || angle <= end) {
-					newSelectedIndex = i;
-					break;
-				}
-			} else if (angle >= start && angle <= end) {
-				newSelectedIndex = i;
-				break;
-			}
+		// Map horizontal position to slot (3 slots: left, center, right)
+		let position: SpellPosition;
+		if (dx < -this.SLOT_SIZE / 2) {
+			position = SpellPosition.LEFT; // M
+		} else if (dx > this.SLOT_SIZE / 2) {
+			position = SpellPosition.RIGHT; // ,
+		} else {
+			position = SpellPosition.CENTER; // N
 		}
 
-		if (newSelectedIndex !== this.selectedIndex) {
-			this.setSelection(newSelectedIndex);
-		}
+		this.selectByPosition(position);
 	}
 
 	private setSelection(index: number): void {
 		// Clear previous selection
-		if (this.selectedIndex >= 0 && this.selectedIndex < this.segments.length) {
-			const prevSegment = this.segments[this.selectedIndex];
-			this.drawSegment(
-				prevSegment.graphics,
-				prevSegment.startAngle,
-				prevSegment.endAngle,
-				prevSegment.spell,
-				false
-			);
-			prevSegment.icon.setScale(1);
+		if (this.selectedIndex >= 0 && this.selectedIndex < this.slots.length) {
+			const prevSlot = this.slots[this.selectedIndex];
+			this.drawSlot(prevSlot.graphics, prevSlot.x, prevSlot.y, prevSlot.spell, false);
+			prevSlot.icon.setScale(1);
 		}
 
 		this.selectedIndex = index;
 
 		// Highlight new selection
-		if (index >= 0 && index < this.segments.length) {
-			const segment = this.segments[index];
-			this.drawSegment(segment.graphics, segment.startAngle, segment.endAngle, segment.spell, true);
-			segment.icon.setScale(1.3);
+		if (index >= 0 && index < this.slots.length) {
+			const slot = this.slots[index];
+			this.drawSlot(slot.graphics, slot.x, slot.y, slot.spell, true);
+			slot.icon.setScale(1.3);
 
 			// Update info text
-			this.selectedSpellText.setText(segment.spell.name);
-			this.selectedSpellText.setColor(segment.spell.color);
-			this.manaCostText.setText(`Mana: ${segment.spell.manaCost}`);
-			this.descriptionText.setText(segment.spell.description);
+			this.selectedSpellText.setText(slot.spell.name);
+			this.selectedSpellText.setColor(slot.spell.color);
+			this.manaCostText.setText(`Mana: ${slot.spell.manaCost}`);
+			this.descriptionText.setText(slot.spell.description);
 		} else {
 			this.clearInfoText();
 		}
-	}
-
-	private clearSelection(): void {
-		if (this.selectedIndex >= 0 && this.selectedIndex < this.segments.length) {
-			const segment = this.segments[this.selectedIndex];
-			this.drawSegment(segment.graphics, segment.startAngle, segment.endAngle, segment.spell, false);
-			segment.icon.setScale(1);
-		}
-		this.selectedIndex = -1;
-		this.clearInfoText();
 	}
 
 	private clearInfoText(): void {
@@ -342,36 +340,40 @@ export class SpellWheelScene extends Phaser.Scene {
 	}
 
 	private castSelectedSpell(): void {
-		if (this.selectedIndex >= 0 && this.selectedIndex < this.segments.length) {
-			const spell = this.segments[this.selectedIndex].spell;
-
-			// Check mana (placeholder - player doesn't have mana yet)
-			// if (this.player.mana < spell.manaCost) {
-			//     this.showNotEnoughMana();
-			//     return;
-			// }
+		if (this.selectedIndex >= 0 && this.selectedIndex < this.slots.length) {
+			const spell = this.slots[this.selectedIndex].spell;
 
 			// Cast the spell effect at player position
 			const playerX = this.player.container.x;
 			const playerY = this.player.container.y;
 
-			// Get mouse position for targeted spells
-			const pointer = this.input.activePointer;
-			const targetX = pointer.worldX || playerX + 100;
-			const targetY = pointer.worldY || playerY;
+			// Get mouse position for targeted spells from the parent scene's camera
+			// This is necessary because SpellWheelScene is a UI overlay with its own camera
+			const parentPointer = this.parentScene.input.activePointer;
+			const parentCamera = this.parentScene.cameras.main;
+
+			// Convert screen coordinates to world coordinates using the parent scene's camera
+			let targetX = playerX + 100; // Default fallback
+			let targetY = playerY;
+
+			if (parentPointer && parentCamera) {
+				const worldPoint = parentCamera.getWorldPoint(parentPointer.x, parentPointer.y);
+				targetX = worldPoint.x;
+				targetY = worldPoint.y;
+			}
 
 			// Call the appropriate effect method
 			this.castSpellEffect(spell, playerX, playerY, targetX, targetY);
 
-			// Log the cast
-			console.log(`Cast ${spell.name} (${spell.manaCost} mana)`);
+			console.log(
+				`[SpellWheel] Cast ${spell.name} at player (${playerX}, ${playerY}) targeting (${targetX}, ${targetY})`
+			);
 		}
 
 		this.close(true);
 	}
 
 	private castSpellEffect(spell: SpellDefinition, x: number, y: number, targetX: number, targetY: number): void {
-		// Call the appropriate method on SpellEffects based on spell.effectMethod
 		switch (spell.effectMethod) {
 			case 'fireball':
 				this.spellEffects.fireball(x, y);
@@ -391,7 +393,6 @@ export class SpellWheelScene extends Phaser.Scene {
 				this.spellEffects.lightningBolt(x, y, targetX, targetY);
 				break;
 			case 'chainLightning':
-				// For chain lightning, we'd need nearby enemies
 				this.spellEffects.lightningBolt(x, y, targetX, targetY);
 				break;
 			case 'heal':
@@ -463,8 +464,8 @@ export class SpellWheelScene extends Phaser.Scene {
 	 * Get the currently selected spell (for external use)
 	 */
 	public getSelectedSpell(): SpellDefinition | null {
-		if (this.selectedIndex >= 0 && this.selectedIndex < this.segments.length) {
-			return this.segments[this.selectedIndex].spell;
+		if (this.selectedIndex >= 0 && this.selectedIndex < this.slots.length) {
+			return this.slots[this.selectedIndex].spell;
 		}
 		return null;
 	}

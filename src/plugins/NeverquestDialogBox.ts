@@ -25,12 +25,11 @@
  */
 
 import Phaser from 'phaser';
-import { NineSlice } from 'phaser3-nineslice';
 import { Player } from '../entities/Player';
 import { NeverquestTypingSoundManager } from './NeverquestTypingSoundManager';
 import { NeverquestVideoOpener } from './NeverquestVideoOpener';
 import { NumericColors } from '../consts/Colors';
-import { Alpha, Scale, AnimationTiming, Depth, FontFamilies, DialogBox } from '../consts/Numbers';
+import { Alpha, Depth, FontFamilies, DialogBox } from '../consts/Numbers';
 import { DialogBoxMessages } from '../consts/Messages';
 
 // Interface for dialog chat data
@@ -53,13 +52,21 @@ export interface IDialogTextMessage extends Phaser.GameObjects.Text {
 	setStyle(style: Phaser.Types.GameObjects.Text.TextStyle): this;
 }
 
-// Interface for dialog object
-export interface IDialog extends NineSlice {
+// Interface for dialog object (extends Phaser GameObject with NineSlice-like properties)
+export interface IDialog extends Phaser.GameObjects.GameObject {
 	textMessage?: IDialogTextMessage;
 	visible: boolean;
 	x: number;
 	y: number;
 	scaleX: number;
+	scaleY: number;
+	width: number;
+	height: number;
+	setTint(color: number): this;
+	setScrollFactor(x: number, y: number): this;
+	setOrigin(x: number, y?: number): this;
+	setDepth(value: number): this;
+	setSize(width: number, height: number): this;
 }
 
 /**

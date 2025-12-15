@@ -156,6 +156,29 @@ describe('NeverquestKeyboardMouseController', () => {
 			expect(controller.neverquestBattleManager.stopBlock).toHaveBeenCalledWith(mockPlayer);
 		});
 
+		it('should open spell wheel when L key is held (keyCode 76)', () => {
+			// Mock the timer to immediately execute the callback
+			const timerCallback = jest.fn();
+			mockScene.time.delayedCall.mockImplementation((_delay: number, callback: () => void) => {
+				timerCallback.mockImplementation(callback);
+				return { destroy: jest.fn() };
+			});
+
+			const keydownCallback = mockScene.input.keyboard.on.mock.calls.find(
+				(call: any) => call[0] === 'keydown'
+			)[1];
+
+			keydownCallback({ keyCode: 76 });
+
+			// Simulate the timer firing (hold threshold reached)
+			timerCallback();
+
+			expect(mockScene.scene.launch).toHaveBeenCalledWith('SpellWheelScene', {
+				player: mockPlayer,
+				parentScene: mockScene,
+			});
+		});
+
 		it('should not attack while swimming (J key)', () => {
 			mockPlayer.isSwimming = true;
 			const keydownCallback = mockScene.input.keyboard.on.mock.calls.find(
@@ -166,7 +189,7 @@ describe('NeverquestKeyboardMouseController', () => {
 			expect(controller.neverquestBattleManager.atack).not.toHaveBeenCalled();
 		});
 
-		it('should not block while swimming', () => {
+		it('should not block while swimming (K key)', () => {
 			mockPlayer.isSwimming = true;
 			const keydownCallback = mockScene.input.keyboard.on.mock.calls.find(
 				(call: any) => call[0] === 'keydown'

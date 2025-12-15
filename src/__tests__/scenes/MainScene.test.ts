@@ -15,6 +15,9 @@ jest.mock('../../plugins/NeverquestEnvironmentParticles');
 jest.mock('../../plugins/NeverquestEnemyZones');
 jest.mock('../../plugins/NeverquestSaveManager');
 jest.mock('../../plugins/AnimatedTiles');
+jest.mock('../../scenes/SpellWheelScene', () => ({
+	SpellWheelSceneName: 'SpellWheelScene',
+}));
 
 describe('MainScene', () => {
 	let scene: MainScene;
@@ -556,7 +559,7 @@ describe('MainScene', () => {
 			const callOrder: string[] = [];
 
 			// Track creation order
-			(NeverquestMapCreator as jest.Mock).mockImplementation((s) => {
+			(NeverquestMapCreator as jest.Mock).mockImplementation((_s) => {
 				callOrder.push('MapCreator');
 				return {
 					create: jest.fn(() => callOrder.push('MapCreator.create')),

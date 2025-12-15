@@ -58,7 +58,7 @@ jest.mock('phaser', () => {
 			},
 			GameObjects: {
 				Sprite: MockSprite,
-				Container: jest.fn(function (scene: any, x: number, y: number, children?: any[]) {
+				Container: jest.fn(function (scene: any, x: number, y: number, _children?: any[]) {
 					return {
 						scene,
 						x,
@@ -214,6 +214,13 @@ describe('Player', () => {
 		expect(player.attributes.health).toBeGreaterThan(0);
 		expect(player.attributes.level).toBeGreaterThanOrEqual(1);
 		expect(player.speed).toBeGreaterThan(0);
+	});
+
+	test('should initialize speed equal to baseSpeed (bug regression test)', () => {
+		// This test ensures initial speed matches baseSpeed
+		// Previously there was a bug where initial speed was 50 but baseSpeed was 200,
+		// causing speed to increase after toggling shift on/off
+		expect(player.speed).toBe(player.baseSpeed);
 	});
 
 	test('should have movement capabilities', () => {

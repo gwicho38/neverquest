@@ -62,6 +62,7 @@ describe('InfoBox', () => {
 		});
 
 		it('should call createBackground and createInformation', () => {
+			// eslint-disable-next-line @typescript-eslint/no-unused-vars
 			const infoBox = new InfoBox(mockScene, 100, 100, 200, 150);
 
 			expect(mockScene.add.nineslice).toHaveBeenCalled();

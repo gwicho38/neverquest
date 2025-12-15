@@ -1,5 +1,4 @@
 import { AttributesManager } from '../../../plugins/attributes/AttributesManager';
-import { ATTRIBUTES_CONST } from '../../../consts/AttributesConst';
 import { BUFF_TYPES } from '../../../consts/DB_SEED/BuffTypes';
 
 describe('AttributesManager', () => {
@@ -336,11 +335,8 @@ describe('AttributesManager', () => {
 
 			manager.calculateAtack();
 
-			const strMultiplier = Math.floor(10 / ATTRIBUTES_CONST.ATK.DIVIDER01); // 1
-			const atackBonus = strMultiplier * ATTRIBUTES_CONST.ATK.BONUS_MULTIPLIER; // 2
-			const levelMultiplier = Math.floor(1 / ATTRIBUTES_CONST.ATK.DIVIDER02); // 0
-			const levelAtackBonus = levelMultiplier * ATTRIBUTES_CONST.ATK.BONUS_LEVEL_MULTIPLIER; // 0
-
+			// strMultiplier = floor(10 / 10) = 1, atackBonus = 1 * 2 = 2
+			// levelMultiplier = floor(1 / 3) = 0, levelAtackBonus = 0 * 1 = 0
 			expect(mockEntity.attributes.atack).toBe(20 + 10 + 2 + 0 + 0); // 32
 		});
 
@@ -357,8 +353,7 @@ describe('AttributesManager', () => {
 			manager.calculateAtack();
 
 			// Base calculation + consumable bonuses (5 + 3 = 8)
-			const strMultiplier = Math.floor(10 / 10); // 1
-			const atackBonus = strMultiplier * 2; // 2
+			// strMultiplier = floor(10 / 10) = 1, atackBonus = 1 * 2 = 2
 			expect(mockEntity.attributes.atack).toBe(20 + 10 + 2 + 0 + 8); // 40
 		});
 
@@ -371,9 +366,7 @@ describe('AttributesManager', () => {
 
 			manager.calculateAtack();
 
-			const levelMultiplier = Math.floor(9 / ATTRIBUTES_CONST.ATK.DIVIDER02); // 3
-			const levelAtackBonus = levelMultiplier * ATTRIBUTES_CONST.ATK.BONUS_LEVEL_MULTIPLIER; // 3
-
+			// levelMultiplier = floor(9 / 3) = 3, levelAtackBonus = 3 * 1 = 3
 			expect(mockEntity.attributes.atack).toBe(20 + 10 + 2 + 3 + 0); // 35
 		});
 
@@ -386,9 +379,7 @@ describe('AttributesManager', () => {
 
 			manager.calculateAtack();
 
-			const strMultiplier = Math.floor(25 / 10); // 2
-			const atackBonus = strMultiplier * 2; // 4
-
+			// strMultiplier = floor(25 / 10) = 2, atackBonus = 2 * 2 = 4
 			expect(mockEntity.attributes.atack).toBe(20 + 25 + 4 + 0 + 0); // 49
 		});
 
@@ -401,9 +392,7 @@ describe('AttributesManager', () => {
 
 			manager.calculateAtack();
 
-			const levelMultiplier = Math.floor(6 / 3); // 2
-			const levelAtackBonus = levelMultiplier * 1; // 2
-
+			// levelMultiplier = floor(6 / 3) = 2, levelAtackBonus = 2 * 1 = 2
 			expect(mockEntity.attributes.atack).toBe(20 + 10 + 2 + 2 + 0); // 34
 		});
 
@@ -416,9 +405,7 @@ describe('AttributesManager', () => {
 
 			manager.calculateAtack();
 
-			const strMultiplier = Math.floor(30 / 10); // 3
-			const atackBonus = strMultiplier * 2; // 6
-
+			// strMultiplier = floor(30 / 10) = 3, atackBonus = 3 * 2 = 6
 			expect(mockEntity.attributes.atack).toBe(20 + 30 + 6 + 0 + 0); // 56
 		});
 	});

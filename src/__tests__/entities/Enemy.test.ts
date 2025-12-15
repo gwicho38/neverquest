@@ -199,8 +199,6 @@ describe('Enemy', () => {
 		});
 
 		it('should only set attributes if they exist', () => {
-			const originalHealth = enemy.attributes.health;
-
 			// Create config without required properties
 			const incompleteConfig = {
 				id: 1,

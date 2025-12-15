@@ -143,6 +143,7 @@ module.exports = [
 			'bundle.js',
 			'coverage/**',
 			'src/assets/maps/**/*.tsx',
+			'src/types/*.d.ts',
 			'*.config.js',
 			'electron-main.js',
 			'src/plugins/AnimatedTiles.js',

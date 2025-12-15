@@ -1,4 +1,4 @@
-import { InventoryScene, InventorySceneName } from '../../scenes/InventoryScene';
+import { InventoryScene } from '../../scenes/InventoryScene';
 import { NeverquestInterfaceController } from '../../plugins/NeverquestInterfaceController';
 import { PanelComponent } from '../../components/PanelComponent';
 import { InfoBox } from '../../components/InfoBox';
@@ -104,10 +104,6 @@ describe('InventoryScene', () => {
 		};
 
 		// Mock gamepad
-		const mockPad1 = {
-			on: jest.fn(),
-		};
-
 		const mockGamepad = {
 			pad1: null as any,
 			on: jest.fn(),

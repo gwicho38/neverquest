@@ -1,10 +1,10 @@
 import { AttributeSceneName } from '../scenes/AttributeScene';
-import { InventorySceneName } from '../scenes/InventoryScene';
 import { SpellWheelSceneName } from '../scenes/SpellWheelScene';
 import { SceneToggleWatcher } from '../scenes/watchers/SceneToggleWatcher';
 import { NeverquestBattleManager } from './NeverquestBattleManager';
 import { DebugMessages } from '../consts/Messages';
 import { SpellWheelValues, InputValues } from '../consts/Numbers';
+import { InventorySceneName } from '../scenes/InventoryScene';
 
 /**
  * @class
@@ -129,7 +129,7 @@ export class NeverquestKeyboardMouseController {
 			}
 			// K key (75) - Block
 			if (
-				keydown.keyCode === 75 &&
+				keydown.keyCode === InputValues.KEY_K &&
 				this.player &&
 				this.player.active &&
 				this.player.canBlock &&
@@ -218,5 +218,7 @@ export class NeverquestKeyboardMouseController {
 			player: this.player,
 			parentScene: this.scene,
 		});
+
+		console.log('[KeyboardController] L key hold - Spell wheel opened');
 	}
 }

@@ -297,7 +297,6 @@ describe('NeverquestMinimap', () => {
 		});
 
 		it('should create temporary graphics for drawing', () => {
-			const graphicsCallCount = (mockScene.add.graphics as jest.Mock).mock.calls.length;
 			minimap.renderMap();
 
 			// Should create additional graphics (background, border, player marker, temp graphics)
@@ -313,7 +312,6 @@ describe('NeverquestMinimap', () => {
 		it('should position player marker at center of minimap', () => {
 			minimap.renderMap();
 
-			const setPositionCalls = minimap.playerMarker.setPosition as jest.Mock;
 			// Check last call (after renderMap)
 			expect(minimap.playerMarker.setPosition).toHaveBeenCalled();
 		});

@@ -60,7 +60,7 @@ describe('IntroScene', () => {
 
 		// Mock textures manager
 		mockTextures = {
-			getPixel: jest.fn((x: number, y: number, key: string) => ({
+			getPixel: jest.fn((_x: number, _y: number, _key: string) => ({
 				alpha: 255,
 				r: 255,
 				g: 255,

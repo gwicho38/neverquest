@@ -18,7 +18,7 @@ jest.mock('phaser', () => {
 		return { x, y, width: w, height: h };
 	};
 	MockRectangle.Inflate = (rect: any) => rect;
-	MockRectangle.Random = (rect: any, point: any) => ({ x: 100, y: 100 });
+	MockRectangle.Random = (_rect: any, _point: any) => ({ x: 100, y: 100 });
 
 	return {
 		Scene: class {
@@ -183,14 +183,19 @@ jest.mock('../../consts/Messages', () => ({
 	},
 }));
 
+jest.mock('../../scenes/SpellWheelScene', () => ({
+	SpellWheelSceneName: 'SpellWheelScene',
+}));
+
 describe('DungeonScene', () => {
 	let scene: DungeonScene;
 	let mockSound: any;
-	let mockKeyboardHandler: any;
-	let mockFadeCompleteCallback: any;
+	let mockKeyboardHandlers: Record<string, (...args: any[]) => void>;
+	let mockFadeCompleteCallback: (...args: any[]) => void;
 
 	beforeEach(() => {
 		jest.clearAllMocks();
+		mockKeyboardHandlers = {};
 
 		mockSound = {
 			play: jest.fn(),
@@ -225,8 +230,8 @@ describe('DungeonScene', () => {
 
 		(scene as any).input = {
 			keyboard: {
-				on: jest.fn().mockImplementation((_event: string, handler: (...args: any[]) => void) => {
-					mockKeyboardHandler = handler;
+				on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+					mockKeyboardHandlers[event] = handler;
 				}),
 			},
 		};
@@ -260,6 +265,11 @@ describe('DungeonScene', () => {
 
 		(scene as any).tweens = {
 			add: jest.fn(),
+		};
+
+		(scene as any).events = {
+			on: jest.fn(),
+			emit: jest.fn(),
 		};
 	});
 
@@ -435,7 +445,7 @@ describe('DungeonScene', () => {
 				preventDefault: jest.fn(),
 			};
 
-			mockKeyboardHandler(event);
+			mockKeyboardHandlers['keydown'](event);
 
 			expect(event.preventDefault).toHaveBeenCalled();
 			expect(scene.saveManager.saveGame).toHaveBeenCalledWith(false);
@@ -450,7 +460,7 @@ describe('DungeonScene', () => {
 				preventDefault: jest.fn(),
 			};
 
-			mockKeyboardHandler(event);
+			mockKeyboardHandlers['keydown'](event);
 
 			expect(event.preventDefault).toHaveBeenCalled();
 			expect(scene.saveManager.loadGame).toHaveBeenCalledWith(false);
@@ -466,7 +476,7 @@ describe('DungeonScene', () => {
 				preventDefault: jest.fn(),
 			};
 
-			mockKeyboardHandler(event);
+			mockKeyboardHandlers['keydown'](event);
 
 			expect(scene.saveManager.applySaveData).not.toHaveBeenCalled();
 		});
@@ -480,7 +490,7 @@ describe('DungeonScene', () => {
 				preventDefault: jest.fn(),
 			};
 
-			mockKeyboardHandler(event);
+			mockKeyboardHandlers['keydown'](event);
 
 			expect(event.preventDefault).toHaveBeenCalled();
 			expect(scene.saveManager.loadGame).toHaveBeenCalledWith(true);
@@ -496,7 +506,7 @@ describe('DungeonScene', () => {
 				preventDefault: jest.fn(),
 			};
 
-			mockKeyboardHandler(event);
+			mockKeyboardHandlers['keydown'](event);
 
 			expect(scene.saveManager.showSaveNotification).toHaveBeenCalledWith('No checkpoint found', true);
 		});

@@ -26,7 +26,6 @@ jest.mock('phaser', () => {
 
 import { NeverquestEnemyZones } from '../../plugins/NeverquestEnemyZones';
 import { Enemy } from '../../entities/Enemy';
-import { EnemiesSeedConfig } from '../../consts/enemies/EnemiesSeedConfig';
 
 // Mock the Enemy entity
 jest.mock('../../entities/Enemy', () => {

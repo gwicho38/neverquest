@@ -46,7 +46,12 @@
 			"Bash(pkill:*)",
 			"Bash(npx jest:*)",
 			"Bash(xxd:*)",
-			"Bash(git restore:*)"
+			"Bash(git restore:*)",
+			"Bash(git checkout:*)",
+			"Bash(git stash:*)",
+			"Bash(git check-ignore:*)",
+			"Bash(npm run analyze:quick:*)",
+			"Bash(npm run analyze:*)"
 		],
 		"deny": [],
 		"ask": []

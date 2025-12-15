@@ -120,7 +120,8 @@ export class UpsideDownScene extends Phaser.Scene {
 		this.createVignetteEffect();
 
 		// Set up warps and markers
-		const neverquestWarp = new NeverquestWarp(this, this.player, this.map);
+		// NOTE: Type assertions needed as NeverquestWarp expects specific scene/player interfaces
+		const neverquestWarp = new NeverquestWarp(this as never, this.player as never, this.map);
 		neverquestWarp.createWarps();
 
 		const interactiveMarkers = new NeverquestObjectMarker(this, this.map);
@@ -130,7 +131,7 @@ export class UpsideDownScene extends Phaser.Scene {
 		this.scene.launch('DialogScene', {
 			player: this.player,
 			map: this.map,
-			scene: this,
+			scene: this as unknown as Phaser.Scene,
 		});
 
 		this.scene.launch('HUDScene', {
@@ -229,7 +230,7 @@ export class UpsideDownScene extends Phaser.Scene {
 			emitZone: {
 				type: 'random',
 				source: new Phaser.Geom.Rectangle(-width, -height, width * 3, height * 3),
-			},
+			} as Phaser.Types.GameObjects.Particles.EmitZoneData,
 		});
 		this.ashParticles.setScrollFactor(1);
 		this.ashParticles.setDepth(Depth.PARTICLES_HIGH);
@@ -248,7 +249,7 @@ export class UpsideDownScene extends Phaser.Scene {
 			emitZone: {
 				type: 'random',
 				source: new Phaser.Geom.Rectangle(-width / 2, -height / 2, width * 2, height * 2),
-			},
+			} as Phaser.Types.GameObjects.Particles.EmitZoneData,
 		});
 		floatingParticles.setScrollFactor(Alpha.ALMOST_OPAQUE);
 		floatingParticles.setDepth(Depth.PARTICLES_MID);
@@ -270,7 +271,7 @@ export class UpsideDownScene extends Phaser.Scene {
 			emitZone: {
 				type: 'random',
 				source: new Phaser.Geom.Rectangle(-width, -height, width * 3, height * 3),
-			},
+			} as Phaser.Types.GameObjects.Particles.EmitZoneData,
 		});
 		this.fogParticles.setScrollFactor(Alpha.NEARLY_FULL);
 		this.fogParticles.setDepth(Depth.PARTICLES_LOW);
@@ -546,7 +547,6 @@ export class UpsideDownScene extends Phaser.Scene {
 		// Example: Subtle drift effect for particles based on player movement
 		if (this.player && this.fogParticles) {
 			const velocityX = this.player.body?.velocity.x || 0;
-			const velocityY = this.player.body?.velocity.y || 0;
 
 			// Make fog react slightly to player movement
 			this.fogParticles.setParticleSpeed(15 - velocityX * Alpha.VERY_LOW, 25 + velocityX * Alpha.VERY_LOW);

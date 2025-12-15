@@ -36,14 +36,14 @@ describe('NeverquestFogWarManager', () => {
 		// Mock scene
 		mockScene = {
 			make: {
-				renderTexture: jest.fn((config) => {
+				renderTexture: jest.fn((_config) => {
 					// Return different mocks based on call order
 					const callCount = (mockScene.make.renderTexture as jest.Mock).mock.calls.length;
 					return callCount === 1 ? mockRenderTexture : mockNoVisionRT;
 				}),
 			},
 			add: {
-				image: jest.fn((x, y, texture) => {
+				image: jest.fn((x, y, _texture) => {
 					// Create a new mock image with the specified position
 					mockImageMask = {
 						x,

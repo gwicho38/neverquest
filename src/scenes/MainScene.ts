@@ -22,6 +22,7 @@ export class MainScene extends Phaser.Scene {
 	saveManager: NeverquestSaveManager | null;
 	upsideDownPortal: Phaser.GameObjects.Zone | null;
 	upsideDownPortalParticles: Phaser.GameObjects.Particles.ParticleEmitter | null;
+	spellWheelOpen: boolean;
 
 	constructor() {
 		super({
@@ -38,6 +39,7 @@ export class MainScene extends Phaser.Scene {
 		this.saveManager = null;
 		this.upsideDownPortal = null;
 		this.upsideDownPortalParticles = null;
+		this.spellWheelOpen = false;
 	}
 
 	init(data: { fromUpsideDown?: boolean }): void {
@@ -158,6 +160,12 @@ export class MainScene extends Phaser.Scene {
 				event.preventDefault();
 				this.saveManager!.createCheckpoint();
 			}
+		});
+
+		// Spell wheel is now handled by NeverquestKeyboardMouseController (L key hold)
+		// Listen for spell wheel close event (needed for controller state management)
+		this.events.on('spellwheelclosed', () => {
+			this.spellWheelOpen = false;
 		});
 	}
 

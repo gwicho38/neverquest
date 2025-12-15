@@ -34,12 +34,14 @@ export class DungeonScene extends Phaser.Scene {
 	lineOfSight!: NeverquestLineOfSight;
 	exitPortal!: Phaser.GameObjects.Zone;
 	previousScene: string = 'MainScene'; // Track which scene to return to
+	spellWheelOpen: boolean = false;
 
 	constructor() {
 		super({
 			key: 'DungeonScene',
 		});
 		this.enemies = [];
+		this.spellWheelOpen = false;
 	}
 
 	/**
@@ -175,6 +177,12 @@ export class DungeonScene extends Phaser.Scene {
 					this.saveManager.showSaveNotification(GameMessages.NO_CHECKPOINT_FOUND, true);
 				}
 			}
+		});
+
+		// Spell wheel is now handled by NeverquestKeyboardMouseController (L key hold)
+		// Listen for spell wheel close event (needed for controller state management)
+		this.events.on('spellwheelclosed', () => {
+			this.spellWheelOpen = false;
 		});
 	}
 

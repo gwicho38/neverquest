@@ -102,7 +102,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public bodyOffsetY: number = 2;
 	public dustParticleName: string = 'walk_dust';
 
-	constructor(scene: Phaser.Scene, x: number, y: number, texture: string, map?: any) {
+	constructor(scene: Phaser.Scene, x: number, y: number, texture: string, _map?: unknown) {
 		super(scene, 0, 0, texture);
 
 		// Has to call this method, so the animations work properly.

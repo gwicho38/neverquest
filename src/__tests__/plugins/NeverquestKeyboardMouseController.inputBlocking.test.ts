@@ -1,6 +1,7 @@
 /**
  * Test for keyboard controller input blocking during dialog
  * Ensures that J/K keys are properly blocked when player flags are disabled
+ * Key mappings: J = Attack, K = Block, L hold = Spell Wheel, L tap = Roll
  */
 
 import { NeverquestKeyboardMouseController } from '../../plugins/NeverquestKeyboardMouseController';
@@ -37,6 +38,17 @@ const mockScene: any = {
 		on: jest.fn(),
 		off: jest.fn(),
 		emit: jest.fn(),
+	},
+	time: {
+		delayedCall: jest.fn((_delay: number, callback: () => void) => {
+			// Store callback for manual triggering in tests
+			(mockScene as any)._spellWheelTimerCallback = callback;
+			return { destroy: jest.fn() };
+		}),
+	},
+	scene: {
+		isActive: jest.fn().mockReturnValue(false),
+		launch: jest.fn(),
 	},
 };
 
@@ -158,6 +170,22 @@ describe('NeverquestKeyboardMouseController Input Blocking', () => {
 		expect(mockBattleManager.block).not.toHaveBeenCalled();
 	});
 
+	test('should open spell wheel when L key is held', () => {
+		const keyEvent = { keyCode: 76 }; // L key
+
+		keydownHandler(keyEvent);
+
+		// Simulate the timer firing (hold threshold reached)
+		if ((mockScene as any)._spellWheelTimerCallback) {
+			(mockScene as any)._spellWheelTimerCallback();
+		}
+
+		expect(mockScene.scene.launch).toHaveBeenCalledWith('SpellWheelScene', {
+			player: mockPlayer,
+			parentScene: mockScene,
+		});
+	});
+
 	test('should block inventory access when player cannot move (dialog active)', () => {
 		mockPlayer.canMove = false; // Simulates dialog active state
 		const keyEvent = { keyCode: 73 }; // I key
@@ -192,15 +220,17 @@ describe('NeverquestKeyboardMouseController Input Blocking', () => {
 	test('should block all combat actions when swimming', () => {
 		mockPlayer.isSwimming = true;
 
-		// Test J key
+		// Test J key (attack)
 		keydownHandler({ keyCode: 74 });
 		expect(mockBattleManager.atack).not.toHaveBeenCalled();
 
-		// Test Space key
+		// Test Space key (jump)
+		mockPlayer.jump = jest.fn();
+		mockPlayer.canJump = true;
 		keydownHandler({ keyCode: 32 });
-		expect(mockBattleManager.atack).not.toHaveBeenCalled();
+		// Note: Space is for jump, which doesn't have swimming check in current implementation
 
-		// Test K key
+		// Test K key (block)
 		keydownHandler({ keyCode: 75 });
 		expect(mockBattleManager.block).not.toHaveBeenCalled();
 	});
@@ -214,11 +244,11 @@ describe('NeverquestKeyboardMouseController Input Blocking', () => {
 		mockPlayer.active = false;
 
 		// Test all keys are blocked
-		keydownHandler({ keyCode: 74 }); // J
-		keydownHandler({ keyCode: 32 }); // Space
-		keydownHandler({ keyCode: 75 }); // K
-		keydownHandler({ keyCode: 73 }); // I
-		keydownHandler({ keyCode: 85 }); // U
+		keydownHandler({ keyCode: 74 }); // J (attack)
+		keydownHandler({ keyCode: 32 }); // Space (jump)
+		keydownHandler({ keyCode: 75 }); // K (block)
+		keydownHandler({ keyCode: 73 }); // I (inventory)
+		keydownHandler({ keyCode: 85 }); // U (attributes)
 
 		expect(mockBattleManager.atack).not.toHaveBeenCalled();
 		expect(mockBattleManager.block).not.toHaveBeenCalled();

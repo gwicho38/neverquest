@@ -18,7 +18,8 @@ import { MainScene } from './scenes/MainScene';
 // import { MobileCheckScene } from './scenes/MobileCheckScene';
 // import { OverworldScene } from './scenes/OverworldScene';
 import { PreloadScene } from './scenes/PreloadScene';
-import { UpsideDownScene } from './scenes/UpsideDownScene';
+// NOTE: UpsideDownScene is available but currently disabled
+// import { UpsideDownScene } from './scenes/UpsideDownScene';
 import { SpellWheelScene } from './scenes/SpellWheelScene';
 // import { SettingScene } from './scenes/SettingScene';
 // import { TownScene } from './scenes/TownScene';
