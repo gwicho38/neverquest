@@ -51,7 +51,10 @@
 			"Bash(git stash:*)",
 			"Bash(git check-ignore:*)",
 			"Bash(npm run analyze:quick:*)",
-			"Bash(npm run analyze:*)"
+			"Bash(npm run analyze:*)",
+			"Bash(gh run:*)",
+			"Bash(npm audit fix:*)",
+			"Bash(npm uninstall:*)"
 		],
 		"deny": [],
 		"ask": []
