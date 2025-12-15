@@ -1,3 +1,25 @@
+/**
+ * @fileoverview Player movement controller for Neverquest
+ *
+ * This plugin handles all player movement including:
+ * - Keyboard input (WASD, arrow keys)
+ * - Gamepad input
+ * - Virtual joystick (mobile)
+ * - Swimming detection and speed adjustment
+ * - Running toggle (Shift key)
+ *
+ * State management:
+ * - Owns: isSwimming, isRunning, player speed
+ * - Reads: canMove, isAtacking (blocks movement when false)
+ * - Does NOT modify: canMove, canAtack (those belong to dialog/battle)
+ *
+ * @see NeverquestAnimationManager - Handles animation changes
+ * @see NeverquestGamePadController - Handles gamepad input
+ * @see Player - The entity being controlled
+ *
+ * @module plugins/NeverquestMovement
+ */
+
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
 import { Alpha, EntitySpeed, MapLayerNames } from '../consts/Numbers';
@@ -6,7 +28,24 @@ import { NeverquestGamePadController } from './NeverquestGamePadController';
 import { Player } from '../entities/Player';
 
 /**
- * Movement controller for the player character with support for keyboard, gamepad, and virtual joystick input
+ * Movement controller for the player character.
+ *
+ * Supports multiple input methods:
+ * - Keyboard (WASD + arrow keys)
+ * - Gamepad (analog sticks)
+ * - Virtual joystick (mobile touch)
+ *
+ * Handles movement states:
+ * - Normal walking
+ * - Running (Shift toggle)
+ * - Swimming (auto-detected from water tiles)
+ *
+ * @example
+ * const movement = new NeverquestMovement(scene, player, joystickScene);
+ * // In update loop:
+ * movement.move();
+ *
+ * @extends AnimationNames
  */
 export class NeverquestMovement extends AnimationNames {
 	public scene: Phaser.Scene;

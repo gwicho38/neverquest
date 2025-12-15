@@ -1,3 +1,24 @@
+/**
+ * @fileoverview Combat system manager for Neverquest
+ *
+ * This plugin handles all combat-related functionality including:
+ * - Attack execution and hitbox creation
+ * - Damage calculation (with variation, criticals, hit/miss)
+ * - Block/defend mechanics
+ * - Death handling for players and enemies
+ *
+ * State management:
+ * - Owns: isAtacking, isBlocking during combat flow
+ * - Sets: canAtack = false during attack animation, restored on completion
+ * - NOTE: Does not touch canMove - that's for dialog/menus
+ *
+ * @see NeverquestKeyboardMouseController - Triggers attacks
+ * @see NeverquestEntityTextDisplay - Shows damage numbers
+ * @see ExpManager - Awards experience on kills
+ *
+ * @module plugins/NeverquestBattleManager
+ */
+
 import { AnimationNames } from '../consts/AnimationNames';
 import PhaserJuice from 'phaser3-juice-plugin';
 import Phaser from 'phaser';
@@ -11,7 +32,16 @@ import { CombatNumbers, Alpha } from '../consts/Numbers';
 import { GameMessages } from '../consts/Messages';
 
 /**
- * @class
+ * Manages all combat interactions in the game.
+ *
+ * Handles attack execution, damage calculation, blocking, and death.
+ * Uses Phaser's physics overlap detection for hit detection.
+ *
+ * @example
+ * const battleManager = new NeverquestBattleManager();
+ * battleManager.atack(player); // Initiates attack sequence
+ *
+ * @extends AnimationNames
  */
 export class NeverquestBattleManager extends AnimationNames {
 	/**

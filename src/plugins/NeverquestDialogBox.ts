@@ -1,3 +1,29 @@
+/**
+ * @fileoverview Dialog box system for NPC conversations and text display
+ *
+ * This plugin manages the in-game dialog system including:
+ * - Dialog box display with NineSlice scaling
+ * - Typewriter text animation
+ * - Character portraits and names
+ * - Multi-page message support
+ * - Input handling for advancing dialog
+ *
+ * State management:
+ * - When dialog opens: Sets canMove, canAtack, canBlock = false
+ * - When dialog closes: Restores canMove, canAtack, canBlock = true
+ * - Emits 'dialogComplete' event when finished
+ *
+ * IMPORTANT: This plugin owns player controls during dialog.
+ * Other systems should NOT modify canMove/canAtack/canBlock
+ * while dialog is visible.
+ *
+ * @see NeverquestTypingSoundManager - Keyboard sound effects
+ * @see NeverquestVideoOpener - Video playback in dialogs
+ * @see docs/PLAYER_STATE_MANAGEMENT.md - State ownership rules
+ *
+ * @module plugins/NeverquestDialogBox
+ */
+
 import Phaser from 'phaser';
 import { NineSlice } from 'phaser3-nineslice';
 import { Player } from '../entities/Player';

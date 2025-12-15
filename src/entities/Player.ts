@@ -1,3 +1,28 @@
+/**
+ * @fileoverview Player entity - the main controllable character in Neverquest
+ *
+ * This file contains the Player class which represents the player character.
+ * It extends Phaser's Arcade Sprite and implements the IBaseEntity interface.
+ *
+ * Key responsibilities:
+ * - Movement (walking, running, swimming, jumping, rolling)
+ * - Combat state management (attacking, blocking)
+ * - Inventory management
+ * - Health and attribute tracking
+ *
+ * State management:
+ * - Movement states are managed by NeverquestMovement
+ * - Combat states are managed by NeverquestBattleManager
+ * - Dialog disables controls via NeverquestDialogBox
+ *
+ * @see NeverquestMovement - Handles player movement
+ * @see NeverquestBattleManager - Handles combat
+ * @see NeverquestKeyboardMouseController - Handles input
+ * @see docs/PLAYER_STATE_MANAGEMENT.md - State management patterns
+ *
+ * @module entities/Player
+ */
+
 import Phaser from 'phaser';
 import { NumericColors } from '../consts/Colors';
 import { ENTITIES } from '../consts/Entities';
@@ -12,7 +37,20 @@ import { BaseEntity, IBaseEntity } from './BaseEntity';
 import { EntityAttributes, IEntityAttributes } from './EntityAttributes';
 
 /**
- * Player class extending Phaser's Arcade Sprite with game-specific functionality
+ * Player class extending Phaser's Arcade Sprite with game-specific functionality.
+ *
+ * The Player is the main controllable character. It manages:
+ * - Physics body and container for collision
+ * - Health bar display
+ * - Movement via NeverquestMovement
+ * - Input via NeverquestKeyboardMouseController
+ * - Attributes via AttributesManager
+ *
+ * @example
+ * const player = new Player(scene, 100, 100, 'character', map);
+ * // Player is automatically added to scene and physics
+ *
+ * @implements {IBaseEntity}
  */
 export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	// BaseEntity properties
@@ -94,7 +132,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		/**
 		 * Maximum speed to be used for the player.
 		 */
-		this.speed = 50;
+		this.speed = this.baseSpeed;
 
 		// TODO - Should get the player's items when he starts the game.
 		/**

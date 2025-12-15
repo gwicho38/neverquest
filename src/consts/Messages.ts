@@ -1,6 +1,19 @@
 /**
- * User-facing messages and strings
- * All text shown to users should be defined here for localization support
+ * @fileoverview User-facing messages and strings for Neverquest
+ *
+ * All text shown to users should be defined here for:
+ * - Localization support (i18n)
+ * - Consistency across the codebase
+ * - Easy modification of game text
+ *
+ * Organization:
+ * - Error messages: Technical errors and failures
+ * - Warning messages: Non-critical issues
+ * - Game messages: Combat, movement, etc.
+ * - UI labels: Button text, titles, etc.
+ * - Debug messages: Developer-facing text
+ *
+ * @module consts/Messages
  */
 
 // =============================================================================
@@ -8,17 +21,44 @@
 // =============================================================================
 
 export const ErrorMessages = {
+	// Configuration errors
 	ENEMY_CONFIG_NOT_FOUND: (id: number | string) => `Enemy config not found for id: ${id}`,
 	ITEM_CONFIG_NOT_FOUND: (id: number | string) => `Item config not found for id: ${id}`,
+	SCENE_NOT_FOUND: (key: string) => `Scene not found: ${key}`,
+	ANIMATION_NOT_FOUND: (key: string) => `Animation not found: ${key}`,
+
+	// Runtime errors
 	UNCAUGHT_ERROR: 'Uncaught error',
 	UNHANDLED_PROMISE: 'Unhandled promise rejection',
 	ERROR_GETTING_BOUNDS: 'Error getting bounds',
+
+	// Asset errors
 	ASSET_NOT_REGISTERED: (key: string) => `Asset not registered: ${key}`,
 	ASSET_FETCH_FAILED: (statusText: string) => `Failed to fetch asset: ${statusText}`,
+	ASSET_LOAD_TIMEOUT: (key: string) => `Asset load timeout: ${key}`,
+
+	// Plugin errors
 	ANIMATED_TILES_UNEXPECTED_ERROR:
 		"This shouldn't happen. Not at all. Blame Phaser Animated Tiles plugin. You'll be fine though.",
+	PLUGIN_INIT_FAILED: (name: string) => `Plugin initialization failed: ${name}`,
+
+	// UI errors
 	INTERFACE_ELEMENT_LINE_NOT_AVAILABLE:
 		'This Element line is not available. Check if this line has items, or if the line exists at all.',
+
+	// Entity errors
+	ENTITY_NOT_ACTIVE: (name: string) => `Entity not active: ${name}`,
+	ENTITY_MISSING_COMPONENT: (entity: string, component: string) =>
+		`${entity} missing required component: ${component}`,
+
+	// State errors
+	INVALID_STATE_TRANSITION: (from: string, to: string) => `Invalid state transition: ${from} -> ${to}`,
+	STATE_ALREADY_SET: (state: string) => `State already set: ${state}`,
+
+	// Save/Load errors
+	SAVE_FAILED: (reason: string) => `Save failed: ${reason}`,
+	LOAD_FAILED: (reason: string) => `Load failed: ${reason}`,
+	CORRUPTED_SAVE_DATA: 'Save data is corrupted or invalid',
 } as const;
 
 // =============================================================================
