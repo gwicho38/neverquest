@@ -1,0 +1,91 @@
+import { BUFF_TYPES } from '../BuffTypes';
+import { ITEM_TYPE } from '../ItemTypes';
+
+/**
+ * Armor Items
+ * Chest plates, chainmail, and other defensive equipment
+ */
+export const ARMOR_ITEMS = [
+	{
+		id: 20,
+		name: 'Epic Armor',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description: 'Masterwork armor forged by legendary blacksmiths. Permanently increases DEFENSE by 8.',
+		script: 'perm def 8;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'armor',
+	},
+	{
+		id: 30,
+		name: 'Fire Resistance Armor',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description:
+			'Armor enchanted with fire protection. Permanently increases DEFENSE by 6 and reduces fire damage.',
+		script: 'perm def 6;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'armor',
+		resistance: { fire: 0.5 },
+	},
+	{
+		id: 31,
+		name: 'Ice Resistance Armor',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description:
+			'Armor enchanted with frost protection. Permanently increases DEFENSE by 6 and reduces ice damage.',
+		script: 'perm def 6;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'armor',
+		resistance: { ice: 0.5 },
+	},
+	{
+		id: 64,
+		name: 'Leather Armor',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description: 'Basic leather protection. Permanently increases DEFENSE by 2.',
+		script: 'perm def 2;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'armor',
+	},
+	{
+		id: 65,
+		name: 'Chainmail',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description: 'Strong metal links provide good protection. Permanently increases DEFENSE by 4.',
+		script: 'perm def 4;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'armor',
+	},
+	{
+		id: 66,
+		name: 'Plate Armor',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description: 'Heavy plate armor for maximum protection. Permanently increases DEFENSE by 6.',
+		script: 'perm def 6;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'armor',
+	},
+];

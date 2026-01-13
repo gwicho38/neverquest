@@ -1,0 +1,88 @@
+import { BUFF_TYPES } from '../BuffTypes';
+import { ITEM_TYPE } from '../ItemTypes';
+
+/**
+ * Accessory Items
+ * Rings, amulets, cloaks, and other utility equipment
+ */
+export const ACCESSORY_ITEMS = [
+	{
+		id: 70,
+		name: 'Shadow Cloak',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.SPD01,
+		description: 'A cloak woven from shadows. Permanently increases SPEED by 5 and evasion.',
+		script: 'perm spd 5;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'accessory',
+	},
+	{
+		id: 80,
+		name: 'Dungeon Explorer Badge',
+		type: ITEM_TYPE.EQUIP,
+		buffType: 0,
+		description: 'Badge of an elite dungeon explorer. Increases treasure drop rates.',
+		script: '',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'accessory',
+		bonusDropRate: 1.25, // 25% more drops
+	},
+	{
+		id: 90,
+		name: 'Speed Boots',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.SPD01,
+		description: 'Enchanted boots that make you incredibly fast. Permanently increases SPEED by 10.',
+		script: 'perm spd 10;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'accessory',
+	},
+	{
+		id: 67,
+		name: 'Ring of Power',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.ATK02,
+		description: 'A ring humming with power. Permanently increases ATTACK by 4.',
+		script: 'perm atk 4;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'accessory',
+	},
+	{
+		id: 68,
+		name: 'Ring of Defense',
+		type: ITEM_TYPE.EQUIP,
+		buffType: BUFF_TYPES.DEF01,
+		description: 'A ring that hardens the skin. Permanently increases DEFENSE by 3.',
+		script: 'perm def 3;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'accessory',
+	},
+	{
+		id: 69,
+		name: 'Amulet of Health',
+		type: ITEM_TYPE.EQUIP,
+		buffType: 0,
+		description: 'An amulet that boosts vitality. Permanently increases MAX HP by 20.',
+		script: 'perm hp 20;',
+		texture: 'treasure_chest',
+		sfx: 'equip_item',
+		stackable: false,
+		inventoryScale: 1.7,
+		equipSlot: 'accessory',
+	},
+];
