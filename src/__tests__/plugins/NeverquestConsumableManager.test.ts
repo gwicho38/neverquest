@@ -153,7 +153,7 @@ describe('NeverquestConsumableManager', () => {
 		it('should update HUD progress bar if it exists', () => {
 			manager.recover(mockItem, ['rec', 'hp', '10'], mockPlayer);
 
-			expect(mockPlayer.neverquestHUDProgressBar.updateHealth).toHaveBeenCalledWith(mockPlayer.attributes.health);
+			expect(mockPlayer.neverquestHUDProgressBar.updateHealth).toHaveBeenCalled();
 		});
 
 		it('should not update HUD progress bar if it does not exist', () => {

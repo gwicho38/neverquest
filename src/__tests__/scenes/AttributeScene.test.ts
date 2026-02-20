@@ -469,14 +469,14 @@ describe('AttributeScene', () => {
 		});
 
 		it('should call attributesManager.addAttribute', () => {
-			const payload = { attribute: 'str', text: 'STR' };
+			const payload = { attribute: 'str', text: 'STR' } as const;
 			scene.addAttribute(payload);
 
 			expect(mockPlayer.attributesManager.addAttribute).toHaveBeenCalledWith('str', 1, scene.lastRawAttributes);
 		});
 
 		it('should work with different attributes', () => {
-			const payload = { attribute: 'int', text: 'INT' };
+			const payload = { attribute: 'int', text: 'INT' } as const;
 			scene.addAttribute(payload);
 
 			expect(mockPlayer.attributesManager.addAttribute).toHaveBeenCalledWith('int', 1, scene.lastRawAttributes);
@@ -490,7 +490,7 @@ describe('AttributeScene', () => {
 		});
 
 		it('should call attributesManager.removeAttribute', () => {
-			const payload = { attribute: 'str', text: 'STR' };
+			const payload = { attribute: 'str', text: 'STR' } as const;
 			scene.removeAttribute(payload);
 
 			expect(mockPlayer.attributesManager.removeAttribute).toHaveBeenCalledWith(
@@ -501,7 +501,7 @@ describe('AttributeScene', () => {
 		});
 
 		it('should work with different attributes', () => {
-			const payload = { attribute: 'dex', text: 'DEX' };
+			const payload = { attribute: 'dex', text: 'DEX' } as const;
 			scene.removeAttribute(payload);
 
 			expect(mockPlayer.attributesManager.removeAttribute).toHaveBeenCalledWith(
@@ -675,11 +675,11 @@ describe('AttributeScene', () => {
 			scene.create();
 
 			// Add attribute
-			scene.addAttribute({ attribute: 'str', text: 'STR' });
+			scene.addAttribute({ attribute: 'str', text: 'STR' } as const);
 			expect(mockPlayer.attributesManager.addAttribute).toHaveBeenCalledWith('str', 1, scene.lastRawAttributes);
 
 			// Remove attribute
-			scene.removeAttribute({ attribute: 'str', text: 'STR' });
+			scene.removeAttribute({ attribute: 'str', text: 'STR' } as const);
 			expect(mockPlayer.attributesManager.removeAttribute).toHaveBeenCalledWith(
 				'str',
 				1,

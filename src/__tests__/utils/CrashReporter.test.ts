@@ -87,7 +87,7 @@ describe('CrashReporter', () => {
 
 			const logs = reporter.getCrashLogs();
 			expect(logs[0].gameState).toBeDefined();
-			expect(logs[0].gameState.level).toBe(5);
+			expect((logs[0].gameState as { level: number }).level).toBe(5);
 		});
 
 		it('should sanitize game state by removing sensitive data', () => {
@@ -105,10 +105,13 @@ describe('CrashReporter', () => {
 			reporter.reportCrash('testType', error, gameState);
 
 			const logs = reporter.getCrashLogs();
-			expect(logs[0].gameState.player.name).toBe('TestPlayer');
-			expect(logs[0].gameState.player.password).toBeUndefined();
-			expect(logs[0].gameState.player.token).toBeUndefined();
-			expect(logs[0].gameState.player.sessionId).toBeUndefined();
+			const sanitizedState = logs[0].gameState as {
+				player: { name?: string; password?: string; token?: string; sessionId?: string };
+			};
+			expect(sanitizedState.player.name).toBe('TestPlayer');
+			expect(sanitizedState.player.password).toBeUndefined();
+			expect(sanitizedState.player.token).toBeUndefined();
+			expect(sanitizedState.player.sessionId).toBeUndefined();
 		});
 
 		it('should limit maximum crash logs', () => {
@@ -265,7 +268,8 @@ describe('CrashReporter', () => {
 
 			const logs = reporter.getCrashLogs();
 			// Should truncate at depth 3
-			expect(logs[0].gameState.level1.level2.level3).toBe('[Object]');
+			const gameState = logs[0].gameState as { level1: { level2: { level3: unknown } } };
+			expect(gameState.level1.level2.level3).toBe('[Object]');
 		});
 
 		it('should truncate long arrays', () => {
@@ -274,7 +278,8 @@ describe('CrashReporter', () => {
 			reporter.reportCrash('test', new Error('Test'), { items: longArray });
 
 			const logs = reporter.getCrashLogs();
-			expect(logs[0].gameState.items.length).toBeLessThanOrEqual(10);
+			const gameState = logs[0].gameState as { items: unknown[] };
+			expect(gameState.items.length).toBeLessThanOrEqual(10);
 		});
 	});
 

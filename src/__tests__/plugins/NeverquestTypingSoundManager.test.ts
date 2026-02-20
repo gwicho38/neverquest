@@ -72,10 +72,10 @@ describe('NeverquestTypingSoundManager', () => {
 	});
 
 	describe('create', () => {
-		it('should create space audio', () => {
+		it('should create space audio with volume config', () => {
 			manager.create();
 
-			expect(mockScene.sound.add).toHaveBeenCalledWith('space_sound');
+			expect(mockScene.sound.add).toHaveBeenCalledWith('space_sound', { volume: 0.4 });
 		});
 
 		it('should store spaceAudioManager reference', () => {
@@ -84,20 +84,21 @@ describe('NeverquestTypingSoundManager', () => {
 			expect(manager['spaceAudioManager']).toBe(mockSpaceAudio);
 		});
 
-		it('should set space audio volume', () => {
+		it('should set space audio volume via config', () => {
 			manager.create();
 
-			expect(mockSpaceAudio.volume).toBe(0.4);
+			// Verify that sound.add was called with volume config for space sound
+			expect(mockScene.sound.add).toHaveBeenCalledWith('space_sound', { volume: 0.4 });
 		});
 
-		it('should create all 5 letter audios', () => {
+		it('should create all 5 letter audios with volume config', () => {
 			manager.create();
 
-			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_01');
-			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_02');
-			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_03');
-			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_04');
-			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_05');
+			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_01', { volume: 0.4 });
+			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_02', { volume: 0.4 });
+			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_03', { volume: 0.4 });
+			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_04', { volume: 0.4 });
+			expect(mockScene.sound.add).toHaveBeenCalledWith('typing_key_05', { volume: 0.4 });
 		});
 
 		it('should store all letter audios in array', () => {
@@ -107,11 +108,16 @@ describe('NeverquestTypingSoundManager', () => {
 			expect(manager['letterAudios']).toEqual(mockLetterAudios);
 		});
 
-		it('should set volume for all letter audios', () => {
+		it('should set volume for all letter audios via config', () => {
 			manager.create();
 
-			mockLetterAudios.forEach((audio) => {
-				expect(audio.volume).toBe(0.4);
+			// Verify that sound.add was called with volume config for each letter sound
+			const soundAddCalls = (mockScene.sound.add as jest.Mock).mock.calls;
+			const letterSoundCalls = soundAddCalls.filter(
+				(call: [string, { volume?: number }]) => call[0] !== 'space_sound'
+			);
+			letterSoundCalls.forEach((call: [string, { volume?: number }]) => {
+				expect(call[1]).toEqual({ volume: 0.4 });
 			});
 		});
 

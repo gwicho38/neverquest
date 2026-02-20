@@ -124,28 +124,30 @@ describe('VideoPlayerScene', () => {
 
 	describe('init', () => {
 		it('should set videoId from data', () => {
-			scene.init({ videoId: 'test-video-id', player: null });
+			scene.init({ videoId: 'test-video-id' });
 
 			expect(scene.videoId).toBe('test-video-id');
 		});
 
 		it('should set player from data', () => {
-			const mockPlayer = { container: { body: { maxSpeed: 100 } } };
-			scene.init({ videoId: '', player: mockPlayer });
+			const mockPlayer = { container: { body: { maxSpeed: 100 } }, speed: 100 } as typeof scene.player;
+			scene.init({ videoId: '', player: mockPlayer! });
 
 			expect(scene.player).toBe(mockPlayer);
 		});
 
 		it('should set player maxSpeed to 0', () => {
-			const mockPlayer = { container: { body: { maxSpeed: 100 } } };
+			const mockPlayer = { container: { body: { maxSpeed: 100 } }, speed: 100 } as NonNullable<
+				typeof scene.player
+			>;
 			scene.init({ videoId: '', player: mockPlayer });
 
-			expect(mockPlayer.container.body.maxSpeed).toBe(0);
+			expect(mockPlayer.container.body!.maxSpeed).toBe(0);
 		});
 
 		it('should handle player without body', () => {
-			const mockPlayer = { container: {} };
-			expect(() => scene.init({ videoId: '', player: mockPlayer })).not.toThrow();
+			const mockPlayer = { container: { body: null }, speed: 0 } as typeof scene.player;
+			expect(() => scene.init({ videoId: '', player: mockPlayer! })).not.toThrow();
 		});
 	});
 
@@ -210,7 +212,7 @@ describe('VideoPlayerScene', () => {
 	describe('createCloseButton', () => {
 		beforeEach(() => {
 			scene.preload();
-			scene.player = { container: { body: { maxSpeed: 0 } }, speed: 100 };
+			scene.player = { container: { body: { maxSpeed: 0 } }, speed: 100 } as typeof scene.player;
 		});
 
 		it('should create close button image', () => {

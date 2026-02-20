@@ -380,4 +380,330 @@ describe('Enemy', () => {
 			expect(mockBody.setVelocity).toHaveBeenCalledWith(75, 25);
 		});
 	});
+
+	describe('checkPlayerInRange', () => {
+		beforeEach(() => {
+			enemy = new Enemy(mockScene, 100, 200, 'rat', 1);
+		});
+
+		it('should stop movement when no player in range', () => {
+			mockScene.physics.overlapCirc.mockReturnValue([]);
+			const stopSpy = jest.spyOn(enemy, 'stopMovement');
+
+			enemy.checkPlayerInRange();
+
+			expect(stopSpy).toHaveBeenCalled();
+		});
+
+		it('should clear currentPath when no player in range', () => {
+			enemy.currentPath = [{ x: 0, y: 0 } as Phaser.Math.Vector2];
+			mockScene.physics.overlapCirc.mockReturnValue([]);
+
+			enemy.checkPlayerInRange();
+
+			expect(enemy.currentPath).toBeNull();
+		});
+
+		it('should detect player within perception range', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 120, y: 220 },
+					hitZone: {},
+				},
+			};
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+
+			enemy.checkPlayerInRange();
+
+			expect(mockScene.physics.overlapCirc).toHaveBeenCalledWith(
+				enemy.container.x,
+				enemy.container.y,
+				enemy.perceptionRange
+			);
+		});
+
+		it('should check line of sight when available', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 120, y: 220 },
+					hitZone: {},
+				},
+			};
+			const mockLineOfSight = {
+				isVisible: jest.fn().mockReturnValue(true),
+			};
+			mockScene.lineOfSight = mockLineOfSight;
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+
+			enemy.checkPlayerInRange();
+
+			expect(mockLineOfSight.isVisible).toHaveBeenCalled();
+		});
+
+		it('should not pursue player if line of sight blocked', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 120, y: 220 },
+					hitZone: {},
+				},
+			};
+			const mockLineOfSight = {
+				isVisible: jest.fn().mockReturnValue(false),
+			};
+			mockScene.lineOfSight = mockLineOfSight;
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+			const stopSpy = jest.spyOn(enemy, 'stopMovement');
+
+			enemy.checkPlayerInRange();
+
+			// Should stop because no player is "seen"
+			expect(stopSpy).toHaveBeenCalled();
+		});
+
+		it('should attack when overlapping with player hitZone', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 100, y: 200 },
+					hitZone: { body: {} },
+				},
+			};
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+			// Simulate overlap callback
+			mockScene.physics.overlap.mockImplementation((_zone: any, _enemy: any, callback: any) => {
+				callback();
+			});
+
+			enemy.checkPlayerInRange();
+
+			expect(mockScene.physics.overlap).toHaveBeenCalled();
+		});
+
+		it('should use pathfinding when available and not overlapping', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 150, y: 250 },
+					hitZone: { body: {} },
+				},
+			};
+			const mockPathfinding = {
+				findPath: jest.fn(),
+			};
+			mockScene.pathfinding = mockPathfinding;
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+			mockScene.physics.overlap.mockImplementation(() => {}); // No overlap
+
+			enemy.checkPlayerInRange();
+
+			expect(mockPathfinding.findPath).toHaveBeenCalled();
+		});
+
+		it('should use direct movement when pathfinding not available', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 150, y: 250 },
+					hitZone: { body: {} },
+				},
+			};
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+			mockScene.physics.overlap.mockImplementation(() => {}); // No overlap
+			delete mockScene.pathfinding;
+
+			enemy.checkPlayerInRange();
+
+			expect(mockScene.physics.moveToObject).toHaveBeenCalled();
+		});
+
+		it('should not move if currently attacking', () => {
+			const mockPlayerObject = {
+				gameObject: {
+					entityName: 'Player',
+					container: { x: 150, y: 250 },
+					hitZone: { body: {} },
+				},
+			};
+			mockScene.physics.overlapCirc.mockReturnValue([mockPlayerObject]);
+			mockScene.physics.overlap.mockImplementation(() => {}); // No overlap
+			enemy.isAtacking = true;
+
+			enemy.checkPlayerInRange();
+
+			expect(mockScene.physics.moveToObject).not.toHaveBeenCalled();
+		});
+
+		it('should ignore non-player entities', () => {
+			const mockEnemyObject = {
+				gameObject: {
+					entityName: 'Enemy',
+					container: { x: 150, y: 250 },
+					hitZone: { body: {} },
+				},
+			};
+			mockScene.physics.overlapCirc.mockReturnValue([mockEnemyObject]);
+			const stopSpy = jest.spyOn(enemy, 'stopMovement');
+
+			enemy.checkPlayerInRange();
+
+			// Should stop because no Player found
+			expect(stopSpy).toHaveBeenCalled();
+		});
+	});
+
+	describe('onUpdate with throttling', () => {
+		beforeEach(() => {
+			enemy = new Enemy(mockScene, 100, 200, 'rat', 1);
+			(enemy as any).body = { setSize: jest.fn() };
+		});
+
+		it('should throttle perception checks based on interval', () => {
+			const checkSpy = jest.spyOn(enemy, 'checkPlayerInRange');
+			enemy.lastPerceptionCheck = 0;
+			mockScene.time.now = 100; // Less than perceptionCheckInterval
+
+			enemy.onUpdate();
+
+			// Should not check because throttle interval not passed
+			expect(checkSpy).not.toHaveBeenCalled();
+		});
+
+		it('should check perception when interval has passed', () => {
+			const checkSpy = jest.spyOn(enemy, 'checkPlayerInRange');
+			enemy.lastPerceptionCheck = 0;
+			mockScene.time.now = enemy.perceptionCheckInterval + 100;
+
+			enemy.onUpdate();
+
+			expect(checkSpy).toHaveBeenCalled();
+		});
+
+		it('should continue processing when path exists between perception checks', () => {
+			enemy.currentPath = [{ x: 100, y: 200 } as Phaser.Math.Vector2, { x: 150, y: 250 } as Phaser.Math.Vector2];
+			enemy.currentWaypointIndex = 1;
+			enemy.lastPerceptionCheck = 0;
+			mockScene.time.now = 50; // Not enough for perception check
+
+			// Verify path exists and would trigger followCurrentPath
+			expect(enemy.currentPath).not.toBeNull();
+			expect(enemy.currentWaypointIndex).toBeLessThan(enemy.currentPath!.length);
+			expect(enemy.isAtacking).toBe(false);
+		});
+
+		it('should not follow path while attacking', () => {
+			enemy.currentPath = [{ x: 100, y: 200 } as Phaser.Math.Vector2, { x: 150, y: 250 } as Phaser.Math.Vector2];
+			enemy.currentWaypointIndex = 1;
+			enemy.isAtacking = true;
+			enemy.lastPerceptionCheck = 0;
+			mockScene.time.now = 50;
+
+			(enemy.container as any).body = {
+				setVelocity: jest.fn(),
+			};
+
+			enemy.onUpdate();
+
+			expect((enemy.container as any).body.setVelocity).not.toHaveBeenCalled();
+		});
+
+		it('should update lastPerceptionCheck after check', () => {
+			enemy.lastPerceptionCheck = 0;
+			mockScene.time.now = 500;
+
+			enemy.onUpdate();
+
+			expect(enemy.lastPerceptionCheck).toBe(500);
+		});
+	});
+
+	describe('pathfinding properties', () => {
+		beforeEach(() => {
+			enemy = new Enemy(mockScene, 100, 200, 'rat', 1);
+		});
+
+		it('should initialize with null currentPath', () => {
+			expect(enemy.currentPath).toBeNull();
+		});
+
+		it('should initialize currentWaypointIndex to 0', () => {
+			expect(enemy.currentWaypointIndex).toBe(0);
+		});
+
+		it('should have pathUpdateInterval property', () => {
+			expect(enemy.pathUpdateInterval).toBeGreaterThan(0);
+		});
+
+		it('should have waypointReachedDistance property', () => {
+			expect(enemy.waypointReachedDistance).toBeGreaterThan(0);
+		});
+
+		it('should have perceptionCheckInterval property', () => {
+			expect(enemy.perceptionCheckInterval).toBeGreaterThan(0);
+		});
+
+		it('should initialize lastPathUpdate to 0', () => {
+			expect(enemy.lastPathUpdate).toBe(0);
+		});
+
+		it('should initialize lastPerceptionCheck to 0', () => {
+			expect(enemy.lastPerceptionCheck).toBe(0);
+		});
+	});
+
+	describe('animation properties', () => {
+		beforeEach(() => {
+			enemy = new Enemy(mockScene, 100, 200, 'rat', 1);
+		});
+
+		it('should have idle animation prefix', () => {
+			expect(enemy.idlePrefixAnimation).toBeDefined();
+			expect(typeof enemy.idlePrefixAnimation).toBe('string');
+		});
+
+		it('should have walk animation prefix', () => {
+			expect(enemy.walkPrefixAnimation).toBeDefined();
+			expect(typeof enemy.walkPrefixAnimation).toBe('string');
+		});
+
+		it('should have attack animation prefix', () => {
+			expect(enemy.atackPrefixAnimation).toBeDefined();
+			expect(typeof enemy.atackPrefixAnimation).toBe('string');
+		});
+
+		it('should have directional animation suffixes', () => {
+			expect(enemy.downAnimationSufix).toBeDefined();
+			expect(enemy.upAnimationSufix).toBeDefined();
+			expect(enemy.leftAnimationSufix).toBeDefined();
+			expect(enemy.rightAnimationSufix).toBeDefined();
+		});
+	});
+
+	describe('BaseEntity state properties', () => {
+		beforeEach(() => {
+			enemy = new Enemy(mockScene, 100, 200, 'rat', 1);
+		});
+
+		it('should have swimming properties', () => {
+			expect(enemy.isSwimming).toBe(false);
+			expect(enemy.canSwim).toBe(true);
+		});
+
+		it('should have running properties', () => {
+			expect(enemy.isRunning).toBe(false);
+		});
+
+		it('should have speed properties', () => {
+			expect(enemy.baseSpeed).toBeGreaterThan(0);
+			expect(enemy.swimSpeed).toBeGreaterThan(0);
+			expect(enemy.runSpeed).toBeGreaterThan(0);
+		});
+
+		it('should have correct speed ordering', () => {
+			expect(enemy.swimSpeed).toBeLessThan(enemy.baseSpeed);
+			expect(enemy.baseSpeed).toBeLessThan(enemy.runSpeed);
+		});
+	});
 });

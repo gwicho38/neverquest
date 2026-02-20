@@ -1,14 +1,23 @@
 /**
- * Tests for OverworldScene
+ * Tests for CrossroadsScene
+ *
+ * CrossroadsScene is the central hub connecting all major regions in the story.
+ * It serves as the Act 2 starting point where players can access:
+ * - South: Return to Forest (OverworldScene)
+ * - West: Ancient Ruins (first Sunstone fragment)
+ * - North: Gate to Dark Lands (locked until Act 3)
+ * - East: Mountain pass (future expansion - Ice Caverns)
+ * - Center: Trading Post with NPCs
  */
 
-import { OverworldScene } from '../../scenes/OverworldScene';
+import { CrossroadsScene } from '../../scenes/CrossroadsScene';
 import { NeverquestMapCreator } from '../../plugins/NeverquestMapCreator';
 import { NeverquestWarp } from '../../plugins/NeverquestWarp';
 import { NeverquestObjectMarker } from '../../plugins/NeverquestObjectMarker';
 import { NeverquestEnvironmentParticles } from '../../plugins/NeverquestEnvironmentParticles';
 import { NeverquestEnemyZones } from '../../plugins/NeverquestEnemyZones';
 import { NeverquestSaveManager } from '../../plugins/NeverquestSaveManager';
+// NeverquestNPCManager is mocked below, import not needed at runtime
 
 // Mock dependencies
 jest.mock('../../plugins/AnimatedTiles', () => jest.fn());
@@ -19,12 +28,12 @@ jest.mock('../../plugins/NeverquestEnvironmentParticles', () => ({
 }));
 jest.mock('../../plugins/NeverquestMapCreator', () => ({
 	NeverquestMapCreator: jest.fn().mockImplementation(() => ({
-		mapName: 'overworld',
+		mapName: 'crossroads',
 		tilesetImages: [] as any[],
 		create: jest.fn(),
 		map: {
-			widthInPixels: 3200,
-			heightInPixels: 2400,
+			widthInPixels: 6400, // 80x80 tiles at 80 pixels
+			heightInPixels: 6400,
 		},
 	})),
 }));
@@ -52,6 +61,31 @@ jest.mock('../../plugins/NeverquestSaveManager', () => ({
 		showSaveNotification: jest.fn(),
 	})),
 }));
+jest.mock('../../plugins/NeverquestNPCManager', () => ({
+	NeverquestNPCManager: jest.fn().mockImplementation(() => ({
+		addNPCs: jest.fn(),
+		create: jest.fn(),
+		destroy: jest.fn(),
+	})),
+	CROSSROADS_NPCS: [
+		{ id: 'merchant', name: 'Wandering Merchant', x: 640, y: 560, chatId: 11 },
+		{ id: 'fallenKnight', name: 'Sir Aldric', x: 480, y: 640, chatId: 12 },
+		{ id: 'oracle', name: 'Oracle', x: 800, y: 480, chatId: 13 },
+		{ id: 'gateGuardian', name: 'Gate Guardian', x: 640, y: 320, chatId: 14 },
+	],
+}));
+jest.mock('../../plugins/NeverquestProgrammaticEnemyZones', () => ({
+	NeverquestProgrammaticEnemyZones: jest.fn().mockImplementation(() => ({
+		addZones: jest.fn(),
+		create: jest.fn(),
+		destroy: jest.fn(),
+	})),
+	CROSSROADS_ENEMY_ZONES: [
+		{ id: 'west_bandits_1', x: 256, y: 640, width: 192, height: 192, enemyId: 4, count: 2 },
+		{ id: 'east_wolves_1', x: 1024, y: 480, width: 200, height: 200, enemyId: 5, count: 2 },
+		{ id: 'shadow_scout_patrol', x: 640, y: 640, width: 640, height: 480, enemyId: 6, count: 1 },
+	],
+}));
 jest.mock('../../entities/Player', () => ({
 	Player: jest.fn(),
 }));
@@ -65,6 +99,9 @@ jest.mock('../../consts/Numbers', () => ({
 		OPAQUE: 1,
 		HIGH: 0.8,
 		VERY_HIGH: 0.9,
+		VERY_LOW: 0.1,
+		TRANSPARENT: 0,
+		MEDIUM: 0.5,
 	},
 	ParticleValues: {
 		LIFESPAN_MEDIUM: 2000,
@@ -72,11 +109,15 @@ jest.mock('../../consts/Numbers', () => ({
 	},
 	Scale: {
 		MEDIUM_LARGE: 0.75,
+		TINY: 0.5,
+		SMALL: 0.8,
 	},
 }));
 jest.mock('../../consts/Colors', () => ({
 	HexColors: {
-		ORANGE_LIGHT: '#FFA500',
+		GREEN_LIGHT: '#44ff44',
+		BLUE_LIGHT: '#66aaff',
+		WHITE: '#ffffff',
 	},
 }));
 jest.mock('../../consts/Messages', () => ({
@@ -85,8 +126,8 @@ jest.mock('../../consts/Messages', () => ({
 	},
 }));
 
-describe('OverworldScene', () => {
-	let scene: OverworldScene;
+describe('CrossroadsScene', () => {
+	let scene: CrossroadsScene;
 	let mockSound: any;
 	let mockKeyboardHandler: any;
 
@@ -98,7 +139,7 @@ describe('OverworldScene', () => {
 			stop: jest.fn(),
 		};
 
-		scene = new OverworldScene();
+		scene = new CrossroadsScene();
 
 		// Setup mock scene properties
 		(scene as any).load = {
@@ -110,6 +151,8 @@ describe('OverworldScene', () => {
 				startFollow: jest.fn(),
 				setZoom: jest.fn(),
 				setBounds: jest.fn(),
+				centerX: 640,
+				centerY: 360,
 			},
 		};
 
@@ -150,13 +193,30 @@ describe('OverworldScene', () => {
 		const mockText = {
 			setOrigin: jest.fn().mockReturnThis(),
 			setDepth: jest.fn().mockReturnThis(),
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setAlpha: jest.fn().mockReturnThis(),
+			destroy: jest.fn(),
+		};
+
+		// Mock particles emitter
+		const mockParticleEmitter = {
+			destroy: jest.fn(),
+		};
+
+		// Mock graphics object for visual effects
+		const mockGraphics = {
+			fillStyle: jest.fn().mockReturnThis(),
+			fillRect: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			destroy: jest.fn(),
 		};
 
 		// Mock add object for scene.add methods
 		(scene as any).add = {
 			zone: jest.fn().mockReturnValue(mockZone),
-			particles: jest.fn().mockReturnValue({}),
+			particles: jest.fn().mockReturnValue(mockParticleEmitter),
 			text: jest.fn().mockReturnValue(mockText),
+			graphics: jest.fn().mockReturnValue(mockGraphics),
 		};
 
 		// Mock physics for overlap and existing
@@ -172,7 +232,12 @@ describe('OverworldScene', () => {
 			add: jest.fn(),
 		};
 
-		// Mock player with container - cast to any to bypass strict typing in tests
+		// Mock time for delayed calls
+		(scene as any).time = {
+			delayedCall: jest.fn(),
+		};
+
+		// Mock player with container
 		scene.player = {
 			container: {},
 			neverquestMovement: null,
@@ -181,13 +246,13 @@ describe('OverworldScene', () => {
 	});
 
 	describe('constructor', () => {
-		it('should create scene with key OverworldScene', () => {
-			const newScene = new OverworldScene();
-			expect((newScene as any).sys?.settings?.key || 'OverworldScene').toBe('OverworldScene');
+		it('should create scene with key CrossroadsScene', () => {
+			const newScene = new CrossroadsScene();
+			expect((newScene as any).sys?.settings?.key || 'CrossroadsScene').toBe('CrossroadsScene');
 		});
 
 		it('should initialize with null/empty properties', () => {
-			const newScene = new OverworldScene();
+			const newScene = new CrossroadsScene();
 			expect(newScene.player).toBeNull();
 			expect(newScene.mapCreator).toBeNull();
 			expect(newScene.map).toBeNull();
@@ -197,7 +262,13 @@ describe('OverworldScene', () => {
 			expect(newScene.enemies).toEqual([]);
 			expect(newScene.neverquestEnemyZones).toBeNull();
 			expect(newScene.saveManager).toBeNull();
-			expect(newScene.crossroadsWarpZone).toBeNull();
+			expect(newScene.overworldWarpZone).toBeNull();
+		});
+
+		it('should initialize enemies as empty array', () => {
+			const newScene = new CrossroadsScene();
+			expect(Array.isArray(newScene.enemies)).toBe(true);
+			expect(newScene.enemies.length).toBe(0);
 		});
 	});
 
@@ -221,37 +292,45 @@ describe('OverworldScene', () => {
 			expect((scene as any).cameras.main.setZoom).toHaveBeenCalledWith(2);
 		});
 
-		it('should create map with correct name', () => {
+		it('should create map with crossroads name', () => {
 			scene.create();
 
-			expect(NeverquestMapCreator).toHaveBeenCalledWith(scene, 'overworld');
+			expect(NeverquestMapCreator).toHaveBeenCalledWith(scene, 'crossroads');
+		});
+
+		it('should store map reference', () => {
+			scene.create();
+
+			expect(scene.map).toBeDefined();
+			expect(scene.map!.widthInPixels).toBe(6400);
+			expect(scene.map!.heightInPixels).toBe(6400);
 		});
 
 		it('should start camera following player', () => {
 			scene.create();
 
-			expect((scene as any).cameras.main.startFollow).toHaveBeenCalledWith(scene.player.container);
+			expect((scene as any).cameras.main.startFollow).toHaveBeenCalledWith(scene.player!.container);
 		});
 
 		it('should set camera bounds to map size', () => {
 			scene.create();
 
-			expect((scene as any).cameras.main.setBounds).toHaveBeenCalledWith(0, 0, 3200, 2400);
+			expect((scene as any).cameras.main.setBounds).toHaveBeenCalledWith(0, 0, 6400, 6400);
 		});
 
-		it('should create warps', () => {
+		it('should create warps for scene transitions', () => {
 			scene.create();
 
 			expect(NeverquestWarp).toHaveBeenCalled();
 		});
 
-		it('should create interactive markers', () => {
+		it('should create interactive markers for NPCs', () => {
 			scene.create();
 
 			expect(NeverquestObjectMarker).toHaveBeenCalled();
 		});
 
-		it('should launch dialog scene', () => {
+		it('should launch dialog scene with correct data', () => {
 			scene.create();
 
 			expect((scene as any).scene.launch).toHaveBeenCalledWith(
@@ -264,7 +343,7 @@ describe('OverworldScene', () => {
 			);
 		});
 
-		it('should get joystick scene', () => {
+		it('should get joystick scene reference', () => {
 			scene.create();
 
 			expect((scene as any).scene.get).toHaveBeenCalledWith('JoystickScene');
@@ -295,14 +374,20 @@ describe('OverworldScene', () => {
 			expect(scene.particles!.create).toHaveBeenCalled();
 		});
 
-		it('should set sound volume and play forest theme', () => {
+		it('should set sound volume and play background music', () => {
 			scene.create();
 
 			expect((scene as any).sound.add).toHaveBeenCalledWith('forest', { loop: true });
 			expect(mockSound.play).toHaveBeenCalled();
 		});
 
-		it('should create enemy zones', () => {
+		it('should initialize enemies array', () => {
+			scene.create();
+
+			expect(scene.enemies).toEqual([]);
+		});
+
+		it('should create enemy zones for bandits and wolves', () => {
 			scene.create();
 
 			expect(NeverquestEnemyZones).toHaveBeenCalled();
@@ -400,6 +485,18 @@ describe('OverworldScene', () => {
 
 			expect(scene.saveManager!.showSaveNotification).toHaveBeenCalledWith('No checkpoint found', true);
 		});
+
+		it('should not trigger save on regular S key without Ctrl', () => {
+			const event = {
+				ctrlKey: false,
+				key: 's',
+				preventDefault: jest.fn(),
+			};
+
+			mockKeyboardHandler(event);
+
+			expect(scene.saveManager!.saveGame).not.toHaveBeenCalled();
+		});
 	});
 
 	describe('stopSceneMusic', () => {
@@ -408,6 +505,12 @@ describe('OverworldScene', () => {
 			scene.stopSceneMusic();
 
 			expect(mockSound.stop).toHaveBeenCalled();
+		});
+
+		it('should handle null themeSound gracefully', () => {
+			const newScene = new CrossroadsScene();
+			// themeSound is null by default
+			expect(() => newScene.stopSceneMusic()).not.toThrow();
 		});
 	});
 
@@ -421,8 +524,8 @@ describe('OverworldScene', () => {
 		});
 	});
 
-	describe('createCrossroadsWarp', () => {
-		it('should create a warp zone to CrossroadsScene', () => {
+	describe('createOverworldWarp', () => {
+		it('should create a warp zone to OverworldScene', () => {
 			scene.create();
 
 			expect((scene as any).add.zone).toHaveBeenCalled();
@@ -441,29 +544,25 @@ describe('OverworldScene', () => {
 			);
 		});
 
-		it('should create arrow indicators', () => {
+		it('should create arrow indicators pointing down', () => {
 			scene.create();
 
-			// Should create 2 arrows (left and right of warp)
+			// Should create arrows pointing down to forest
 			expect((scene as any).add.text).toHaveBeenCalledWith(
 				expect.any(Number),
 				expect.any(Number),
-				'↑',
+				'↓',
 				expect.any(Object)
 			);
 		});
 
 		it('should not create warp if player is null', () => {
-			// Test createCrossroadsWarp directly instead of through create()
-			// to avoid other null player checks in create()
-			scene.map = { widthInPixels: 800, heightInPixels: 800 } as any;
+			scene.map = { widthInPixels: 1280, heightInPixels: 1280 } as any;
 			scene.player = null;
 
-			// Call createCrossroadsWarp directly
-			scene.createCrossroadsWarp();
+			scene.createOverworldWarp();
 
-			// The zone should not be created since player is null
-			expect(scene.crossroadsWarpZone).toBeNull();
+			expect(scene.overworldWarpZone).toBeNull();
 		});
 
 		it('should set up overlap detection with player container', () => {
@@ -477,7 +576,7 @@ describe('OverworldScene', () => {
 		});
 	});
 
-	describe('transitionToCrossroads', () => {
+	describe('transitionToOverworld', () => {
 		beforeEach(() => {
 			(scene as any).cameras = {
 				main: {
@@ -501,29 +600,29 @@ describe('OverworldScene', () => {
 
 		it('should destroy warp zone on transition', () => {
 			scene.create();
-			const mockDestroy = (scene.crossroadsWarpZone as any)?.destroy;
+			const mockDestroy = (scene.overworldWarpZone as any)?.destroy;
 
-			scene.transitionToCrossroads();
+			scene.transitionToOverworld();
 
 			if (mockDestroy) {
 				expect(mockDestroy).toHaveBeenCalled();
 			}
-			expect(scene.crossroadsWarpZone).toBeNull();
+			expect(scene.overworldWarpZone).toBeNull();
 		});
 
 		it('should fade the camera', () => {
 			scene.create();
-			scene.transitionToCrossroads();
+			scene.transitionToOverworld();
 
 			expect((scene as any).cameras.main.fade).toHaveBeenCalledWith(500);
 		});
 
-		it('should start CrossroadsScene with previous scene reference', () => {
+		it('should start OverworldScene with previous scene reference', () => {
 			scene.create();
-			scene.transitionToCrossroads();
+			scene.transitionToOverworld();
 
-			expect((scene as any).scene.start).toHaveBeenCalledWith('CrossroadsScene', {
-				previousScene: 'OverworldScene',
+			expect((scene as any).scene.start).toHaveBeenCalledWith('OverworldScene', {
+				previousScene: 'CrossroadsScene',
 			});
 		});
 
@@ -531,10 +630,60 @@ describe('OverworldScene', () => {
 			scene.create();
 			const mockPlayerDestroy = (scene.player as any).destroy;
 
-			scene.transitionToCrossroads();
+			scene.transitionToOverworld();
 
 			expect(mockPlayerDestroy).toHaveBeenCalled();
 			expect((scene.player as any).neverquestMovement).toBeNull();
 		});
+	});
+});
+
+describe('CrossroadsScene Story Context', () => {
+	it('should be the central hub scene for Act 2', () => {
+		const scene = new CrossroadsScene();
+		// The scene key confirms its identity
+		expect((scene as any).sys?.settings?.key || 'CrossroadsScene').toBe('CrossroadsScene');
+	});
+
+	it('should use crossroads map', () => {
+		const scene = new CrossroadsScene();
+		// Setup mocks
+		(scene as any).load = { scenePlugin: jest.fn() };
+		(scene as any).cameras = {
+			main: { startFollow: jest.fn(), setZoom: jest.fn(), setBounds: jest.fn(), centerX: 640, centerY: 360 },
+		};
+		(scene as any).scene = { launch: jest.fn(), get: jest.fn().mockReturnValue({}) };
+		(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue({ play: jest.fn() }) };
+		(scene as any).input = { keyboard: { on: jest.fn() } };
+		(scene as any).sys = { animatedTiles: { init: jest.fn() } };
+		// Mock add/physics/tweens for warp functionality
+		const mockZone = { setOrigin: jest.fn().mockReturnThis(), destroy: jest.fn(), body: { immovable: false } };
+		const mockText = {
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			setScrollFactor: jest.fn().mockReturnThis(),
+			setAlpha: jest.fn().mockReturnThis(),
+			destroy: jest.fn(),
+		};
+		const mockGraphics = {
+			fillStyle: jest.fn().mockReturnThis(),
+			fillRect: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+			destroy: jest.fn(),
+		};
+		(scene as any).add = {
+			zone: jest.fn().mockReturnValue(mockZone),
+			particles: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+			text: jest.fn().mockReturnValue(mockText),
+			graphics: jest.fn().mockReturnValue(mockGraphics),
+		};
+		(scene as any).physics = { add: { existing: jest.fn(), overlap: jest.fn() } };
+		(scene as any).tweens = { add: jest.fn() };
+		(scene as any).time = { delayedCall: jest.fn() };
+		scene.player = { container: {}, neverquestMovement: null, destroy: jest.fn() } as any;
+
+		scene.create();
+
+		expect(NeverquestMapCreator).toHaveBeenCalledWith(scene, 'crossroads');
 	});
 });

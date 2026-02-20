@@ -1,5 +1,16 @@
-import { AttributesManager } from '../../../plugins/attributes/AttributesManager';
+import { AttributesManager, IRawAttributes } from '../../../plugins/attributes/AttributesManager';
 import { BUFF_TYPES } from '../../../consts/DB_SEED/BuffTypes';
+
+/**
+ * Default raw attributes for testing
+ */
+const defaultRawAttributes: IRawAttributes = {
+	str: 10,
+	vit: 10,
+	agi: 10,
+	dex: 10,
+	int: 10,
+};
 
 describe('AttributesManager', () => {
 	let manager: AttributesManager;
@@ -346,8 +357,8 @@ describe('AttributesManager', () => {
 			mockEntity.attributes.level = 1;
 			mockEntity.attributes.rawAttributes.str = 10;
 			mockEntity.attributes.bonus.consumable = [
-				{ uniqueId: BUFF_TYPES.ATK01.id, value: '5' },
-				{ uniqueId: BUFF_TYPES.ATK02.id, value: '3' },
+				{ uniqueId: BUFF_TYPES.ATK01.id, statBonus: 'atack', value: 5, time: 60 },
+				{ uniqueId: BUFF_TYPES.ATK02.id, statBonus: 'atack', value: 3, time: 60 },
 			];
 
 			manager.calculateAtack();
@@ -525,7 +536,7 @@ describe('AttributesManager', () => {
 			mockEntity.attributes.rawAttributes.str = 10;
 			mockEntity.attributes.availableStatPoints = 5;
 
-			manager.addAttribute('str', 3, {});
+			manager.addAttribute('str', 3, defaultRawAttributes);
 
 			expect(mockEntity.attributes.rawAttributes.str).toBe(13);
 			expect(mockEntity.attributes.availableStatPoints).toBe(2);
@@ -533,7 +544,7 @@ describe('AttributesManager', () => {
 
 		it('should set changedAttribute flag', () => {
 			manager.changedAttribute = false;
-			manager.addAttribute('str', 1, {});
+			manager.addAttribute('str', 1, defaultRawAttributes);
 
 			expect(manager.changedAttribute).toBe(true);
 		});
@@ -542,7 +553,7 @@ describe('AttributesManager', () => {
 			mockEntity.attributes.rawAttributes.str = 10;
 			mockEntity.attributes.availableStatPoints = 2;
 
-			manager.addAttribute('str', 5, {});
+			manager.addAttribute('str', 5, defaultRawAttributes);
 
 			expect(mockEntity.attributes.rawAttributes.str).toBe(10); // Unchanged
 			expect(mockEntity.attributes.availableStatPoints).toBe(2); // Unchanged
@@ -551,13 +562,13 @@ describe('AttributesManager', () => {
 		it('should handle adding to different attributes', () => {
 			mockEntity.attributes.availableStatPoints = 10;
 
-			manager.addAttribute('vit', 2, {});
+			manager.addAttribute('vit', 2, defaultRawAttributes);
 			expect(mockEntity.attributes.rawAttributes.vit).toBe(12);
 
-			manager.addAttribute('agi', 3, {});
+			manager.addAttribute('agi', 3, defaultRawAttributes);
 			expect(mockEntity.attributes.rawAttributes.agi).toBe(13);
 
-			manager.addAttribute('dex', 1, {});
+			manager.addAttribute('dex', 1, defaultRawAttributes);
 			expect(mockEntity.attributes.rawAttributes.dex).toBe(11);
 
 			expect(mockEntity.attributes.availableStatPoints).toBe(4); // 10 - 2 - 3 - 1
@@ -567,7 +578,7 @@ describe('AttributesManager', () => {
 			mockEntity.attributes.rawAttributes.str = 10;
 			mockEntity.attributes.availableStatPoints = 5;
 
-			manager.addAttribute('str', 5, {});
+			manager.addAttribute('str', 5, defaultRawAttributes);
 
 			expect(mockEntity.attributes.rawAttributes.str).toBe(15);
 			expect(mockEntity.attributes.availableStatPoints).toBe(0);

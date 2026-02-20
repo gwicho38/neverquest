@@ -212,7 +212,10 @@ describe('SettingScene', () => {
 
 		it('should stop scene on close button click', () => {
 			// Get the pointerdown callback
-			const pointerdownCall = scene.closeButton.on.mock.calls.find((call: any) => call[0] === 'pointerdown');
+			const closeButtonMock = scene.closeButton as unknown as { on: jest.Mock };
+			const pointerdownCall = closeButtonMock.on.mock.calls.find(
+				(call: [string, () => void]) => call[0] === 'pointerdown'
+			);
 			const callback = pointerdownCall[1];
 
 			// Execute callback
@@ -450,7 +453,10 @@ describe('SettingScene', () => {
 			scene.settingHeader = { setPosition: jest.fn(), y: 115 };
 
 			// Close scene
-			const pointerdownCall = scene.closeButton.on.mock.calls.find((call: any) => call[0] === 'pointerdown');
+			const closeButtonMock = scene.closeButton as unknown as { on: jest.Mock };
+			const pointerdownCall = closeButtonMock.on.mock.calls.find(
+				(call: [string, () => void]) => call[0] === 'pointerdown'
+			);
 			pointerdownCall[1]();
 			expect(mockScene.stop).toHaveBeenCalled();
 

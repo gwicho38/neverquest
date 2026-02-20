@@ -498,14 +498,14 @@ describe('IntroScene', () => {
 		it('should generate random points within logo bounds', () => {
 			const particleCall = mockAdd.particles.mock.calls[0];
 			const config = particleCall[3];
-			const mockVec = {
-				setTo: jest.fn().mockReturnThis(),
-			};
+			const mockVec: { x?: number; y?: number } = {};
 
 			config.emitZone.source.getRandomPoint(mockVec);
 
 			expect(mockTextures.getPixel).toHaveBeenCalled();
-			expect(mockVec.setTo).toHaveBeenCalled();
+			// The callback should set x and y on the vector
+			expect(mockVec.x).toBeDefined();
+			expect(mockVec.y).toBeDefined();
 		});
 	});
 

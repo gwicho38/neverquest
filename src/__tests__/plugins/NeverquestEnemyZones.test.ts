@@ -348,7 +348,7 @@ describe('NeverquestEnemyZones', () => {
 
 			enemyZones.create();
 
-			expect(mockScene.physics.add.collider).toHaveBeenCalledWith(mockScene.enemies, null);
+			expect(mockScene.physics.add.collider).toHaveBeenCalledWith(mockScene.enemies, undefined);
 		});
 
 		it('should not create enemies when createFromProperties is false', () => {

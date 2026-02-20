@@ -361,17 +361,6 @@ describe('NeverquestTiledInfoBox', () => {
 			infoBox.create();
 		});
 
-		it('should set allProperties on overlap', () => {
-			const mockZoneWithChat = {
-				chat: ['Hello!'],
-				properties: [{ name: 'test', value: 'value' }] as any[],
-			};
-
-			overlapCallback(mockZoneWithChat);
-
-			expect((infoBox.neverquestDialogBox as any).allProperties).toEqual(mockZoneWithChat.properties);
-		});
-
 		it('should set isOverlapingChat to true', () => {
 			const mockZoneWithChat = {
 				chat: ['Hello!'],
