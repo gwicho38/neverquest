@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Ogre enemy configuration
+ *
+ * This file defines the Ogre enemy type:
+ * - Animation definitions (idle, walk, attack per direction)
+ * - Combat stats (high health, high attack, slow speed)
+ * - Drop table with rare equipment
+ *
+ * Ogre: Slow but powerful brute enemy.
+ *
+ * @see Enemy - Enemy entity class
+ * @see NeverquestEnemyZones - Spawns enemies
+ * @see EnemiesSeedConfig - Enemy registry
+ *
+ * @module consts/enemies/ogre
+ */
+
 import { EntityDrops } from '../../models/EntityDrops';
 
 export const Ogre = [
