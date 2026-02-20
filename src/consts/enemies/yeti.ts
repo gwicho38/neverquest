@@ -65,8 +65,8 @@ export const YetiConfig = createEnemyConfig({
 	drops: [
 		COMMON_DROPS.HEALTH_POTION(80),
 		COMMON_DROPS.MANA_POTION(50),
-		new EntityDrops(4, 100), // Ice shard (guaranteed)
+		new EntityDrops(13, 100), // Ice shard (guaranteed)
 		new EntityDrops(5, 30), // Cold resistance potion
-		new EntityDrops(6, 15), // Yeti fur (rare crafting material) - TODO: add item ID
+		new EntityDrops(6, 15), // Yeti fur (rare crafting material)
 	],
 });

@@ -67,6 +67,6 @@ export const FireDrakeConfig = createEnemyConfig({
 		COMMON_DROPS.HEALTH_POTION(50),
 		COMMON_DROPS.MANA_POTION(25),
 		new EntityDrops(8, 45), // Molten core
-		new EntityDrops(10, 8), // Drake scale - TODO: add item ID
+		new EntityDrops(10, 8), // Drake scale
 	],
 });

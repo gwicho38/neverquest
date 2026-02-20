@@ -98,6 +98,12 @@ export const GameMessages = {
 	SHIELD_RAISED: 'You raise your shield!',
 	SHIELD_LOWERED: 'Your shield is lowered.',
 
+	// Environmental damage
+	HEAT_DAMAGE: (damage: number) => `The searing heat burns you for ${damage} damage!`,
+	DROWNING_DAMAGE: (damage: number) => `You are drowning! -${damage} HP`,
+	LIGHTNING_DAMAGE: (damage: number) => `Lightning strikes you for ${damage} damage!`,
+	LIGHTNING_STUNNED: 'You are stunned by the lightning!',
+
 	// Save/Load
 	NO_CHECKPOINT_FOUND: 'No checkpoint found',
 } as const;

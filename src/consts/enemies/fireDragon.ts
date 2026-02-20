@@ -73,6 +73,6 @@ export const FireDragonConfig = createEnemyConfig({
 		new EntityDrops(8, 100), // Molten cores (guaranteed, multiple)
 		new EntityDrops(9, 100), // Heat resistance armor (guaranteed)
 		new EntityDrops(10, 100), // Drake scales
-		new EntityDrops(12, 30), // Dragon Scale (legendary boss drop) - TODO: add item ID
+		new EntityDrops(12, 30), // Dragon Scale (legendary boss drop)
 	],
 });

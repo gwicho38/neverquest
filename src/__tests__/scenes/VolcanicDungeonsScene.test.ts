@@ -32,6 +32,15 @@ jest.mock('phaser', () => {
 				(this as any).sys = { settings: { key: config?.key } };
 			}
 		},
+		Physics: {
+			Arcade: {
+				Sprite: class {},
+				StaticBody: class {},
+			},
+		},
+		GameObjects: {
+			Sprite: class {},
+		},
 		Geom: {
 			Rectangle: MockRectangle,
 			Point: function () {
@@ -188,6 +197,9 @@ jest.mock('../../consts/Numbers', () => ({
 		LIFESPAN_LONG: 2000,
 		LIFESPAN_VERY_LONG: 3000,
 	},
+	CombatNumbers: {
+		PLAYER_DEATH_DELAY: 1500,
+	},
 	VolcanicPhysics: {
 		LAVA_INSTANT_DEATH: true,
 		LAVA_RESPAWN_DELAY: 2000,
@@ -230,6 +242,14 @@ jest.mock('../../consts/Numbers', () => ({
 jest.mock('../../consts/Messages', () => ({
 	GameMessages: {
 		NO_CHECKPOINT_FOUND: 'No checkpoint found',
+		HEAT_DAMAGE: (damage: number) => `The searing heat burns you for ${damage} damage!`,
+		PLAYER_DEFEATED: 'You have been defeated!',
+	},
+}));
+
+jest.mock('../../scenes/HUDScene', () => ({
+	HUDScene: {
+		log: jest.fn(),
 	},
 }));
 
@@ -258,6 +278,8 @@ describe('VolcanicDungeonsScene', () => {
 				setBounds: jest.fn(),
 				setBackgroundColor: jest.fn(),
 				fade: jest.fn(),
+				shake: jest.fn(),
+				flash: jest.fn(),
 				once: jest.fn().mockImplementation((_event: string, callback: (...args: any[]) => void) => {
 					mockFadeCompleteCallback = callback;
 				}),
@@ -268,6 +290,8 @@ describe('VolcanicDungeonsScene', () => {
 			launch: jest.fn(),
 			get: jest.fn().mockReturnValue({}),
 			start: jest.fn(),
+			key: 'VolcanicDungeonsScene',
+			pause: jest.fn(),
 		};
 
 		(scene as any).sound = {
@@ -324,6 +348,7 @@ describe('VolcanicDungeonsScene', () => {
 			addEvent: jest.fn().mockReturnValue({
 				destroy: jest.fn(),
 			}),
+			delayedCall: jest.fn(),
 		};
 	});
 
@@ -643,6 +668,82 @@ describe('VolcanicDungeonsScene', () => {
 			mockFadeCompleteCallback();
 
 			expect((scene as any).scene.start).toHaveBeenCalledWith('CrossroadsScene');
+		});
+	});
+
+	describe('heat damage', () => {
+		let heatDamageCallback: () => void;
+
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+			// Capture the heat damage timer callback
+			(scene as any).time.addEvent = jest.fn().mockImplementation((config: any) => {
+				if (config.delay === 2000 && config.loop) {
+					heatDamageCallback = config.callback;
+				}
+				return { destroy: jest.fn() };
+			});
+
+			scene.create();
+
+			// Setup player with health properties for damage tests
+			scene.player = {
+				container: { x: 100, y: 100, body: { velocity: { x: 0, y: 0 }, setVelocity: jest.fn() } },
+				neverquestMovement: {},
+				destroy: jest.fn(),
+				attributes: { health: 20, baseHealth: 20, level: 1 },
+				healthBar: { decrease: jest.fn() },
+				neverquestHUDProgressBar: { updateHealth: jest.fn() },
+				canMove: true,
+				canAtack: true,
+			} as any;
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should apply heat damage when player is in heat zone', () => {
+			scene.isInHeatZone = true;
+			heatDamageCallback();
+
+			expect(scene.player.attributes.health).toBe(19); // 20 - 1
+			expect(scene.player.healthBar.decrease).toHaveBeenCalledWith(1);
+			expect(scene.player.neverquestHUDProgressBar.updateHealth).toHaveBeenCalled();
+		});
+
+		it('should not apply damage when player is not in heat zone', () => {
+			scene.isInHeatZone = false;
+			heatDamageCallback();
+
+			expect(scene.player.attributes.health).toBe(20);
+			expect(scene.player.healthBar.decrease).not.toHaveBeenCalled();
+		});
+
+		it('should reset isInHeatZone after each tick', () => {
+			scene.isInHeatZone = true;
+			heatDamageCallback();
+
+			expect(scene.isInHeatZone).toBe(false);
+		});
+
+		it('should trigger death when health reaches zero', () => {
+			scene.player.attributes.health = 1;
+			scene.isInHeatZone = true;
+			heatDamageCallback();
+
+			expect(scene.player.attributes.health).toBe(0);
+			expect(scene.player.canMove).toBe(false);
+			expect(scene.player.canAtack).toBe(false);
+		});
+
+		it('should not apply damage to dead player', () => {
+			scene.player.attributes.health = 0;
+			scene.isInHeatZone = true;
+			heatDamageCallback();
+
+			expect(scene.player.healthBar.decrease).not.toHaveBeenCalled();
 		});
 	});
 

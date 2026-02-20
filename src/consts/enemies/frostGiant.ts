@@ -69,9 +69,9 @@ export const FrostGiantConfig = createEnemyConfig({
 	healthBarOffsetY: 28,
 	drops: [
 		...COMMON_DROPS.BOSS_LOOT, // Guaranteed potions
-		new EntityDrops(4, 100), // Ice shards (guaranteed, multiple)
+		new EntityDrops(13, 100), // Ice shards (guaranteed, multiple)
 		new EntityDrops(5, 100), // Cold resistance potion (guaranteed)
 		new EntityDrops(6, 50), // Yeti fur
-		new EntityDrops(7, 25), // Frozen Heart (rare boss drop) - TODO: add item ID
+		new EntityDrops(7, 25), // Frozen Heart (rare boss drop)
 	],
 });
