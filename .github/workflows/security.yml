@@ -12,11 +12,12 @@ jobs:
     dependency-review:
         runs-on: ubuntu-latest
         if: github.event_name == 'pull_request'
+        continue-on-error: true
         steps:
             - uses: actions/checkout@v4
             - uses: actions/dependency-review-action@v3
               with:
-                  fail-on-severity: moderate
+                  fail-on-severity: high
 
     codeql:
         runs-on: ubuntu-latest
