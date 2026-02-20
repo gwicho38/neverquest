@@ -70,6 +70,6 @@ export const MagmaWormConfig = createEnemyConfig({
 		COMMON_DROPS.MANA_POTION(50),
 		new EntityDrops(8, 100), // Molten core (guaranteed)
 		new EntityDrops(9, 25), // Heat resistance armor piece
-		new EntityDrops(11, 20), // Worm carapace (rare crafting) - TODO: add item ID
+		new EntityDrops(11, 20), // Worm carapace (rare crafting)
 	],
 });

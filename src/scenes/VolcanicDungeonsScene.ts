@@ -40,10 +40,12 @@ import {
 	AudioValues,
 	Scale,
 	ParticleValues,
+	CombatNumbers,
 	VolcanicPhysics,
 	VolcanicDungeonsValues,
 } from '../consts/Numbers';
 import { GameMessages } from '../consts/Messages';
+import { HUDScene } from './HUDScene';
 
 /**
  * Heat zone configuration for damage areas
@@ -290,10 +292,30 @@ export class VolcanicDungeonsScene extends Phaser.Scene {
 		this.heatDamageTimer = this.time.addEvent({
 			delay: VolcanicPhysics.HEAT_ZONE_TICK_RATE,
 			callback: () => {
-				if (this.isInHeatZone && this.player) {
-					// Apply heat damage
-					// TODO: Implement actual damage when player health system is ready
-					console.log('[VolcanicDungeonsScene] Heat damage tick');
+				if (this.isInHeatZone && this.player && this.player.attributes.health > 0) {
+					const damage = VolcanicPhysics.HEAT_ZONE_DAMAGE;
+					this.player.attributes.health = Math.max(0, this.player.attributes.health - damage);
+					if (this.player.healthBar) {
+						this.player.healthBar.decrease(damage);
+					}
+					if (this.player.neverquestHUDProgressBar) {
+						this.player.neverquestHUDProgressBar.updateHealth();
+					}
+					HUDScene.log(this, GameMessages.HEAT_DAMAGE(damage));
+					this.cameras.main.shake(80, 0.005);
+
+					if (this.player.attributes.health <= 0) {
+						this.player.canMove = false;
+						this.player.canAtack = false;
+						HUDScene.log(this, GameMessages.PLAYER_DEFEATED);
+						this.time.delayedCall(CombatNumbers.PLAYER_DEATH_DELAY, () => {
+							this.scene.launch('GameOverScene', {
+								playerLevel: this.player.attributes.level,
+								lastScene: this.scene.key,
+							});
+							this.scene.pause();
+						});
+					}
 				}
 				// Reset for next frame
 				this.isInHeatZone = false;

@@ -64,7 +64,7 @@ export const IceElementalConfig = createEnemyConfig({
 	drops: [
 		COMMON_DROPS.HEALTH_POTION(50),
 		COMMON_DROPS.MANA_POTION(30),
-		new EntityDrops(4, 40), // Ice shard (crafting material)
-		new EntityDrops(5, 10), // Cold resistance potion - TODO: add item ID
+		new EntityDrops(13, 40), // Ice shard (crafting material)
+		new EntityDrops(5, 10), // Cold resistance potion
 	],
 });

@@ -64,6 +64,6 @@ export const FireImpConfig = createEnemyConfig({
 	drops: [
 		COMMON_DROPS.HEALTH_POTION(35),
 		COMMON_DROPS.MANA_POTION(20),
-		new EntityDrops(8, 30), // Molten core (crafting material) - TODO: add item ID
+		new EntityDrops(8, 30), // Molten core (crafting material)
 	],
 });

@@ -40,10 +40,12 @@ import {
 	AudioValues,
 	Scale,
 	ParticleValues,
+	CombatNumbers,
 	UnderwaterPhysics,
 	UnderwaterTempleValues,
 } from '../consts/Numbers';
 import { GameMessages } from '../consts/Messages';
+import { HUDScene } from './HUDScene';
 
 /**
  * Water current zone configuration
@@ -441,10 +443,30 @@ export class UnderwaterTempleScene extends Phaser.Scene {
 		this.drowningTimer = this.time.addEvent({
 			delay: UnderwaterPhysics.DROWNING_TICK_RATE,
 			callback: () => {
-				if (this.airMeter <= 0) {
-					// TODO: Apply drowning damage when player health system is ready
-					console.log('[UnderwaterTempleScene] Drowning damage!');
+				if (this.airMeter <= 0 && this.player && this.player.attributes.health > 0) {
+					const damage = UnderwaterPhysics.DROWNING_DAMAGE;
+					this.player.attributes.health = Math.max(0, this.player.attributes.health - damage);
+					if (this.player.healthBar) {
+						this.player.healthBar.decrease(damage);
+					}
+					if (this.player.neverquestHUDProgressBar) {
+						this.player.neverquestHUDProgressBar.updateHealth();
+					}
+					HUDScene.log(this, GameMessages.DROWNING_DAMAGE(damage));
 					this.cameras.main.shake(100, 0.01);
+
+					if (this.player.attributes.health <= 0) {
+						this.player.canMove = false;
+						this.player.canAtack = false;
+						HUDScene.log(this, GameMessages.PLAYER_DEFEATED);
+						this.time.delayedCall(CombatNumbers.PLAYER_DEATH_DELAY, () => {
+							this.scene.launch('GameOverScene', {
+								playerLevel: this.player.attributes.level,
+								lastScene: this.scene.key,
+							});
+							this.scene.pause();
+						});
+					}
 				}
 			},
 			loop: true,

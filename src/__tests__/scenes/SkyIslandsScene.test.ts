@@ -27,6 +27,15 @@ jest.mock('phaser', () => {
 				(this as any).sys = { settings: { key: config?.key } };
 			}
 		},
+		Physics: {
+			Arcade: {
+				Sprite: class {},
+				StaticBody: class {},
+			},
+		},
+		GameObjects: {
+			Sprite: class {},
+		},
 		Geom: {
 			Rectangle: MockRectangle,
 			Point: function () {
@@ -207,6 +216,9 @@ jest.mock('../../consts/Numbers', () => ({
 		LIFESPAN_LONG: 2000,
 		LIFESPAN_VERY_LONG: 3000,
 	},
+	CombatNumbers: {
+		PLAYER_DEATH_DELAY: 1500,
+	},
 	SkyPhysics: {
 		JUMP_VELOCITY: -400,
 		JUMP_COOLDOWN: 100,
@@ -258,6 +270,15 @@ jest.mock('../../consts/Numbers', () => ({
 jest.mock('../../consts/Messages', () => ({
 	GameMessages: {
 		NO_CHECKPOINT_FOUND: 'No checkpoint found',
+		LIGHTNING_DAMAGE: (damage: number) => `Lightning strikes you for ${damage} damage!`,
+		LIGHTNING_STUNNED: 'You are stunned by the lightning!',
+		PLAYER_DEFEATED: 'You have been defeated!',
+	},
+}));
+
+jest.mock('../../scenes/HUDScene', () => ({
+	HUDScene: {
+		log: jest.fn(),
 	},
 }));
 

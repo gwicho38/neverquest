@@ -40,10 +40,12 @@ import {
 	AudioValues,
 	Scale,
 	ParticleValues,
+	CombatNumbers,
 	SkyPhysics,
 	SkyIslandsValues,
 } from '../consts/Numbers';
 import { GameMessages } from '../consts/Messages';
+import { HUDScene } from './HUDScene';
 
 /**
  * Wind zone configuration for pushing effects
@@ -478,9 +480,37 @@ export class SkyIslandsScene extends Phaser.Scene {
 					strikeY
 				);
 
-				if (distance < 40) {
-					// TODO: Apply lightning damage when player health system is ready
-					console.log('[SkyIslandsScene] Player hit by lightning!');
+				if (distance < 40 && this.player && this.player.attributes.health > 0) {
+					const damage = SkyPhysics.LIGHTNING_DAMAGE;
+					this.player.attributes.health = Math.max(0, this.player.attributes.health - damage);
+					if (this.player.healthBar) {
+						this.player.healthBar.decrease(damage);
+					}
+					if (this.player.neverquestHUDProgressBar) {
+						this.player.neverquestHUDProgressBar.updateHealth();
+					}
+					HUDScene.log(this, GameMessages.LIGHTNING_DAMAGE(damage));
+					this.cameras.main.shake(150, 0.02);
+
+					// Stun effect
+					this.player.canMove = false;
+					this.time.delayedCall(SkyPhysics.LIGHTNING_STUN_DURATION, () => {
+						if (this.player && this.player.attributes.health > 0) {
+							this.player.canMove = true;
+						}
+					});
+
+					if (this.player.attributes.health <= 0) {
+						this.player.canAtack = false;
+						HUDScene.log(this, GameMessages.PLAYER_DEFEATED);
+						this.time.delayedCall(CombatNumbers.PLAYER_DEATH_DELAY, () => {
+							this.scene.launch('GameOverScene', {
+								playerLevel: this.player.attributes.level,
+								lastScene: this.scene.key,
+							});
+							this.scene.pause();
+						});
+					}
 				}
 			},
 		});

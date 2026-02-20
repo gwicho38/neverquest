@@ -67,6 +67,6 @@ export const LavaGolemConfig = createEnemyConfig({
 		COMMON_DROPS.HEALTH_POTION(60),
 		COMMON_DROPS.MANA_POTION(35),
 		new EntityDrops(8, 60), // Molten core
-		new EntityDrops(9, 15), // Heat resistance armor piece - TODO: add item ID
+		new EntityDrops(9, 15), // Heat resistance armor piece
 	],
 });

@@ -64,6 +64,6 @@ export const FrostSpiderConfig = createEnemyConfig({
 	drops: [
 		COMMON_DROPS.HEALTH_POTION(40),
 		COMMON_DROPS.MANA_POTION(15),
-		new EntityDrops(4, 25), // Ice shard (crafting material) - TODO: add item ID
+		new EntityDrops(13, 25), // Ice shard (crafting material)
 	],
 });
