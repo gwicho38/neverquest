@@ -125,7 +125,10 @@ describe('NeverquestOutlineEffect', () => {
 
 		it('should use first pipeline instance from array', () => {
 			const secondInstance = { setOutlineColor: jest.fn(), thickness: 0 };
-			effect.outlinePostFxPlugin.get.mockReturnValue([mockPipelineInstance, secondInstance]);
+			(effect.outlinePostFxPlugin as unknown as { get: jest.Mock }).get.mockReturnValue([
+				mockPipelineInstance,
+				secondInstance,
+			]);
 
 			effect.applyEffect(mockObject);
 

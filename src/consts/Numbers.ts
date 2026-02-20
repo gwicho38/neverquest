@@ -1,6 +1,18 @@
 /**
- * Numeric constants used throughout the game
- * Organized by category for easy discovery
+ * @fileoverview Numeric constants for game configuration
+ *
+ * This file defines all numeric values used throughout the game:
+ * - EntitySpeed: Movement speeds
+ * - AnimationTiming: Duration values
+ * - CameraValues: Zoom and bounds
+ * - CombatNumbers: Damage modifiers
+ * - Dimensions: UI sizes
+ * - Alpha/Scale/Depth: Visual properties
+ *
+ * Organized by category for easy discovery.
+ * All magic numbers should be defined here.
+ *
+ * @module consts/Numbers
  */
 
 // =============================================================================
@@ -582,4 +594,373 @@ export const InputValues = {
 	KEY_K: 75,
 	KEY_I: 73,
 	KEY_U: 85,
+} as const;
+
+// =============================================================================
+// ICE PHYSICS (Ice Caverns biome)
+// =============================================================================
+
+export const IcePhysics = {
+	// Friction multipliers (lower = more slippery)
+	NORMAL_FRICTION: 1.0,
+	ICE_FRICTION: 0.15,
+	DEEP_ICE_FRICTION: 0.08,
+
+	// Slide mechanics
+	SLIDE_DECELERATION: 0.98, // How quickly player slows on ice
+	MIN_SLIDE_VELOCITY: 5, // Minimum velocity before stopping
+	MAX_SLIDE_VELOCITY: 400, // Cap on slide speed
+
+	// Ice hazard damage
+	FREEZING_WATER_DPS: 5, // Damage per second in freezing water
+	ICICLE_DAMAGE: 15, // Damage from falling icicles
+
+	// Blizzard effects
+	BLIZZARD_VISIBILITY_RADIUS: 80, // Reduced visibility in blizzard
+	BLIZZARD_SPEED_PENALTY: 0.7, // Speed multiplier in blizzard
+
+	// Frost status effect
+	FROST_SLOW_DURATION: 3000, // ms
+	FROST_SLOW_AMOUNT: 0.5, // Speed multiplier when frosted
+} as const;
+
+// =============================================================================
+// ICE CAVERNS SCENE
+// =============================================================================
+
+export const IceCavernsValues = {
+	// Map dimensions
+	MAP_WIDTH_TILES: 60,
+	MAP_HEIGHT_TILES: 60,
+	TILE_SIZE: 16,
+
+	// Room generation
+	MIN_ROOMS: 8,
+	MAX_ROOMS: 12,
+	MIN_ROOM_SIZE: 6,
+	MAX_ROOM_SIZE: 12,
+
+	// Enemy spawn counts per room type
+	ENEMIES_PER_SMALL_ROOM: 2,
+	ENEMIES_PER_MEDIUM_ROOM: 4,
+	ENEMIES_PER_LARGE_ROOM: 6,
+
+	// Boss room
+	BOSS_ROOM_SIZE: 16,
+
+	// Hazard frequencies
+	ICICLE_SPAWN_INTERVAL: 5000, // ms between icicle drops
+	BLIZZARD_DURATION: 8000, // ms
+	BLIZZARD_INTERVAL: 30000, // ms between blizzard events
+
+	// Lighting
+	CAVERN_AMBIENT_DARKNESS: 0.75,
+	ICE_CRYSTAL_LIGHT_RADIUS: 100,
+	ICE_CRYSTAL_LIGHT_COLOR: 0x87ceeb, // Light blue
+} as const;
+
+// =============================================================================
+// VOLCANIC PHYSICS (Volcanic Dungeons biome)
+// =============================================================================
+
+export const VolcanicPhysics = {
+	// Lava damage
+	LAVA_INSTANT_DEATH: true, // Falling in lava is instant death
+	LAVA_RESPAWN_DELAY: 2000, // ms before respawning after lava death
+
+	// Heat damage
+	HEAT_ZONE_DAMAGE: 1, // Damage per tick in heat zones
+	HEAT_ZONE_TICK_RATE: 2000, // ms between heat damage ticks
+	HEAT_RESISTANCE_REDUCTION: 0.5, // Damage reduction with heat resistance
+
+	// Geyser mechanics
+	GEYSER_ERUPTION_INTERVAL: 4000, // ms between eruptions
+	GEYSER_DAMAGE: 10, // Damage from geyser hit
+	GEYSER_WARNING_TIME: 1000, // ms warning before eruption
+
+	// Burning floor
+	BURNING_FLOOR_DAMAGE: 2, // Damage per tick on burning floor
+	BURNING_FLOOR_TICK_RATE: 1000, // ms between burn ticks
+
+	// Fire trap
+	FIRE_TRAP_DAMAGE: 15, // Damage from fire trap
+	FIRE_TRAP_COOLDOWN: 3000, // ms between trap activations
+
+	// Collapsing bridge
+	BRIDGE_COLLAPSE_WARNING: 2000, // ms warning before collapse
+	BRIDGE_RESPAWN_TIME: 10000, // ms before bridge respawns
+} as const;
+
+// =============================================================================
+// VOLCANIC DUNGEONS SCENE
+// =============================================================================
+
+export const VolcanicDungeonsValues = {
+	// Map dimensions
+	MAP_WIDTH_TILES: 70,
+	MAP_HEIGHT_TILES: 70,
+	TILE_SIZE: 16,
+
+	// Room generation
+	MIN_ROOMS: 10,
+	MAX_ROOMS: 14,
+	MIN_ROOM_SIZE: 7,
+	MAX_ROOM_SIZE: 14,
+
+	// Enemy spawn counts per room type
+	ENEMIES_PER_SMALL_ROOM: 2,
+	ENEMIES_PER_MEDIUM_ROOM: 4,
+	ENEMIES_PER_LARGE_ROOM: 5,
+
+	// Boss room
+	BOSS_ROOM_SIZE: 18,
+
+	// Hazard frequencies
+	GEYSER_COUNT_PER_ROOM: 1,
+	HEAT_ZONE_CHANCE: 0.3, // 30% of rooms have heat zones
+
+	// Lighting
+	VOLCANIC_AMBIENT_DARKNESS: 0.6, // Brighter due to lava glow
+	LAVA_LIGHT_RADIUS: 120,
+	LAVA_LIGHT_COLOR: 0xff4500, // Orange-red lava glow
+	TORCH_LIGHT_COLOR: 0xff6600, // Warm orange torch
+
+	// Visual effects
+	SMOKE_PARTICLE_FREQUENCY: 100,
+	EMBER_PARTICLE_FREQUENCY: 150,
+} as const;
+
+// =============================================================================
+// SKY PHYSICS (Sky Islands biome)
+// =============================================================================
+
+export const SkyPhysics = {
+	// Jump mechanics
+	JUMP_VELOCITY: -400, // Upward velocity when jumping
+	JUMP_COOLDOWN: 100, // ms between jumps
+	DOUBLE_JUMP_VELOCITY: -350, // Second jump slightly weaker
+	MAX_JUMPS: 2, // Base jump + double jump
+
+	// Wind mechanics
+	WIND_FORCE_LIGHT: 50, // Gentle breeze
+	WIND_FORCE_MEDIUM: 100, // Standard wind current
+	WIND_FORCE_STRONG: 200, // Strong gust
+	WIND_FORCE_TORNADO: 300, // Tornado pull strength
+	WIND_TICK_RATE: 100, // ms between wind force applications
+
+	// Fall mechanics
+	FALL_DAMAGE_THRESHOLD: 300, // Y velocity before taking damage
+	FALL_DAMAGE_MULTIPLIER: 0.02, // Damage = velocity * multiplier
+	MAX_FALL_DAMAGE: 50, // Cap on fall damage
+	RESPAWN_FALL_DAMAGE: 10, // Damage when respawning from fall
+
+	// Platform mechanics
+	CRUMBLE_WARNING_TIME: 1500, // ms warning before platform crumbles
+	CRUMBLE_FALL_TIME: 500, // ms for platform to fall
+	PLATFORM_RESPAWN_TIME: 8000, // ms before platform respawns
+
+	// Lightning hazard
+	LIGHTNING_STRIKE_INTERVAL: 5000, // ms between potential strikes
+	LIGHTNING_DAMAGE: 20, // Damage from lightning
+	LIGHTNING_WARNING_TIME: 1000, // ms warning before strike
+	LIGHTNING_STUN_DURATION: 500, // ms stun after being hit
+} as const;
+
+// =============================================================================
+// SKY ISLANDS SCENE
+// =============================================================================
+
+export const SkyIslandsValues = {
+	// Map dimensions (wider for horizontal platforming)
+	MAP_WIDTH_TILES: 80,
+	MAP_HEIGHT_TILES: 50,
+	TILE_SIZE: 16,
+
+	// Island generation
+	MIN_ISLANDS: 12,
+	MAX_ISLANDS: 18,
+	MIN_ISLAND_SIZE: 4,
+	MAX_ISLAND_SIZE: 10,
+	ISLAND_VERTICAL_SPACING: 3, // Minimum tiles between island layers
+	ISLAND_HORIZONTAL_GAP: 2, // Minimum gap between adjacent islands
+
+	// Enemy spawn counts per island type
+	ENEMIES_PER_SMALL_ISLAND: 1,
+	ENEMIES_PER_MEDIUM_ISLAND: 2,
+	ENEMIES_PER_LARGE_ISLAND: 4,
+
+	// Boss island
+	BOSS_ISLAND_SIZE: 14,
+
+	// Wind zone frequencies
+	WIND_ZONE_CHANCE: 0.4, // 40% of gaps have wind currents
+	TORNADO_ZONE_CHANCE: 0.1, // 10% chance for tornado zones
+
+	// Teleporter pads
+	TELEPORTER_COUNT: 4, // Number of teleporter pad pairs
+
+	// Lighting
+	SKY_AMBIENT_BRIGHTNESS: 0.2, // Bright outdoor lighting
+	CLOUD_LIGHT_RADIUS: 150,
+	CLOUD_LIGHT_COLOR: 0xffffff, // White cloud glow
+	LIGHTNING_FLASH_COLOR: 0xffffcc, // Yellow-white flash
+
+	// Visual effects
+	CLOUD_PARTICLE_FREQUENCY: 200,
+	WIND_PARTICLE_FREQUENCY: 80,
+} as const;
+
+// =============================================================================
+// UNDERWATER PHYSICS (Underwater Temple biome)
+// =============================================================================
+
+export const UnderwaterPhysics = {
+	// Swimming speed (percentage of normal speed)
+	SWIM_SPEED_MULTIPLIER: 0.65, // 65% of normal speed
+	SWIM_SPEED_SLOW: 0.5, // In crushing pressure zones
+	SWIM_SPEED_FAST: 0.8, // With speed boost items
+
+	// Air meter system
+	MAX_AIR: 100, // Air meter capacity
+	AIR_DRAIN_RATE: 2, // Air lost per second
+	AIR_DANGER_THRESHOLD: 25, // Below this, warning effects
+	DROWNING_DAMAGE: 5, // Damage per tick when out of air
+	DROWNING_TICK_RATE: 1000, // ms between drowning damage
+
+	// Air bubble refill
+	AIR_BUBBLE_REFILL_RATE: 50, // Air restored per second at bubble
+	AIR_BUBBLE_RADIUS: 48, // Detection radius for air bubbles
+
+	// Water current mechanics
+	CURRENT_FORCE_WEAK: 30, // Gentle current
+	CURRENT_FORCE_MEDIUM: 60, // Standard current
+	CURRENT_FORCE_STRONG: 100, // Strong current
+	CURRENT_FORCE_WHIRLPOOL: 150, // Whirlpool pull
+
+	// Pressure zones
+	PRESSURE_DAMAGE: 2, // Damage per tick in pressure zones
+	PRESSURE_TICK_RATE: 2000, // ms between pressure damage
+
+	// Electric eel shock
+	SHOCK_DAMAGE: 15, // Damage from electric shock
+	SHOCK_STUN_DURATION: 1000, // ms stun duration
+	SHOCK_ZONE_RADIUS: 60, // Radius of electric attack
+} as const;
+
+// =============================================================================
+// UNDERWATER TEMPLE SCENE
+// =============================================================================
+
+export const UnderwaterTempleValues = {
+	// Map dimensions (vertical exploration)
+	MAP_WIDTH_TILES: 60,
+	MAP_HEIGHT_TILES: 80, // Taller for vertical exploration
+	TILE_SIZE: 16,
+
+	// Room generation
+	MIN_ROOMS: 10,
+	MAX_ROOMS: 15,
+	MIN_ROOM_SIZE: 5,
+	MAX_ROOM_SIZE: 11,
+
+	// Enemy spawn counts per room type
+	ENEMIES_PER_SMALL_ROOM: 2,
+	ENEMIES_PER_MEDIUM_ROOM: 3,
+	ENEMIES_PER_LARGE_ROOM: 5,
+
+	// Boss room
+	BOSS_ROOM_SIZE: 20, // Large for Leviathan fight
+
+	// Air bubble placement
+	AIR_BUBBLE_FREQUENCY: 50, // Tiles between air bubbles
+	AIR_BUBBLE_SPAWN_CHANCE: 0.4, // 40% of valid positions have bubbles
+
+	// Current zone frequencies
+	CURRENT_ZONE_CHANCE: 0.35, // 35% of corridors have currents
+	WHIRLPOOL_CHANCE: 0.1, // 10% chance for whirlpool hazards
+
+	// Lighting (underwater blue-green)
+	UNDERWATER_AMBIENT_DARKNESS: 0.7, // Dark underwater
+	UNDERWATER_LIGHT_RADIUS: 80, // Limited visibility
+	UNDERWATER_LIGHT_COLOR: 0x0099cc, // Blue-cyan underwater glow
+	BIOLUMINESCENCE_COLOR: 0x00ffaa, // Glowing creatures/plants
+
+	// Visual effects
+	BUBBLE_PARTICLE_FREQUENCY: 120,
+	SEAWEED_SWAY_SPEED: 1500, // ms for full sway cycle
+} as const;
+
+// =============================================================================
+// CURSE MECHANICS (Undead Crypts biome)
+// =============================================================================
+
+export const CurseMechanics = {
+	// Curse zone effects
+	WEAKENED_HP_REDUCTION: 0.5, // 50% max HP reduction
+	WEAKENED_DAMAGE_REDUCTION: 0.75, // 25% damage reduction
+	SLOWED_SPEED_REDUCTION: 0.7, // 30% speed reduction
+	HAUNTED_TELEPORT_CHANCE: 0.1, // 10% chance per tick
+
+	// Curse tick rates
+	CURSE_CHECK_RATE: 2000, // ms between curse checks
+	UNHOLY_GROUND_TICK_RATE: 3000, // ms between unholy ground damage
+
+	// Unholy ground damage
+	UNHOLY_GROUND_DAMAGE: 3, // Damage per tick on unholy ground
+
+	// Poison gas
+	POISON_GAS_DAMAGE: 5, // Damage per tick in poison
+	POISON_GAS_TICK_RATE: 1500, // ms between poison damage
+	POISON_DURATION: 6000, // How long poison lasts after leaving zone
+
+	// Ghost mechanics
+	GHOST_PHASE_DURATION: 3000, // How long ghosts can phase through walls
+	GHOST_COOLDOWN: 5000, // Cooldown between phases
+
+	// Holy weapon bonuses
+	HOLY_DAMAGE_BONUS: 1.5, // 50% bonus damage vs undead
+} as const;
+
+// =============================================================================
+// UNDEAD CRYPTS SCENE
+// =============================================================================
+
+export const UndeadCryptsValues = {
+	// Map dimensions
+	MAP_WIDTH_TILES: 70,
+	MAP_HEIGHT_TILES: 70,
+	TILE_SIZE: 16,
+
+	// Room generation
+	MIN_ROOMS: 12,
+	MAX_ROOMS: 16,
+	MIN_ROOM_SIZE: 6,
+	MAX_ROOM_SIZE: 12,
+
+	// Enemy spawn counts per room type
+	ENEMIES_PER_SMALL_ROOM: 3,
+	ENEMIES_PER_MEDIUM_ROOM: 5,
+	ENEMIES_PER_LARGE_ROOM: 7,
+
+	// Boss room
+	BOSS_ROOM_SIZE: 18,
+
+	// Curse zone frequencies
+	CURSE_ZONE_CHANCE: 0.25, // 25% of rooms have curse zones
+	UNHOLY_GROUND_CHANCE: 0.2, // 20% of corridors have unholy ground
+
+	// Puzzle elements
+	PUZZLE_ROOMS_COUNT: 3, // Number of puzzle rooms per dungeon
+	KEYS_REQUIRED: 3, // Keys needed for boss door
+
+	// Lighting (eerie green-purple)
+	CRYPT_AMBIENT_DARKNESS: 0.8, // Very dark crypts
+	CRYPT_LIGHT_RADIUS: 70, // Limited torch light
+	CRYPT_LIGHT_COLOR: 0x665577, // Purple-grey torch light
+	RUNE_GLOW_COLOR: 0x88ff88, // Green glowing runes
+	GHOST_GLOW_COLOR: 0x99bbff, // Blue-white ghost glow
+
+	// Visual effects
+	DUST_PARTICLE_FREQUENCY: 150,
+	COBWEB_SWAY_SPEED: 2000, // ms for full sway cycle
 } as const;

@@ -1,19 +1,43 @@
+/**
+ * @fileoverview Scene transition and warp system for Neverquest
+ *
+ * This plugin handles scene-to-scene transitions via warp points:
+ * - Reads warp objects from Tiled map layers
+ * - Creates overlap zones for warp triggers
+ * - Manages camera fade transitions
+ * - Passes player state between scenes
+ * - Supports particle effects during transitions
+ *
+ * Warp configuration (set in Tiled object properties):
+ * - scene: Target scene key
+ * - x, y: Target spawn coordinates
+ * - autoStart: Auto-trigger on overlap (optional)
+ *
+ * @see NeverquestMapCreator - Loads maps containing warp objects
+ * @see IWarpableScene - Interface for warpable scenes
+ *
+ * @module plugins/NeverquestWarp
+ */
+
 import { HexColors } from '../consts/Colors';
 import { Alpha, ParticleValues, Scale, AnimationTiming } from '../consts/Numbers';
+import { Player } from '../entities/Player';
+import { IWarpableScene } from '../types';
 
+/**
+ * Interface for Tiled object properties
+ */
+interface ITiledProperty {
+	name: string;
+	type: string;
+	value: string | number | boolean;
+}
+
+/**
+ * Extended Zone interface for warp points with Tiled object properties
+ */
 interface WarpPoint extends Phaser.GameObjects.Zone {
-	warp: any;
-}
-
-interface PlayerWithMovement extends Phaser.GameObjects.GameObject {
-	container: Phaser.GameObjects.Container & { body: Phaser.Physics.Arcade.Body };
-	neverquestMovement: any;
-	destroy(): void;
-}
-
-interface SceneWithPlayer extends Phaser.Scene {
-	player?: PlayerWithMovement;
-	stopSceneMusic?: () => void;
+	warp: Phaser.Types.Tilemaps.TiledObject;
 }
 
 /**
@@ -23,12 +47,12 @@ export class NeverquestWarp {
 	/**
 	 * Scene Context.
 	 */
-	scene: SceneWithPlayer;
+	scene: IWarpableScene;
 
 	/**
 	 * Player Game Object.
 	 */
-	player: PlayerWithMovement;
+	player: Player;
 
 	/**
 	 * Tile Map to get the object from.
@@ -81,13 +105,13 @@ export class NeverquestWarp {
 	 * @param player The game object that will be teleported to a certain spot.
 	 * @param map The tilemap containing warp objects.
 	 */
-	constructor(scene: SceneWithPlayer, player: PlayerWithMovement, map: Phaser.Tilemaps.Tilemap) {
+	constructor(scene: IWarpableScene, player: Player, map: Phaser.Tilemaps.Tilemap) {
 		this.scene = scene;
 		this.player = player;
 		this.map = map;
 		this.fadeOutTime = this.defaultFadeTime;
 		this.fadeInTime = this.defaultFadeTime;
-		this.maxSpeed = this.player.container.body.maxSpeed;
+		this.maxSpeed = (this.player.container.body as Phaser.Physics.Arcade.Body).maxSpeed;
 	}
 
 	/**
@@ -115,7 +139,9 @@ export class NeverquestWarp {
 			const centerY = warp.y! + warp.height! / 2;
 
 			// Check if this is a scene change warp (dungeon entrance)
-			const isSceneWarp = warp.properties?.find((p: any) => p.name === this.propertyChangeScene);
+			const isSceneWarp = (warp.properties as ITiledProperty[] | undefined)?.find(
+				(p: ITiledProperty) => p.name === this.propertyChangeScene
+			);
 
 			this.particlesConfig = {
 				angle: -90,
@@ -143,21 +169,22 @@ export class NeverquestWarp {
 			warp_points.push({ ...zone, warp } as WarpPoint);
 		});
 
-		this.scene.cameras.main.on('camerafadeoutstart', (_fade: any) => {
+		this.scene.cameras.main.on('camerafadeoutstart', (_camera: Phaser.Cameras.Scene2D.Camera) => {
 			// Stop moving.
-			this.player.container.body.maxSpeed = 0;
+			(this.player.container.body as Phaser.Physics.Arcade.Body).maxSpeed = 0;
 		});
-		this.scene.cameras.main.on('camerafadeincomplete', (_fade: any) => {
-			this.player.container.body.maxSpeed = this.maxSpeed;
+		this.scene.cameras.main.on('camerafadeincomplete', (_camera: Phaser.Cameras.Scene2D.Camera) => {
+			(this.player.container.body as Phaser.Physics.Arcade.Body).maxSpeed = this.maxSpeed;
 		});
 
 		// Sets the collision between the player and the warp points.
 		this.scene.physics.add.collider(warp_points, this.player.container, (warp_point, _player) => {
 			const warpPointTyped = warp_point as WarpPoint;
+			const properties = warpPointTyped.warp.properties as ITiledProperty[];
 			const dest = destinations.find(
-				(d) => d.id === warpPointTyped.warp.properties.find((f: any) => f.name === this.propertyWarpName).value
+				(d) => d.id === properties.find((f: ITiledProperty) => f.name === this.propertyWarpName)?.value
 			);
-			const isScene = warpPointTyped.warp.properties.find((f: any) => f.name === this.propertyChangeScene);
+			const isScene = properties.find((f: ITiledProperty) => f.name === this.propertyChangeScene);
 
 			if (dest && isScene === undefined) {
 				this.scene.cameras.main.fade(this.fadeOutTime);
@@ -165,10 +192,11 @@ export class NeverquestWarp {
 				this.player.container.y = dest.y!;
 				this.scene.cameras.main.fadeIn(this.fadeInTime);
 			} else if (isScene) {
-				const scene = warpPointTyped.warp.properties.find((f: any) => f.name === this.propertyWarpName).value;
+				const sceneKey = properties.find((f: ITiledProperty) => f.name === this.propertyWarpName)
+					?.value as string;
 
 				// Pass the current scene key to the target scene for return navigation
-				this.scene.scene.start(scene, { previousScene: this.scene.scene.key });
+				this.scene.scene.start(sceneKey, { previousScene: this.scene.scene.key });
 
 				if (this.scene.player) {
 					this.scene.player.neverquestMovement = null;

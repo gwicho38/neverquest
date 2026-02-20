@@ -1,3 +1,21 @@
+/**
+ * @fileoverview Terminal-based game for CLI gameplay
+ *
+ * This file provides a text-mode roguelike game experience:
+ * - ASCII/emoji-based rendering via blessed library
+ * - Player movement, combat, and blocking mechanics
+ * - Enemy AI with perception and pathfinding
+ * - Overworld map generation with houses, water, trees
+ *
+ * Run with: npm run terminal
+ *
+ * @see TerminalRenderer - UI rendering system
+ * @see TerminalMap - Map generation and tile management
+ * @see TerminalEntity - Entity representation
+ *
+ * @module terminal/TerminalGame
+ */
+
 import { EntityAttributes, IEntityAttributes } from '../entities/EntityAttributes';
 import { TerminalEntity } from './entities/TerminalEntity';
 import { TerminalMap } from './TerminalMap';

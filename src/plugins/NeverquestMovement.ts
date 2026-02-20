@@ -26,6 +26,7 @@ import { Alpha, EntitySpeed, MapLayerNames } from '../consts/Numbers';
 import { NeverquestAnimationManager } from './NeverquestAnimationManager';
 import { NeverquestGamePadController } from './NeverquestGamePadController';
 import { Player } from '../entities/Player';
+import type { IVirtualJoystickStick } from '../types';
 
 /**
  * Movement controller for the player character.
@@ -53,7 +54,7 @@ export class NeverquestMovement extends AnimationNames {
 	public cursors: Phaser.Types.Input.Keyboard.CursorKeys;
 	public wasd: { [key: string]: Phaser.Input.Keyboard.Key };
 	public shiftKey: Phaser.Input.Keyboard.Key;
-	public stick: any | null;
+	public stick: IVirtualJoystickStick | null;
 	public joystickScene: Phaser.Scene | null;
 	public neverquestAnimationManager: NeverquestAnimationManager;
 	public neverquestGamePadController: NeverquestGamePadController;
@@ -122,7 +123,7 @@ export class NeverquestMovement extends AnimationNames {
 
 		// Set up joystick events if available
 		if (this.joystickScene) {
-			this.joystickScene.events.on('setStick', (payload: any) => {
+			this.joystickScene.events.on('setStick', (payload: IVirtualJoystickStick) => {
 				this.stick = payload; // Sets the Stick pad for movement.
 			});
 		}

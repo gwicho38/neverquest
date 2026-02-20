@@ -61,6 +61,22 @@ jest.mock('../../consts/Numbers', () => ({
 	},
 	Alpha: {
 		MEDIUM_LIGHT: 0.5,
+		HALF: 0.5,
+		OPAQUE: 1,
+		HIGH: 0.8,
+		VERY_HIGH: 0.9,
+	},
+	ParticleValues: {
+		LIFESPAN_MEDIUM: 2000,
+		LIFESPAN_VERY_LONG: 4000,
+	},
+	Scale: {
+		MEDIUM_LARGE: 0.75,
+	},
+}));
+jest.mock('../../consts/Colors', () => ({
+	HexColors: {
+		ORANGE_LIGHT: '#FFA500',
 	},
 }));
 jest.mock('../../consts/Messages', () => ({
@@ -121,10 +137,47 @@ describe('OverworldScene', () => {
 			},
 		};
 
-		// Mock player with container
+		// Mock zone for warp functionality
+		const mockZone = {
+			setOrigin: jest.fn().mockReturnThis(),
+			destroy: jest.fn(),
+			body: {
+				immovable: false,
+			},
+		};
+
+		// Mock text for arrows
+		const mockText = {
+			setOrigin: jest.fn().mockReturnThis(),
+			setDepth: jest.fn().mockReturnThis(),
+		};
+
+		// Mock add object for scene.add methods
+		(scene as any).add = {
+			zone: jest.fn().mockReturnValue(mockZone),
+			particles: jest.fn().mockReturnValue({}),
+			text: jest.fn().mockReturnValue(mockText),
+		};
+
+		// Mock physics for overlap and existing
+		(scene as any).physics = {
+			add: {
+				existing: jest.fn(),
+				overlap: jest.fn(),
+			},
+		};
+
+		// Mock tweens for arrow animations
+		(scene as any).tweens = {
+			add: jest.fn(),
+		};
+
+		// Mock player with container - cast to any to bypass strict typing in tests
 		scene.player = {
 			container: {},
-		};
+			neverquestMovement: null,
+			destroy: jest.fn(),
+		} as any;
 	});
 
 	describe('constructor', () => {
@@ -144,6 +197,7 @@ describe('OverworldScene', () => {
 			expect(newScene.enemies).toEqual([]);
 			expect(newScene.neverquestEnemyZones).toBeNull();
 			expect(newScene.saveManager).toBeNull();
+			expect(newScene.crossroadsWarpZone).toBeNull();
 		});
 	});
 
@@ -364,6 +418,123 @@ describe('OverworldScene', () => {
 
 		it('should be callable without error', () => {
 			expect(() => scene.update()).not.toThrow();
+		});
+	});
+
+	describe('createCrossroadsWarp', () => {
+		it('should create a warp zone to CrossroadsScene', () => {
+			scene.create();
+
+			expect((scene as any).add.zone).toHaveBeenCalled();
+			expect((scene as any).physics.add.existing).toHaveBeenCalled();
+			expect((scene as any).physics.add.overlap).toHaveBeenCalled();
+		});
+
+		it('should create particle effects at warp location', () => {
+			scene.create();
+
+			expect((scene as any).add.particles).toHaveBeenCalledWith(
+				expect.any(Number),
+				expect.any(Number),
+				'particle_warp',
+				expect.any(Object)
+			);
+		});
+
+		it('should create arrow indicators', () => {
+			scene.create();
+
+			// Should create 2 arrows (left and right of warp)
+			expect((scene as any).add.text).toHaveBeenCalledWith(
+				expect.any(Number),
+				expect.any(Number),
+				'↑',
+				expect.any(Object)
+			);
+		});
+
+		it('should not create warp if player is null', () => {
+			// Test createCrossroadsWarp directly instead of through create()
+			// to avoid other null player checks in create()
+			scene.map = { widthInPixels: 800, heightInPixels: 800 } as any;
+			scene.player = null;
+
+			// Call createCrossroadsWarp directly
+			scene.createCrossroadsWarp();
+
+			// The zone should not be created since player is null
+			expect(scene.crossroadsWarpZone).toBeNull();
+		});
+
+		it('should set up overlap detection with player container', () => {
+			scene.create();
+
+			expect((scene as any).physics.add.overlap).toHaveBeenCalledWith(
+				scene.player!.container,
+				expect.any(Object),
+				expect.any(Function)
+			);
+		});
+	});
+
+	describe('transitionToCrossroads', () => {
+		beforeEach(() => {
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					fade: jest.fn(),
+					once: jest.fn().mockImplementation((event: string, callback: () => void) => {
+						if (event === 'camerafadeoutcomplete') {
+							callback();
+						}
+					}),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+			};
+		});
+
+		it('should destroy warp zone on transition', () => {
+			scene.create();
+			const mockDestroy = (scene.crossroadsWarpZone as any)?.destroy;
+
+			scene.transitionToCrossroads();
+
+			if (mockDestroy) {
+				expect(mockDestroy).toHaveBeenCalled();
+			}
+			expect(scene.crossroadsWarpZone).toBeNull();
+		});
+
+		it('should fade the camera', () => {
+			scene.create();
+			scene.transitionToCrossroads();
+
+			expect((scene as any).cameras.main.fade).toHaveBeenCalledWith(500);
+		});
+
+		it('should start CrossroadsScene with previous scene reference', () => {
+			scene.create();
+			scene.transitionToCrossroads();
+
+			expect((scene as any).scene.start).toHaveBeenCalledWith('CrossroadsScene', {
+				previousScene: 'OverworldScene',
+			});
+		});
+
+		it('should clean up player on transition', () => {
+			scene.create();
+			const mockPlayerDestroy = (scene.player as any).destroy;
+
+			scene.transitionToCrossroads();
+
+			expect(mockPlayerDestroy).toHaveBeenCalled();
+			expect((scene.player as any).neverquestMovement).toBeNull();
 		});
 	});
 });

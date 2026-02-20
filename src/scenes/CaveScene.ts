@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Cave dungeon scene for Neverquest
+ *
+ * This scene represents an underground cave area featuring:
+ * - Dark cave tilemap with fog of war
+ * - Cave enemy encounters (bats, etc.)
+ * - Dust particle effects
+ * - Boss encounter location (Act 1 artifact)
+ * - Warp back to Overworld
+ *
+ * Key dungeon for Act 1 progression - contains first boss.
+ *
+ * @see OverworldScene - Connected forest area
+ * @see NeverquestFogWarManager - Cave darkness
+ * @see NeverquestLightingManager - Torch lighting
+ * @see NeverquestBattleManager - Boss fight handling
+ *
+ * @module scenes/CaveScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestWarp } from '../plugins/NeverquestWarp';
 import { NeverquestObjectMarker } from '../plugins/NeverquestObjectMarker';
@@ -7,18 +27,18 @@ import { NeverquestEnemyZones } from '../plugins/NeverquestEnemyZones';
 import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
 import { Player } from '../entities/Player';
-import { IGameScene } from '../types/SceneTypes';
+import { IWarpableScene, ISystemsWithAnimatedTiles } from '../types/SceneTypes';
 import { CameraValues, Alpha } from '../consts/Numbers';
 import { SaveMessages } from '../consts/Messages';
 
-export class CaveScene extends Phaser.Scene implements IGameScene {
+export class CaveScene extends Phaser.Scene implements IWarpableScene {
 	public player: Player | null = null;
 	public map?: Phaser.Tilemaps.Tilemap;
 	public mapCreator?: NeverquestMapCreator;
-	public joystickScene: any;
+	public joystickScene: Phaser.Scene | null = null;
 	public particles!: NeverquestEnvironmentParticles;
 	public themeSound!: Phaser.Sound.BaseSound;
-	public enemies: any[] = [];
+	public enemies: Phaser.GameObjects.GameObject[] = [];
 	public neverquestEnemyZones!: NeverquestEnemyZones;
 	public saveManager!: NeverquestSaveManager;
 
@@ -47,7 +67,7 @@ export class CaveScene extends Phaser.Scene implements IGameScene {
 		// Set camera bounds to match the map size so camera doesn't go beyond the map edges
 		camera.setBounds(0, 0, this.map!.widthInPixels, this.map!.heightInPixels);
 
-		const neverquestWarp = new NeverquestWarp(this as any, this.player! as any, this.mapCreator.map);
+		const neverquestWarp = new NeverquestWarp(this, this.player!, this.mapCreator.map);
 		neverquestWarp.createWarps();
 		const interactiveMarkers = new NeverquestObjectMarker(this, this.mapCreator.map);
 		interactiveMarkers.create();
@@ -62,7 +82,7 @@ export class CaveScene extends Phaser.Scene implements IGameScene {
 
 		this.scene.launch('HUDScene', { player: this.player, map: this.mapCreator!.map });
 
-		(this.sys as any).animatedTiles.init(this.mapCreator.map);
+		(this.sys as ISystemsWithAnimatedTiles).animatedTiles?.init(this.mapCreator.map);
 		this.particles = new NeverquestEnvironmentParticles(this, this.mapCreator.map);
 		this.particles.create();
 

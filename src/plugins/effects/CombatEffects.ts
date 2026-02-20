@@ -1,6 +1,20 @@
 /**
- * CombatEffects Plugin
- * Handles visual particle effects for combat interactions (hits, blocks, deaths)
+ * @fileoverview Combat visual effects using particle systems
+ *
+ * This plugin handles particle effects for combat interactions:
+ * - Hit impacts (physical, fire, ice, lightning, etc.)
+ * - Critical hit effects with enhanced visuals
+ * - Block/parry spark effects
+ * - Death explosions
+ * - Blood splatter effects
+ *
+ * Supports multiple damage types with unique particle configurations.
+ *
+ * @see NeverquestBattleManager - Triggers combat effects
+ * @see ParticleConfigs - Particle configuration constants
+ * @see ParticlePool - Efficient particle reuse
+ *
+ * @module plugins/effects/CombatEffects
  */
 
 import Phaser from 'phaser';

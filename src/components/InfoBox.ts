@@ -1,10 +1,25 @@
+/**
+ * @fileoverview Tooltip/info box UI component
+ *
+ * This file provides an information display box for tooltips:
+ * - NineSlice background for responsive sizing
+ * - Name and description text fields
+ * - Configurable dimensions and positioning
+ * - Used for item descriptions, ability info, etc.
+ *
+ * @see PanelComponent - Base panel implementation
+ * @see NeverquestTiledInfoBox - Map-triggered info displays
+ *
+ * @module components/InfoBox
+ */
+
 import { HexColors } from '../consts/Colors';
 import { FontFamilies, Alpha } from '../consts/Numbers';
 import { InfoBoxMessages } from '../consts/Messages';
 
 export class InfoBox {
 	scene: Phaser.Scene;
-	backgroundSprite: any; // NineSlice type
+	backgroundSprite: Phaser.GameObjects.NineSlice | null;
 	name: Phaser.GameObjects.Text | null;
 	description: Phaser.GameObjects.Text | null;
 	x: number;

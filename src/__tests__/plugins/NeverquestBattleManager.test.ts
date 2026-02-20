@@ -319,11 +319,239 @@ describe('NeverquestBattleManager', () => {
 			};
 
 			// Call takeDamage with damage that would make health negative
-			battleManager.takeDamage(attacker, target);
+			// Cast mocks through unknown to satisfy ICombatEntity interface
+			battleManager.takeDamage(
+				attacker as unknown as Parameters<typeof battleManager.takeDamage>[0],
+				target as unknown as Parameters<typeof battleManager.takeDamage>[1]
+			);
 
 			// Verify health is clamped to 0, not negative
 			expect(target.attributes.health).toBeGreaterThanOrEqual(0);
 			expect(target.attributes.health).toBe(0);
+		});
+	});
+
+	describe('randomDamage', () => {
+		it('should return a number', () => {
+			const damage = battleManager.randomDamage(10);
+			expect(typeof damage).toBe('number');
+		});
+
+		it('should return damage within variation range (±10%)', () => {
+			const baseDamage = 100;
+			const variation = battleManager.variation; // 10%
+
+			// Run multiple times to test randomness
+			for (let i = 0; i < 100; i++) {
+				const damage = battleManager.randomDamage(baseDamage);
+				const minDamage = Math.floor(baseDamage - baseDamage * (variation / 100));
+				const maxDamage = Math.floor(baseDamage + baseDamage * (variation / 100));
+
+				expect(damage).toBeGreaterThanOrEqual(minDamage);
+				expect(damage).toBeLessThanOrEqual(maxDamage);
+			}
+		});
+
+		it('should floor the result to an integer', () => {
+			const damage = battleManager.randomDamage(15);
+			expect(Number.isInteger(damage)).toBe(true);
+		});
+
+		it('should handle zero damage', () => {
+			const damage = battleManager.randomDamage(0);
+			expect(damage).toBe(0);
+		});
+
+		it('should handle negative base damage', () => {
+			const damage = battleManager.randomDamage(-10);
+			// Negative damage can occur when defense > attack
+			// The variation should still be applied
+			expect(typeof damage).toBe('number');
+		});
+
+		it('should produce different values (not always the same)', () => {
+			const damages = new Set<number>();
+			for (let i = 0; i < 50; i++) {
+				damages.add(battleManager.randomDamage(100));
+			}
+			// With 10% variation on 100, we expect some variety
+			expect(damages.size).toBeGreaterThan(1);
+		});
+	});
+
+	describe('checkAtackHit', () => {
+		it('should return true when hit is much higher than flee', () => {
+			// With 100 hit and 0 flee, should always hit
+			let hitCount = 0;
+			for (let i = 0; i < 100; i++) {
+				if (battleManager.checkAtackHit(100, 0)) {
+					hitCount++;
+				}
+			}
+			expect(hitCount).toBe(100);
+		});
+
+		it('should return true when flee is 0 (division by zero protection)', () => {
+			const result = battleManager.checkAtackHit(50, 0);
+			// When flee is 0, (hit * 100) / flee is Infinity, which is not finite
+			// So it should return true
+			expect(result).toBe(true);
+		});
+
+		it('should return boolean', () => {
+			const result = battleManager.checkAtackHit(50, 25);
+			expect(typeof result).toBe('boolean');
+		});
+
+		it('should have lower hit chance with higher flee', () => {
+			// Compare hit rates at different flee values
+			// Formula: (hit * 100) / flee >= random
+			// With hit=50, flee=100: (50*100)/100 = 50, so ~50% hit rate
+			// With hit=50, flee=200: (50*100)/200 = 25, so ~25% hit rate
+			let hitCountLowFlee = 0;
+			let hitCountHighFlee = 0;
+
+			for (let i = 0; i < 1000; i++) {
+				if (battleManager.checkAtackHit(50, 100)) hitCountLowFlee++;
+				if (battleManager.checkAtackHit(50, 200)) hitCountHighFlee++;
+			}
+
+			// Higher flee should result in fewer hits
+			expect(hitCountLowFlee).toBeGreaterThan(hitCountHighFlee);
+		});
+
+		it('should handle equal hit and flee', () => {
+			// With equal values, hit rate should be around 100%
+			let hitCount = 0;
+			for (let i = 0; i < 100; i++) {
+				if (battleManager.checkAtackHit(50, 50)) hitCount++;
+			}
+			// (50 * 100) / 50 = 100, so should hit most of the time
+			expect(hitCount).toBeGreaterThan(80);
+		});
+
+		it('should miss sometimes when flee is higher than hit', () => {
+			// With flee higher than hit, should miss more often
+			let missCount = 0;
+			for (let i = 0; i < 100; i++) {
+				if (!battleManager.checkAtackHit(20, 80)) missCount++;
+			}
+			// (20 * 100) / 80 = 25, so should miss often
+			expect(missCount).toBeGreaterThan(50);
+		});
+	});
+
+	describe('checkAtackIsCritial', () => {
+		it('should return boolean', () => {
+			const result = battleManager.checkAtackIsCritial(10);
+			expect(typeof result).toBe('boolean');
+		});
+
+		it('should always crit with 100% crit chance', () => {
+			let critCount = 0;
+			for (let i = 0; i < 100; i++) {
+				if (battleManager.checkAtackIsCritial(100)) critCount++;
+			}
+			expect(critCount).toBe(100);
+		});
+
+		it('should never crit with 0% crit chance', () => {
+			let critCount = 0;
+			for (let i = 0; i < 100; i++) {
+				if (battleManager.checkAtackIsCritial(0)) critCount++;
+			}
+			expect(critCount).toBe(0);
+		});
+
+		it('should crit approximately 10% of the time with 10% chance', () => {
+			let critCount = 0;
+			const trials = 1000;
+			for (let i = 0; i < trials; i++) {
+				if (battleManager.checkAtackIsCritial(10)) critCount++;
+			}
+			// Allow for some variance: expect between 5% and 15%
+			const critRate = critCount / trials;
+			expect(critRate).toBeGreaterThan(0.05);
+			expect(critRate).toBeLessThan(0.15);
+		});
+
+		it('should crit approximately 50% of the time with 50% chance', () => {
+			let critCount = 0;
+			const trials = 1000;
+			for (let i = 0; i < trials; i++) {
+				if (battleManager.checkAtackIsCritial(50)) critCount++;
+			}
+			// Allow for some variance: expect between 40% and 60%
+			const critRate = critCount / trials;
+			expect(critRate).toBeGreaterThan(0.4);
+			expect(critRate).toBeLessThan(0.6);
+		});
+	});
+
+	describe('constructor defaults', () => {
+		it('should initialize with correct default values', () => {
+			const manager = new NeverquestBattleManager();
+
+			expect(manager.enemiesVariableName).toBe('enemies');
+			expect(manager.playerVariableName).toBe('player');
+			expect(manager.hitboxVelocity).toBe(10);
+			expect(manager.variation).toBe(10);
+			expect(manager.hitboxSpriteName).toBe('slash');
+		});
+
+		it('should have attack direction frame names', () => {
+			const manager = new NeverquestBattleManager();
+
+			expect(manager.atackDirectionFrameName).toEqual({
+				up: 'up',
+				right: 'right',
+				down: 'down',
+				left: 'left',
+			});
+		});
+
+		it('should have attack sound animation names', () => {
+			const manager = new NeverquestBattleManager();
+
+			expect(manager.atackSoundAnimationNames).toEqual(['atack01', 'atack02', 'atack03']);
+		});
+
+		it('should have damage sound names', () => {
+			const manager = new NeverquestBattleManager();
+
+			expect(manager.damageSoundNames).toEqual(['damage01', 'damage02', 'damage03']);
+		});
+
+		it('should initialize neverquestEntityTextDisplay as null', () => {
+			const manager = new NeverquestBattleManager();
+
+			expect(manager.neverquestEntityTextDisplay).toBeNull();
+		});
+
+		it('should initialize phaserJuice as null', () => {
+			const manager = new NeverquestBattleManager();
+
+			expect(manager.phaserJuice).toBeNull();
+		});
+	});
+
+	describe('damage calculation edge cases', () => {
+		it('should handle very high attack values', () => {
+			const damage = battleManager.randomDamage(10000);
+			expect(damage).toBeGreaterThan(0);
+			expect(damage).toBeLessThanOrEqual(11000); // max with +10% variation
+		});
+
+		it('should handle decimal damage values', () => {
+			const damage = battleManager.randomDamage(15.7);
+			// Should floor the result
+			expect(Number.isInteger(damage)).toBe(true);
+		});
+
+		it('should handle very small positive damage', () => {
+			const damage = battleManager.randomDamage(1);
+			expect(damage).toBeGreaterThanOrEqual(0);
+			expect(damage).toBeLessThanOrEqual(2);
 		});
 	});
 });

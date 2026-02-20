@@ -1,10 +1,31 @@
 /**
- * Asset Cache Manager for Electron App
- * Handles caching, preloading, and optimization of game assets
+ * @fileoverview Asset caching and preloading for Electron app
+ *
+ * This utility manages game asset caching:
+ * - Priority-based preloading (high/medium/low)
+ * - Blob URL creation for images/audio
+ * - JSON parsing for data assets
+ * - LRU cache eviction
+ * - Asset access tracking
+ *
+ * Optimizes load times and memory usage.
+ *
+ * @see PreloadScene - Uses cache for asset loading
+ * @see GameAssets - Asset configuration
+ *
+ * @module utils/AssetCacheManager
  */
 
 import { AssetCacheValues } from '../consts/Numbers';
 import { ErrorMessages, UrlPrefixes } from '../consts/Messages';
+
+/**
+ * Type for cached asset data.
+ * - string: Blob URLs for images/audio/video, or text content
+ * - Record<string, unknown>: Parsed JSON data
+ * - Blob: Raw binary data for unknown types
+ */
+export type CachedAsset = string | Record<string, unknown> | Blob;
 
 export interface AssetInfo {
 	key: string;
@@ -19,7 +40,7 @@ export interface AssetInfo {
 
 export class AssetCacheManager {
 	private static instance: AssetCacheManager;
-	private cache: Map<string, any> = new Map();
+	private cache: Map<string, CachedAsset> = new Map();
 	private assetInfo: Map<string, AssetInfo> = new Map();
 	private maxCacheSize =
 		AssetCacheValues.MAX_CACHE_SIZE_MB * AssetCacheValues.BYTES_PER_KB * AssetCacheValues.BYTES_PER_KB; // 100MB
@@ -92,7 +113,7 @@ export class AssetCacheManager {
 	/**
 	 * Load an asset with caching
 	 */
-	public async loadAsset(key: string): Promise<any> {
+	public async loadAsset(key: string): Promise<CachedAsset> {
 		// Check if already cached
 		if (this.cache.has(key)) {
 			const info = this.assetInfo.get(key);
@@ -120,7 +141,7 @@ export class AssetCacheManager {
 	/**
 	 * Fetch asset from URL
 	 */
-	private async fetchAsset(info: AssetInfo): Promise<any> {
+	private async fetchAsset(info: AssetInfo): Promise<CachedAsset> {
 		const response = await fetch(info.url);
 		if (!response.ok) {
 			throw new Error(ErrorMessages.ASSET_FETCH_FAILED(response.statusText));
@@ -139,7 +160,7 @@ export class AssetCacheManager {
 			}
 
 			case 'json':
-				return await response.json();
+				return (await response.json()) as Record<string, unknown>;
 
 			case 'text':
 				return await response.text();
@@ -152,7 +173,7 @@ export class AssetCacheManager {
 	/**
 	 * Cache an asset
 	 */
-	private cacheAsset(key: string, asset: any, info: AssetInfo): void {
+	private cacheAsset(key: string, asset: CachedAsset, info: AssetInfo): void {
 		// Check cache size limit
 		if (info.size && this.currentCacheSize + info.size > this.maxCacheSize) {
 			this.cleanupCache();

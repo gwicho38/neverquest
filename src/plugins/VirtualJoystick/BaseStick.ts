@@ -1,7 +1,24 @@
 /**
+ * @fileoverview Base virtual joystick class for analog input
+ *
+ * This file provides the base class for all joystick types:
+ * - Analog force calculations (0-1 range)
+ * - Dead zone handling for precision control
+ * - Motion lock for axis restriction
+ * - Hit area detection and positioning
+ * - Debug visualization support
+ *
+ * Third-party library by Photon Storm Ltd, adapted for Neverquest.
+ *
  * @author       Richard Davey <rich@photonstorm.com>
  * @copyright    2019 Photon Storm Ltd.
  * @license      {@link http://choosealicense.com/licenses/no-license/|No License}
+ *
+ * @see Stick - Visible analog joystick
+ * @see HiddenStick - Invisible touch-anywhere joystick
+ * @see DPad - Digital directional pad
+ *
+ * @module plugins/VirtualJoystick/BaseStick
  */
 
 import CONST from './const';

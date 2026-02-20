@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Collectible item entity for drops and pickups
+ *
+ * This class represents items in the game world:
+ * - Configuration from DB_SEED_ITEMS
+ * - Collision detection with player
+ * - Auto-pickup on player overlap
+ * - Inventory integration
+ * - Consumable/equipment/quest item types
+ *
+ * Dropped by enemies or placed in world.
+ *
+ * @see DB_SEED_ITEMS - Item definitions
+ * @see InventoryScene - Item management UI
+ * @see NeverquestConsumableManager - Consumable usage
+ * @see NeverquestDropSystem - Drop spawning
+ *
+ * @module entities/Item
+ */
+
 import Phaser from 'phaser';
 import { v4 as uuidv4 } from 'uuid';
 import { DB_SEED_ITEMS } from '../consts/DB_SEED/Items';
@@ -9,6 +29,13 @@ import { BuffType } from '../models/BuffType';
 import { ItemType } from '../models/ItemType';
 import { ErrorMessages } from '../consts/Messages';
 import { Scale } from '../consts/Numbers';
+
+/**
+ * Interface for scene with player property
+ */
+interface ISceneWithPlayer extends Phaser.Scene {
+	player: Player;
+}
 
 export class Item extends Phaser.Physics.Arcade.Sprite {
 	public scene: Phaser.Scene;
@@ -56,12 +83,13 @@ export class Item extends Phaser.Physics.Arcade.Sprite {
 
 	public pickItemLogic(): void {
 		let canCollide = true;
-		const playerEntity = (this.scene as any)[this.scenePlayerVariableName] as Player;
+		const sceneWithPlayer = this.scene as ISceneWithPlayer;
+		const playerEntity = sceneWithPlayer[this.scenePlayerVariableName as keyof ISceneWithPlayer] as Player;
 
 		this.scene.physics.add.collider(
-			this as any,
-			playerEntity.hitZone as any,
-			(item: any, _player: any) => {
+			this,
+			playerEntity.hitZone,
+			(item) => {
 				canCollide = false;
 				this.scene.sound.play('get_items');
 

@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Base UI panel component with NineSlice background
+ *
+ * This file provides a reusable panel container for UI elements:
+ * - NineSlice background for responsive scaling without distortion
+ * - Title bar with customizable text
+ * - Close button with interactive behavior
+ * - Mobile-responsive sizing adjustments
+ *
+ * @see InfoBox - Tooltip display using similar patterns
+ * @see LabelBox - Simple labeled panel wrapper
+ *
+ * @module components/PanelComponent
+ */
+
 import { NeverquestUtils } from '../utils/NeverquestUtils';
 import { FontFamilies, Scale, Dimensions } from '../consts/Numbers';
 
@@ -14,7 +29,7 @@ export class PanelComponent {
 	panelTitleTexture: string;
 	panelCloseTexture: string;
 	panelName: string;
-	panelBackground: any; // NineSlice type
+	panelBackground: Phaser.GameObjects.NineSlice | null;
 	panelTitle: Phaser.GameObjects.Image | null;
 	panelTitleText: Phaser.GameObjects.Text | null;
 	titleFontFamily: string;

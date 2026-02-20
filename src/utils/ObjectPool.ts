@@ -1,6 +1,18 @@
 /**
- * Generic Object Pool for reusing game objects
- * Reduces garbage collection and improves performance
+ * @fileoverview Generic object pooling for performance optimization
+ *
+ * This utility provides reusable object pools to reduce GC pressure:
+ * - Pre-populated pool with configurable initial size
+ * - Acquire/release pattern for object reuse
+ * - Reset function for object state cleanup
+ * - Maximum size limits to prevent memory bloat
+ *
+ * Used for frequently created/destroyed objects like particles.
+ *
+ * @see ParticlePool - Particle-specific pool implementation
+ * @see NeverquestEnvironmentParticles - Uses pooled particles
+ *
+ * @module utils/ObjectPool
  */
 
 export class ObjectPool<T> {

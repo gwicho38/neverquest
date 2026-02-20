@@ -766,4 +766,220 @@ describe('SpellEffects', () => {
 			expect(mockParticleEmitter.explode).toHaveBeenCalledWith(0, 100, 100);
 		});
 	});
+
+	describe('Callback Execution (Cleanup)', () => {
+		it('should destroy fireball emitter when cleanup callback is executed', () => {
+			spellEffects.fireball(100, 100);
+
+			// Find and execute the cleanup callback
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			const cleanupCall = delayedCalls[delayedCalls.length - 1];
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy fire trail emitter after stop callback', () => {
+			spellEffects.fireTrail(50, 50, 150, 150);
+
+			// Get the onComplete from tween
+			const tweenConfig = (mockScene.tweens.add as jest.Mock).mock.calls[0][0];
+			tweenConfig.onComplete(); // Execute onComplete
+
+			// Execute the delayed cleanup callback
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			const cleanupCall = delayedCalls[delayedCalls.length - 1];
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy flameWave emitter when cleanup callback is executed', () => {
+			spellEffects.flameWave(100, 150, 0);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			const cleanupCall = delayedCalls[delayedCalls.length - 1];
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy iceShard emitter when cleanup callback is executed', () => {
+			spellEffects.iceShard(120, 180);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			const cleanupCall = delayedCalls[delayedCalls.length - 1];
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should stop and destroy frozenGround emitter when cleanup callbacks are executed', () => {
+			spellEffects.frozenGround(140, 200, 80, 3000);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// First callback stops emitter
+			const stopCall = delayedCalls[0];
+			stopCall[1](); // Execute stop callback
+
+			expect(mockParticleEmitter.stop).toHaveBeenCalled();
+
+			// Second callback destroys emitter
+			const destroyCall = delayedCalls[1];
+			destroyCall[1](); // Execute destroy callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy lightningBolt graphics and emitter when cleanup callbacks are executed', () => {
+			spellEffects.lightningBolt(50, 50, 150, 150);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+
+			// Find graphics cleanup (100ms)
+			const graphicsCall = delayedCalls.find((call) => call[0] === 100);
+			graphicsCall[1](); // Execute callback
+			expect(mockGraphics.destroy).toHaveBeenCalled();
+
+			// Find emitter cleanup (400ms)
+			const emitterCall = delayedCalls.find((call) => call[0] === 400);
+			emitterCall[1](); // Execute callback
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should execute chainLightning callbacks', () => {
+			const targets = [
+				{ x: 50, y: 50 },
+				{ x: 100, y: 100 },
+				{ x: 150, y: 150 },
+			];
+
+			spellEffects.chainLightning(targets);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// Execute the chain link callbacks
+			delayedCalls.forEach((call) => {
+				call[1](); // Execute each callback
+			});
+
+			// Should have created particles for each chain link
+			expect(mockScene.add.particles).toHaveBeenCalled();
+		});
+
+		it('should stop and destroy staticField emitter when cleanup callbacks are executed', () => {
+			spellEffects.staticField(160, 220, 60, 2000);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// First callback stops emitter
+			const stopCall = delayedCalls[0];
+			stopCall[1](); // Execute stop callback
+
+			expect(mockParticleEmitter.stop).toHaveBeenCalled();
+
+			// Second callback destroys emitter
+			const destroyCall = delayedCalls[1];
+			destroyCall[1](); // Execute destroy callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy heal emitter when cleanup callback is executed', () => {
+			spellEffects.heal(170, 230);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			const cleanupCall = delayedCalls[delayedCalls.length - 1];
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should stop and destroy divineShield emitter when cleanup callbacks are executed', () => {
+			spellEffects.divineShield(180, 240, 50, 5000);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// First callback stops emitter
+			const stopCall = delayedCalls[0];
+			stopCall[1](); // Execute stop callback
+
+			expect(mockParticleEmitter.stop).toHaveBeenCalled();
+
+			// Second callback destroys emitter
+			const destroyCall = delayedCalls[1];
+			destroyCall[1](); // Execute destroy callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy resurrection emitter when cleanup callback is executed', () => {
+			spellEffects.resurrection(190, 250);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// Find the resurrection cleanup (1600ms)
+			const cleanupCall = delayedCalls.find((call) => call[0] === 1600);
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy resurrection flash when tween completes', () => {
+			spellEffects.resurrection(190, 250);
+
+			// Get the onComplete from flash tween
+			const tweenConfig = (mockScene.tweens.add as jest.Mock).mock.calls[0][0];
+			tweenConfig.onComplete(); // Execute onComplete
+
+			expect(mockGraphics.destroy).toHaveBeenCalled();
+		});
+
+		it('should stop and destroy poisonCloud emitter when cleanup callbacks are executed', () => {
+			spellEffects.poisonCloud(200, 260, 80, 4000);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// First callback stops emitter
+			const stopCall = delayedCalls[0];
+			stopCall[1](); // Execute stop callback
+
+			expect(mockParticleEmitter.stop).toHaveBeenCalled();
+
+			// Second callback destroys emitter
+			const destroyCall = delayedCalls[1];
+			destroyCall[1](); // Execute destroy callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should destroy shadowBolt emitter after explosion callback is executed', () => {
+			spellEffects.shadowBolt(60, 70, 160, 170);
+
+			// Get the onComplete from tween
+			const tweenConfig = (mockScene.tweens.add as jest.Mock).mock.calls[0][0];
+			tweenConfig.onComplete(); // Execute onComplete - this explodes
+
+			expect(mockParticleEmitter.explode).toHaveBeenCalled();
+
+			// Execute the delayed cleanup callback
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			const cleanupCall = delayedCalls[delayedCalls.length - 1];
+			cleanupCall[1](); // Execute callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+
+		it('should stop and destroy curse emitter when cleanup callbacks are executed', () => {
+			spellEffects.curse(210, 270, 3000);
+
+			const delayedCalls = (mockScene.time.delayedCall as jest.Mock).mock.calls;
+			// First callback stops emitter
+			const stopCall = delayedCalls[0];
+			stopCall[1](); // Execute stop callback
+
+			expect(mockParticleEmitter.stop).toHaveBeenCalled();
+
+			// Second callback destroys emitter
+			const destroyCall = delayedCalls[1];
+			destroyCall[1](); // Execute destroy callback
+
+			expect(mockParticleEmitter.destroy).toHaveBeenCalled();
+		});
+	});
 });

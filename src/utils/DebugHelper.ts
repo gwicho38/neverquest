@@ -1,17 +1,251 @@
 /**
- * Comprehensive Debug Helper for Neverquest
+ * @fileoverview Debug helper for game state inspection
  *
- * This utility provides a full game state dump that can be used by Claude or developers
- * to understand the current state of the game, debug issues, and develop new features.
+ * This utility provides comprehensive debug capabilities:
+ * - Full game state dump (player, enemies, scenes)
+ * - Console and file export options
+ * - Clipboard copy functionality
+ * - Memory usage tracking
+ * - Performance metrics
  *
- * Usage:
- * - Press F9 to dump state to console and download
- * - Use window.neverquestDebug.dump() in console
- * - Use window.neverquestDebug.copyToClipboard() to copy state to clipboard
+ * Hotkeys:
+ * - F9: Dump state to console and download file
+ *
+ * Console API:
+ * - window.neverquestDebug.dump()
+ * - window.neverquestDebug.copyToClipboard()
+ *
+ * @see Logger - Logging integration
+ * @see CrashReporter - Error state capture
+ *
+ * @module utils/DebugHelper
  */
 
-import { logger, GameLogCategory } from './Logger';
+import { logger, GameLogCategory, LogData } from './Logger';
 import { DebugMessages, ErrorMessages } from '../consts/Messages';
+
+/**
+ * Chrome Performance Memory API extension (non-standard)
+ */
+interface PerformanceMemory {
+	usedJSHeapSize: number;
+	totalJSHeapSize: number;
+	jsHeapSizeLimit: number;
+}
+
+/**
+ * Extended Performance interface for memory API (Chrome only)
+ */
+interface PerformanceWithMemory extends Performance {
+	memory?: PerformanceMemory;
+}
+
+/**
+ * Safe Phaser config extract for serialization
+ */
+interface SafePhaserConfig {
+	width?: number | string;
+	height?: number | string;
+	type?: number;
+	parent?: string;
+	physics?: {
+		default?: string;
+		arcade?: {
+			gravity?: { x: number; y: number };
+			debug?: boolean;
+		};
+	};
+	scale?: {
+		mode?: number;
+		autoCenter?: number;
+	};
+}
+
+/**
+ * Player attributes for debug display
+ */
+interface PlayerAttributes {
+	health?: number;
+	maxHealth?: number;
+	level?: number;
+	[key: string]: unknown;
+}
+
+/**
+ * Inventory item for debug display
+ */
+interface InventoryItem {
+	id?: string;
+	name?: string;
+	quantity?: number;
+	[key: string]: unknown;
+}
+
+/**
+ * Dialog info for debug display
+ */
+interface DialogInfo {
+	id?: string;
+	text?: string;
+	isOpen?: boolean;
+	[key: string]: unknown;
+}
+
+/**
+ * Weather/time of day info
+ */
+type EnvironmentState = string | null;
+
+/**
+ * Log entry type from Logger
+ */
+interface LogEntry {
+	timestamp: string;
+	level: number;
+	category: string;
+	message: string;
+	data?: LogData;
+}
+
+/**
+ * Minimap debug info structure
+ */
+interface MinimapDebugInfo {
+	minimapDimensions: {
+		width: number;
+		height: number;
+		mapScale: number;
+	};
+	player: {
+		worldPosition: { x: number; y: number };
+		bounds: PlayerBounds | string | null;
+		tilePosition: {
+			fromPhaser: { x: number; y: number };
+			manual: { x: number; y: number };
+			match: boolean;
+		};
+	};
+	map: {
+		dimensions: { width: number; height: number };
+		tileSize: { width: number; height: number };
+		worldSize: { width: number; height: number };
+	};
+	layer: LayerInfo | null;
+	calculations: MinimapCalculations;
+}
+
+/**
+ * Player bounds for minimap
+ */
+interface PlayerBounds {
+	x: number;
+	y: number;
+	width: number;
+	height: number;
+	centerX: number;
+	centerY: number;
+	top: number;
+	bottom: number;
+	left: number;
+	right: number;
+}
+
+/**
+ * Layer info for minimap
+ */
+interface LayerInfo {
+	x: number;
+	y: number;
+	scrollFactorX: number;
+	scrollFactorY: number;
+	originX: number;
+	originY: number;
+	scaleX: number;
+	scaleY: number;
+}
+
+/**
+ * Minimap calculation details
+ */
+interface MinimapCalculations {
+	viewRadiusInTiles: number;
+	desiredTileRange: { startX: number; startY: number; endX: number; endY: number };
+	clampedTileRange: { startX: number; startY: number; endX: number; endY: number };
+	relativePlayer: { x: number; y: number; note: string };
+	actualTileRangeSize: { x: number; y: number; note: string };
+	markerPosition: { raw: { x: number; y: number }; clamped: { x: number; y: number }; note: string };
+}
+
+/**
+ * Debug commands available on window
+ */
+interface NeverquestDebugCommands {
+	dump: () => GameStateDump;
+	quickDump: () => void;
+	download: () => void;
+	copy: () => Promise<void>;
+	scenes: () => string[];
+	player: () => PlayerInfo | null;
+	enemies: () => EnemyInfo[];
+	minimap: () => MinimapDebugInfo | null;
+	teleport: (x: number, y: number) => void;
+	setHealth: (health: number) => void;
+	giveItem: (itemId: string, quantity?: number) => void;
+	help: () => void;
+}
+
+/**
+ * Extended Window interface for debug commands
+ */
+declare global {
+	interface Window {
+		neverquestDebug?: NeverquestDebugCommands;
+	}
+}
+
+/**
+ * Scene with player property (common pattern in Neverquest)
+ */
+interface SceneWithPlayer extends Phaser.Scene {
+	player?: {
+		container?: { x: number; y: number; getBounds?: () => Phaser.Geom.Rectangle };
+		x?: number;
+		y?: number;
+		attributes?: PlayerAttributes;
+		items?: unknown[];
+		speed?: number;
+		isSwimming?: boolean;
+		isRunning?: boolean;
+		canMove?: boolean;
+		canAtack?: boolean;
+		setPosition?: (x: number, y: number) => void;
+	};
+	enemies?: Array<{
+		id?: string;
+		x: number;
+		y: number;
+		attributes?: { health?: number };
+		entityName?: string;
+		active?: boolean;
+	}>;
+	map?: Phaser.Tilemaps.Tilemap;
+	mapCreator?: { map?: Phaser.Tilemaps.Tilemap };
+}
+
+/**
+ * HUD Scene with minimap
+ */
+interface HUDSceneWithMinimap extends Phaser.Scene {
+	minimap?: {
+		width: number;
+		height: number;
+		mapScale: number;
+	};
+	player?: {
+		container: { x: number; y: number; getBounds?: () => Phaser.Geom.Rectangle };
+	};
+	map?: Phaser.Tilemaps.Tilemap;
+}
 
 interface GameStateDump {
 	metadata: {
@@ -24,7 +258,7 @@ interface GameStateDump {
 	};
 	phaser: {
 		version: string;
-		config: any;
+		config: SafePhaserConfig;
 		stats: {
 			fps: number;
 			delta: number;
@@ -34,11 +268,11 @@ interface GameStateDump {
 	player: PlayerInfo | null;
 	enemies: EnemyInfo[];
 	inventory: InventoryInfo;
-	activeDialogs: any[];
+	activeDialogs: DialogInfo[];
 	environment: EnvironmentInfo;
 	map: MapInfo | null;
 	errors: ErrorInfo[];
-	logs: any[];
+	logs: LogEntry[];
 }
 
 interface PerformanceMetrics {
@@ -64,7 +298,7 @@ interface SceneInfo {
 
 interface PlayerInfo {
 	position: { x: number; y: number };
-	attributes: any;
+	attributes: PlayerAttributes;
 	inventory: number;
 	speed: number;
 	isSwimming: boolean;
@@ -86,13 +320,13 @@ interface EnemyInfo {
 
 interface InventoryInfo {
 	itemCount: number;
-	items: any[];
+	items: InventoryItem[];
 }
 
 interface EnvironmentInfo {
 	currentMap: string | null;
-	weather: any;
-	timeOfDay: any;
+	weather: EnvironmentState;
+	timeOfDay: EnvironmentState;
 }
 
 interface MapInfo {
@@ -132,7 +366,7 @@ interface ErrorInfo {
 	timestamp: string;
 	message: string;
 	stack?: string;
-	data?: any;
+	data?: unknown[];
 }
 
 class DebugHelper {
@@ -198,7 +432,7 @@ class DebugHelper {
 		if (typeof window === 'undefined') return;
 
 		const originalConsoleError = console.error;
-		console.error = (...args: any[]) => {
+		console.error = (...args: unknown[]) => {
 			this.errorLog.push({
 				timestamp: new Date().toISOString(),
 				message: args.map((arg) => String(arg)).join(' '),
@@ -217,13 +451,18 @@ class DebugHelper {
 		const scenes: SceneInfo[] = [];
 		const sceneManager = this.game.scene;
 
-		sceneManager.scenes.forEach((scene: any) => {
-			const plugins = Object.keys(scene).filter(
-				(key) =>
-					scene[key] &&
-					typeof scene[key] === 'object' &&
-					scene[key].constructor?.name?.includes(DebugMessages.NEVERQUEST_PLUGIN_PATTERN)
-			);
+		sceneManager.scenes.forEach((scene: Phaser.Scene) => {
+			const sceneRecord = scene as unknown as Record<string, unknown>;
+			const plugins = Object.keys(scene).filter((key) => {
+				const value = sceneRecord[key];
+				return (
+					value &&
+					typeof value === 'object' &&
+					(value as { constructor?: { name?: string } }).constructor?.name?.includes(
+						DebugMessages.NEVERQUEST_PLUGIN_PATTERN
+					)
+				);
+			});
 
 			scenes.push({
 				key: scene.scene.key,
@@ -246,11 +485,13 @@ class DebugHelper {
 	private getPlayerInfo(): PlayerInfo | null {
 		if (!this.game) return null;
 
-		const activeScenes = this.game.scene.scenes.filter((s: any) => this.game!.scene.isActive(s.scene.key));
+		const activeScenes = this.game.scene.scenes.filter((s: Phaser.Scene) =>
+			this.game!.scene.isActive(s.scene.key)
+		) as SceneWithPlayer[];
 
 		for (const scene of activeScenes) {
-			if ((scene as any).player) {
-				const player = (scene as any).player;
+			if (scene.player) {
+				const player = scene.player;
 				return {
 					position: { x: player.container?.x ?? player.x ?? 0, y: player.container?.y ?? player.y ?? 0 },
 					attributes: player.attributes || {},
@@ -276,13 +517,21 @@ class DebugHelper {
 	private getMapInfo(): MapInfo | null {
 		if (!this.game) return null;
 
-		const activeScenes = this.game.scene.scenes.filter((s: any) => this.game!.scene.isActive(s.scene.key));
+		const activeScenes = this.game.scene.scenes.filter((s: Phaser.Scene) =>
+			this.game!.scene.isActive(s.scene.key)
+		) as SceneWithPlayer[];
 
 		for (const scene of activeScenes) {
-			const map = (scene as any).map || (scene as any).mapCreator?.map;
+			const map = scene.map || scene.mapCreator?.map;
 			if (map) {
 				const camera = scene.cameras?.main;
-				const player = (scene as any).player;
+				const player = scene.player;
+
+				// Type for camera internal properties
+				type CameraInternal = {
+					_bounds?: { x: number; y: number; width: number; height: number };
+					_follow?: unknown;
+				};
 
 				return {
 					name: scene.scene.key || null,
@@ -294,31 +543,23 @@ class DebugHelper {
 						tileWidth: map.tileWidth || 0,
 						tileHeight: map.tileHeight || 0,
 					},
-					isInfinite: map.infinite || false,
+					isInfinite: (map as unknown as { infinite?: boolean }).infinite || false,
 					layerCount: map.layers?.length || 0,
-					layers: map.layers?.map((layer: any) => layer.name) || [],
+					layers: map.layers?.map((layer: Phaser.Tilemaps.LayerData) => layer.name) || [],
 					camera: camera
 						? {
 								x: camera.scrollX || 0,
 								y: camera.scrollY || 0,
 								zoom: camera.zoom || 1,
-								bounds: (
-									camera as unknown as {
-										_bounds?: { x: number; y: number; width: number; height: number };
-									}
-								)._bounds?.width
+								bounds: (camera as unknown as CameraInternal)._bounds?.width
 									? {
-											x: (camera as unknown as { _bounds: { x: number } })._bounds.x || 0,
-											y: (camera as unknown as { _bounds: { y: number } })._bounds.y || 0,
-											width:
-												(camera as unknown as { _bounds: { width: number } })._bounds.width ||
-												0,
-											height:
-												(camera as unknown as { _bounds: { height: number } })._bounds.height ||
-												0,
+											x: (camera as unknown as CameraInternal)._bounds!.x || 0,
+											y: (camera as unknown as CameraInternal)._bounds!.y || 0,
+											width: (camera as unknown as CameraInternal)._bounds!.width || 0,
+											height: (camera as unknown as CameraInternal)._bounds!.height || 0,
 										}
 									: null,
-								followingPlayer: !!(camera as unknown as { _follow?: unknown })._follow,
+								followingPlayer: !!(camera as unknown as CameraInternal)._follow,
 							}
 						: {
 								x: 0,
@@ -349,19 +590,21 @@ class DebugHelper {
 		if (!this.game) return [];
 
 		const enemies: EnemyInfo[] = [];
-		const activeScenes = this.game.scene.scenes.filter((s: any) => this.game!.scene.isActive(s.scene.key));
+		const activeScenes = this.game.scene.scenes.filter((s: Phaser.Scene) =>
+			this.game!.scene.isActive(s.scene.key)
+		) as SceneWithPlayer[];
 
 		for (const scene of activeScenes) {
-			if ((scene as any).enemies) {
-				const sceneEnemies = (scene as any).enemies;
+			if (scene.enemies) {
+				const sceneEnemies = scene.enemies;
 				if (Array.isArray(sceneEnemies)) {
-					sceneEnemies.forEach((enemy: any, index: number) => {
+					sceneEnemies.forEach((enemy, index: number) => {
 						enemies.push({
 							id: enemy.id || `enemy_${index}`,
 							position: { x: enemy.x, y: enemy.y },
 							health: enemy.attributes?.health || 0,
 							entityName: enemy.entityName || 'unknown',
-							isActive: enemy.active,
+							isActive: enemy.active || false,
 						});
 					});
 				}
@@ -385,13 +628,16 @@ class DebugHelper {
 			metrics.frameTime = this.game.loop.delta;
 		}
 
-		if (typeof window !== 'undefined' && (window.performance as any).memory) {
-			const memory = (window.performance as any).memory;
-			metrics.memory = {
-				usedJSHeapSize: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
-				totalJSHeapSize: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
-				limit: `${(memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,
-			};
+		if (typeof window !== 'undefined') {
+			const performanceWithMemory = window.performance as PerformanceWithMemory;
+			if (performanceWithMemory.memory) {
+				const memory = performanceWithMemory.memory;
+				metrics.memory = {
+					usedJSHeapSize: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
+					totalJSHeapSize: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
+					limit: `${(memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,
+				};
+			}
 		}
 
 		return metrics;
@@ -400,14 +646,14 @@ class DebugHelper {
 	/**
 	 * Safely extract config info without circular references
 	 */
-	private getSafeConfig(): any {
+	private getSafeConfig(): SafePhaserConfig {
 		if (!this.game?.config) return {};
 
-		const config = this.game.config as any;
+		const config = this.game.config;
 		return {
 			width: config.width,
 			height: config.height,
-			type: config.type,
+			type: config.renderType,
 			parent: typeof config.parent === 'string' ? config.parent : DebugMessages.HTML_ELEMENT_PLACEHOLDER,
 			physics: config.physics
 				? {
@@ -420,12 +666,13 @@ class DebugHelper {
 							: undefined,
 					}
 				: undefined,
-			scale: config.scale
-				? {
-						mode: config.scale.mode,
-						autoCenter: config.scale.autoCenter,
-					}
-				: undefined,
+			scale:
+				config.scaleMode !== undefined
+					? {
+							mode: config.scaleMode,
+							autoCenter: config.autoCenter,
+						}
+					: undefined,
 		};
 	}
 
@@ -441,7 +688,7 @@ class DebugHelper {
 		const dump: GameStateDump = {
 			metadata: {
 				timestamp: new Date().toISOString(),
-				version: (this.game?.config as any)?.version || DebugMessages.UNKNOWN_VERSION,
+				version: this.game?.config?.gameVersion || DebugMessages.UNKNOWN_VERSION,
 				userAgent: typeof navigator !== 'undefined' ? navigator.userAgent : DebugMessages.UNKNOWN_USER_AGENT,
 				viewport: {
 					width: typeof window !== 'undefined' ? window.innerWidth : 0,
@@ -544,8 +791,8 @@ class DebugHelper {
 		if (!this.game) return;
 
 		// Toggle FPS display
-		const statsPlugin = this.game.plugins.get('FPSPlugin') as any;
-		if (statsPlugin) {
+		const statsPlugin = this.game.plugins.get('FPSPlugin') as { toggle?: () => void } | null;
+		if (statsPlugin && typeof statsPlugin.toggle === 'function') {
 			statsPlugin.toggle();
 		} else {
 			console.log('Performance overlay not available');
@@ -555,7 +802,7 @@ class DebugHelper {
 	/**
 	 * Get specific scene by key
 	 */
-	getScene(key: string): any {
+	getScene(key: string): Phaser.Scene | null {
 		if (!this.game) return null;
 		return this.game.scene.getScene(key);
 	}
@@ -566,8 +813,8 @@ class DebugHelper {
 	getActiveScenes(): string[] {
 		if (!this.game) return [];
 		return this.game.scene.scenes
-			.filter((s: any) => this.game!.scene.isActive(s.scene.key))
-			.map((s: any) => s.scene.key);
+			.filter((s: Phaser.Scene) => this.game!.scene.isActive(s.scene.key))
+			.map((s: Phaser.Scene) => s.scene.key);
 	}
 
 	/**
@@ -580,11 +827,13 @@ class DebugHelper {
 			return;
 		}
 
-		const activeScenes = this.game?.scene.scenes.filter((s: any) => this.game!.scene.isActive(s.scene.key));
+		const activeScenes = this.game?.scene.scenes.filter((s: Phaser.Scene) =>
+			this.game!.scene.isActive(s.scene.key)
+		) as SceneWithPlayer[] | undefined;
 		if (activeScenes) {
 			for (const scene of activeScenes) {
-				if ((scene as any).player) {
-					(scene as any).player.setPosition(x, y);
+				if (scene.player && scene.player.setPosition) {
+					scene.player.setPosition(x, y);
 					console.log(`✅ Player teleported to (${x}, ${y})`);
 					return;
 				}
@@ -604,11 +853,13 @@ class DebugHelper {
 	 * Set player health
 	 */
 	setPlayerHealth(health: number): void {
-		const activeScenes = this.game?.scene.scenes.filter((s: any) => this.game!.scene.isActive(s.scene.key));
+		const activeScenes = this.game?.scene.scenes.filter((s: Phaser.Scene) =>
+			this.game!.scene.isActive(s.scene.key)
+		) as SceneWithPlayer[] | undefined;
 		if (activeScenes) {
 			for (const scene of activeScenes) {
-				if ((scene as any).player) {
-					(scene as any).player.attributes.health = health;
+				if (scene.player && scene.player.attributes) {
+					scene.player.attributes.health = health;
 					console.log(`✅ Player health set to ${health}`);
 					return;
 				}
@@ -619,13 +870,13 @@ class DebugHelper {
 	/**
 	 * Get minimap debug information
 	 */
-	getMinimapInfo(): any {
+	getMinimapInfo(): MinimapDebugInfo | null {
 		if (!this.game) {
 			console.error('Game not initialized');
 			return null;
 		}
 
-		const hudScene = this.game.scene.getScene('HUDScene') as any;
+		const hudScene = this.game.scene.getScene('HUDScene') as HUDSceneWithMinimap | null;
 		if (!hudScene || !hudScene.minimap) {
 			console.error('HUDScene or minimap not found');
 			return null;
@@ -641,14 +892,14 @@ class DebugHelper {
 		}
 
 		// Get the first available layer to convert world coordinates
-		const firstLayer = map.layers.find((l: any) => l.tilemapLayer)?.tilemapLayer;
+		const firstLayer = map.layers.find((l: Phaser.Tilemaps.LayerData) => l.tilemapLayer)?.tilemapLayer;
 
 		// Calculate the same values as renderMap does
 		const playerX = player.container.x;
 		const playerY = player.container.y;
 
 		// Get Phaser.Display.Bounds for player
-		let playerBounds = null;
+		let playerBounds: PlayerBounds | string | null = null;
 		try {
 			if (player.container && player.container.getBounds) {
 				const bounds = player.container.getBounds();
@@ -687,7 +938,7 @@ class DebugHelper {
 		}
 
 		// Get layer origin/offset info
-		let layerInfo = null;
+		let layerInfo: LayerInfo | null = null;
 		if (firstLayer) {
 			layerInfo = {
 				x: firstLayer.x,
@@ -805,7 +1056,7 @@ class DebugHelper {
 	setupConsoleCommands(): void {
 		if (typeof window === 'undefined' || !this.isEnabled) return;
 
-		(window as any).neverquestDebug = {
+		window.neverquestDebug = {
 			dump: () => this.dump(),
 			quickDump: () => this.quickDump(),
 			download: () => this.dumpAndDownload(),

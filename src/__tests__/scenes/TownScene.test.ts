@@ -124,7 +124,7 @@ describe('TownScene', () => {
 		// Mock player with container
 		scene.player = {
 			container: {},
-		};
+		} as unknown as typeof scene.player;
 	});
 
 	describe('constructor', () => {

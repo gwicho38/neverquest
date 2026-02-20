@@ -1,8 +1,19 @@
 /**
- * SpellWheelScene - Radial spell selection UI
- * Activated by holding 'L' key
- * Select spells with M (left), N (center), comma (right)
- * Release L to cast selected spell
+ * @fileoverview Spell selection wheel UI for Neverquest
+ *
+ * This scene displays a horizontal spell bar for quick spell selection:
+ * - Activated by holding 'L' key
+ * - Three spell slots: left (M), center (N), right (comma)
+ * - Visual feedback for selected spell
+ * - Cast on key release
+ *
+ * Shows only unlocked spells based on story progression.
+ *
+ * @see SpellEffects - Spell casting execution
+ * @see NeverquestSpellManager - Spell unlock tracking
+ * @see SPELLS - Spell definitions
+ *
+ * @module scenes/SpellWheelScene
  */
 
 import Phaser from 'phaser';

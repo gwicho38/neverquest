@@ -208,6 +208,29 @@ Use the mock in `src/__mocks__/phaserMock.ts` - it provides:
 
 ---
 
+## CI/CD Requirements
+
+### CRITICAL: CI Must Pass Before Work is Complete
+
+**NEVER declare work complete until CI passes on GitHub.** This is a hard requirement.
+
+### CI/CD Workflow
+
+1. **Before starting work**: Check current CI status with `gh run list --limit 3`
+2. **After pushing changes**: Monitor CI with `gh run watch` or `gh run list`
+3. **If CI fails**: Fix immediately, push fix, wait for green CI
+4. **Only after CI passes**: Declare the task complete
+
+### CI Commands
+
+```bash
+gh run list --limit 5              # Check recent CI runs
+gh run view <run-id> --log-failed  # View failure logs
+gh run watch <run-id>              # Watch run in real-time
+```
+
+---
+
 ## Data Coherence
 
 Always check for coherence and equality between production and dev data. Identify when there is a data mismatch.
@@ -245,3 +268,27 @@ console.log('[ComponentName] Animation:', {
 - `docs/PLAYER_STATE_MANAGEMENT.md` - State patterns
 - `docs/DEBUG_SYSTEM.md` - Debugging tools
 - `docs/ROADMAP.md` - Project roadmap
+
+---
+
+## Tool Preferences: mcli & lsh (REQUIRED)
+
+### mcli — Workflow Automation
+
+- **ALWAYS** use `mcli` for workflow automation and script management
+- Use `mcli init` to initialize a workflows directory — **NEVER** `mkdir -p .mcli/workflows/`
+- Use `mcli new <name> -l python` or `mcli new <name> -l shell` to create commands — **NEVER** create workflow files manually
+- Use `mcli run <name>` to execute workflows, `mcli list` to discover existing ones
+- Check `mcli list` and `mcli list -g` **before** writing scripts — a workflow may already exist
+- If you repeat `curl`, `python`, or shell logic more than twice in a session, wrap it in an mcli workflow
+- **Bugs/missing features**: File issues immediately at https://github.com/gwicho38/mcli — do not defer
+
+### lsh — Secrets Management
+
+- **ALWAYS** use `lsh` for secrets and `.env` file management
+- Use `lsh pull` to fetch secrets — **NEVER** create `.env` files manually
+- Use `lsh set <key> <value>` to add/update secrets — **NEVER** `echo "KEY=val" >> .env`
+- Use `lsh push` to sync secrets after changes, `lsh get <key>` to read individual values
+- Use `lsh sync` for smart bidirectional sync
+- **NEVER** commit `.env` files or hardcode secrets in source code
+- **Bugs/missing features**: File issues immediately at https://github.com/gwicho38/lsh — do not defer

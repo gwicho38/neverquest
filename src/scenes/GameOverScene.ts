@@ -1,3 +1,21 @@
+/**
+ * @fileoverview Game over screen for player death
+ *
+ * This scene displays when the player dies:
+ * - "Game Over" text display
+ * - Restart option (restart current level)
+ * - Load checkpoint option (load last save)
+ * - Main menu option
+ *
+ * Records player level for potential analytics.
+ *
+ * @see NeverquestBattleManager - Triggers on player death
+ * @see NeverquestSaveManager - Load checkpoint functionality
+ * @see MainMenuScene - Return to menu
+ *
+ * @module scenes/GameOverScene
+ */
+
 import Phaser from 'phaser';
 import { HexColors, NumericColors } from '../consts/Colors';
 import { Depth, Dimensions, Scale } from '../consts/Numbers';

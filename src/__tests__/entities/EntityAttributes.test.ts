@@ -1,4 +1,12 @@
-import { EntityAttributes, IEntityAttributes, IRawAttributes, IBonusAttributes } from '../../entities/EntityAttributes';
+import {
+	EntityAttributes,
+	IEntityAttributes,
+	IRawAttributes,
+	IBonusAttributes,
+	IEquipmentBonus,
+	IConsumableBonus,
+	IExtraBonus,
+} from '../../entities/EntityAttributes';
 
 describe('EntityAttributes', () => {
 	describe('Default EntityAttributes Object', () => {
@@ -126,8 +134,9 @@ describe('EntityAttributes', () => {
 		});
 
 		it('should allow adding equipment bonuses', () => {
+			const equipmentBonus: IEquipmentBonus = { item: 'sword', atk: 5 };
 			const bonus: IBonusAttributes = {
-				equipment: [{ type: 'sword', atk: +5 }],
+				equipment: [equipmentBonus],
 				consumable: [],
 				extra: [],
 			};
@@ -137,21 +146,29 @@ describe('EntityAttributes', () => {
 		});
 
 		it('should allow adding consumable bonuses', () => {
+			const consumableBonus: IConsumableBonus = {
+				uniqueId: 1,
+				statBonus: 'health',
+				value: 10,
+				time: 60,
+			};
 			const bonus: IBonusAttributes = {
 				equipment: [],
-				consumable: [{ type: 'potion', hp: +10 }],
+				consumable: [consumableBonus],
 				extra: [],
 			};
 
 			expect(bonus.consumable).toHaveLength(1);
-			expect(bonus.consumable[0].hp).toBe(10);
+			expect(bonus.consumable[0].value).toBe(10);
+			expect(bonus.consumable[0].statBonus).toBe('health');
 		});
 
 		it('should allow adding extra bonuses', () => {
+			const extraBonus: IExtraBonus = { def: 3, source: 'buff' };
 			const bonus: IBonusAttributes = {
 				equipment: [],
 				consumable: [],
-				extra: [{ type: 'buff', def: +3 }],
+				extra: [extraBonus],
 			};
 
 			expect(bonus.extra).toHaveLength(1);
@@ -291,9 +308,13 @@ describe('EntityAttributes', () => {
 		it('should handle multiple bonus types simultaneously', () => {
 			const attrs: IEntityAttributes = JSON.parse(JSON.stringify(EntityAttributes));
 
-			attrs.bonus.equipment.push({ atk: +5 });
-			attrs.bonus.consumable.push({ atk: +3 });
-			attrs.bonus.extra.push({ atk: +2 });
+			const equipmentBonus: IEquipmentBonus = { atk: 5 };
+			const consumableBonus: IConsumableBonus = { uniqueId: 1, statBonus: 'atack', value: 3, time: 60 };
+			const extraBonus: IExtraBonus = { atk: 2 };
+
+			attrs.bonus.equipment.push(equipmentBonus);
+			attrs.bonus.consumable.push(consumableBonus);
+			attrs.bonus.extra.push(extraBonus);
 
 			expect(attrs.bonus.equipment).toHaveLength(1);
 			expect(attrs.bonus.consumable).toHaveLength(1);

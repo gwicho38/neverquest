@@ -1,6 +1,20 @@
 /**
- * SpellEffects Plugin
- * Handles visual particle effects for all spell types
+ * @fileoverview Spell visual effects using particle systems
+ *
+ * This plugin handles particle effects for all spell types:
+ * - Fire spells: Fireball, Fire Trail, Flame Wave
+ * - Ice spells: Ice Shard, Frost Nova, Frozen Ground
+ * - Lightning spells: Lightning Bolt, Static Field
+ * - Holy spells: Heal, Divine Shield, Resurrection
+ * - Dark spells: Poison Cloud, Shadow Bolt, Curse
+ *
+ * Each spell has unique particle configurations for visual distinction.
+ *
+ * @see SpellWheelScene - Spell selection UI
+ * @see ParticleConfigs - Particle configuration constants
+ * @see SPELLS - Spell definitions
+ *
+ * @module plugins/effects/SpellEffects
  */
 
 import Phaser from 'phaser';
@@ -133,12 +147,13 @@ export class SpellEffects {
 		const config = { ...FROZEN_GROUND_PARTICLE };
 
 		// Create circular emitter zone
+		const emitZone: Phaser.Types.GameObjects.Particles.ParticleEmitterRandomZoneConfig = {
+			type: 'random',
+			source: new Phaser.Geom.Circle(0, 0, radius) as Phaser.Types.GameObjects.Particles.RandomZoneSource,
+		};
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...config,
-			emitZone: {
-				type: 'random',
-				source: new Phaser.Geom.Circle(0, 0, radius),
-			} as any,
+			emitZone,
 		});
 
 		// Stop after duration
@@ -202,12 +217,13 @@ export class SpellEffects {
 		radius: number = 60,
 		duration: number = ParticleValues.LIFESPAN_VERY_LONG
 	): Phaser.GameObjects.Particles.ParticleEmitter {
+		const emitZone: Phaser.Types.GameObjects.Particles.ParticleEmitterRandomZoneConfig = {
+			type: 'random',
+			source: new Phaser.Geom.Circle(0, 0, radius) as Phaser.Types.GameObjects.Particles.RandomZoneSource,
+		};
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...STATIC_FIELD_PARTICLE,
-			emitZone: {
-				type: 'random',
-				source: new Phaser.Geom.Circle(0, 0, radius),
-			} as any,
+			emitZone,
 		});
 
 		this.scene.time.delayedCall(duration, () => {
@@ -238,13 +254,14 @@ export class SpellEffects {
 		radius: number = 50,
 		duration: number = SpellEffectDurations.DIVINE_SHIELD
 	): Phaser.GameObjects.Particles.ParticleEmitter {
+		const emitZone: Phaser.Types.GameObjects.Particles.ParticleEmitterEdgeZoneConfig = {
+			type: 'edge',
+			source: new Phaser.Geom.Circle(0, 0, radius) as Phaser.Types.GameObjects.Particles.EdgeZoneSource,
+			quantity: 32,
+		};
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...DIVINE_SHIELD_PARTICLE,
-			emitZone: {
-				type: 'edge',
-				source: new Phaser.Geom.Circle(0, 0, radius),
-				quantity: 32,
-			} as any,
+			emitZone,
 		});
 
 		this.scene.time.delayedCall(duration, () => {
@@ -290,12 +307,13 @@ export class SpellEffects {
 		radius: number = 80,
 		duration: number = SpellEffectDurations.POISON_CLOUD
 	): Phaser.GameObjects.Particles.ParticleEmitter {
+		const emitZone: Phaser.Types.GameObjects.Particles.ParticleEmitterRandomZoneConfig = {
+			type: 'random',
+			source: new Phaser.Geom.Circle(0, 0, radius) as Phaser.Types.GameObjects.Particles.RandomZoneSource,
+		};
 		const emitter = this.scene.add.particles(x, y, this.particleTexture, {
 			...POISON_CLOUD_PARTICLE,
-			emitZone: {
-				type: 'random',
-				source: new Phaser.Geom.Circle(0, 0, radius),
-			} as any,
+			emitZone,
 		});
 
 		this.scene.time.delayedCall(duration, () => {

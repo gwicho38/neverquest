@@ -1,10 +1,34 @@
+/**
+ * @fileoverview Animation state machine for game entities
+ *
+ * This plugin manages sprite animations for Player, Enemy, and other entities:
+ * - Direction-based animation selection (4 or 8 directions)
+ * - Animation state tracking (idle, walk, attack, etc.)
+ * - Animation priority handling
+ * - Frame-based callback support
+ *
+ * Animation naming convention:
+ * - {action}_{direction} (e.g., walk_down, attack_right)
+ * - Idle animations: idle_{direction}
+ * - Movement: walk_{direction}, run_{direction}
+ * - Combat: attack_{direction}, block_{direction}
+ *
+ * Extends AnimationNames for constant access.
+ *
+ * @see Player - Primary animation target
+ * @see Enemy - Enemy animation target
+ * @see AnimationNames - Animation key constants
+ *
+ * @module plugins/NeverquestAnimationManager
+ */
+
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
 import { Angles } from '../consts/Numbers';
 import { Player } from '../entities/Player';
 
 /**
- * Animation manager for game entities like Player, Enemy, etc.
+ * Animation state machine for game entities
  */
 export class NeverquestAnimationManager extends AnimationNames {
 	public entity: Player | Phaser.GameObjects.Sprite;

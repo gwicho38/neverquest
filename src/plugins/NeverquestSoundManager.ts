@@ -1,4 +1,20 @@
 /**
+ * @fileoverview Scene audio management for Neverquest
+ *
+ * This plugin manages audio playback for scenes:
+ * - Stops audio when transitioning between scenes
+ * - References audio from main scene
+ * - Handles audio cleanup
+ *
+ * Prevents audio overlap issues when switching scenes.
+ *
+ * @see MainScene - Primary audio source
+ * @see HUDScene - Uses sound manager reference
+ *
+ * @module plugins/NeverquestSoundManager
+ */
+
+/**
  * @class
  */
 export class NeverquestSoundManager {

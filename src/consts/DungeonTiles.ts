@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Dungeon tile mapping configuration
+ *
+ * This file defines tile indices and weights for procedural dungeon generation:
+ * - Wall tiles (corners, edges with variations)
+ * - Floor tiles with weighted randomization
+ * - Door configurations for all directions
+ * - Special tiles (chest, stairs, tower, pot)
+ *
+ * Used by NeverquestDungeonGenerator for creating random dungeons.
+ *
+ * @see NeverquestDungeonGenerator - Procedural dungeon system
+ * @see NeverquestMapCreator - Map loading and tile placement
+ *
+ * @module consts/DungeonTiles
+ */
+
 interface TileWeight {
 	index: number | number[];
 	weight: number;

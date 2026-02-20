@@ -1,5 +1,23 @@
 /**
- * Comprehensive logging system for Neverquest
+ * @fileoverview Comprehensive logging system for Neverquest
+ *
+ * This utility provides structured logging with:
+ * - Multiple log levels (ERROR, WARN, INFO, DEBUG, TRACE)
+ * - Console output with color coding
+ * - Performance metrics tracking
+ * - Memory usage monitoring (Chrome)
+ * - Debug panel integration
+ *
+ * Usage:
+ * ```typescript
+ * Logger.info('Player spawned', { x: 100, y: 200 });
+ * Logger.error('Failed to load', error);
+ * ```
+ *
+ * @see DebugHelper - Debug panel integration
+ * @see CrashReporter - Error reporting
+ *
+ * @module utils/Logger
  */
 
 import { ErrorMessages, DebugMessages } from '../consts/Messages';
@@ -13,12 +31,57 @@ export enum LogLevel {
 	TRACE = 4,
 }
 
+/**
+ * Data that can be passed to logging functions.
+ * Using unknown to accept any type while maintaining type safety.
+ */
+export type LogData = unknown;
+
+/**
+ * Chrome Performance Memory API extension (non-standard)
+ */
+interface PerformanceMemory {
+	usedJSHeapSize: number;
+	totalJSHeapSize: number;
+	jsHeapSizeLimit: number;
+}
+
+/**
+ * Extended Performance interface for memory API (Chrome only)
+ */
+interface PerformanceWithMemory extends Performance {
+	memory?: PerformanceMemory;
+}
+
+/**
+ * Console commands exposed on window for debugging
+ */
+interface NeverquestConsoleCommands {
+	log: Logger;
+	setLogLevel: (level: string) => void;
+	enableCategory: (cat: string) => void;
+	disableCategory: (cat: string) => void;
+	showCategories: () => void;
+	exportLogs: () => void;
+	clearLogs: () => void;
+	showMemory: () => void;
+}
+
+/**
+ * Extended window interface for debug commands
+ */
+declare global {
+	interface Window {
+		neverquest?: NeverquestConsoleCommands;
+	}
+}
+
 interface LogEntry {
 	timestamp: string;
 	level: LogLevel;
 	category: string;
 	message: string;
-	data?: any;
+	data?: LogData;
 	stack?: string;
 }
 
@@ -119,7 +182,7 @@ class Logger {
 		return `${entry.timestamp} ${levelStr} ${categoryStr} ${entry.message}`;
 	}
 
-	private log(level: LogLevel, category: string, message: string, data?: any): void {
+	private log(level: LogLevel, category: string, message: string, data?: LogData): void {
 		if (!this.shouldLog(level, category)) return;
 
 		const entry: LogEntry = {
@@ -166,26 +229,31 @@ class Logger {
 		}
 	}
 
-	error(category: string, message: string, data?: any): void {
+	error(category: string, message: string, data?: LogData): void {
 		// Capture stack trace for errors
 		const error = new Error();
 		const stack = error.stack;
-		this.log(LogLevel.ERROR, category, message, { ...data, stack });
+		// Combine data with stack trace
+		const errorData =
+			data !== null && typeof data === 'object'
+				? { ...(data as Record<string, unknown>), stack }
+				: { data, stack };
+		this.log(LogLevel.ERROR, category, message, errorData);
 	}
 
-	warn(category: string, message: string, data?: any): void {
+	warn(category: string, message: string, data?: LogData): void {
 		this.log(LogLevel.WARN, category, message, data);
 	}
 
-	info(category: string, message: string, data?: any): void {
+	info(category: string, message: string, data?: LogData): void {
 		this.log(LogLevel.INFO, category, message, data);
 	}
 
-	debug(category: string, message: string, data?: any): void {
+	debug(category: string, message: string, data?: LogData): void {
 		this.log(LogLevel.DEBUG, category, message, data);
 	}
 
-	trace(category: string, message: string, data?: any): void {
+	trace(category: string, message: string, data?: LogData): void {
 		this.log(LogLevel.TRACE, category, message, data);
 	}
 
@@ -200,13 +268,16 @@ class Logger {
 
 	// Memory logging
 	logMemoryUsage(): void {
-		if (typeof window !== 'undefined' && (window.performance as any).memory) {
-			const memory = (window.performance as any).memory;
-			this.debug('Memory', DebugMessages.MEMORY_USAGE, {
-				usedJSHeapSize: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
-				totalJSHeapSize: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
-				limit: `${(memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,
-			});
+		if (typeof window !== 'undefined') {
+			const performanceWithMemory = window.performance as PerformanceWithMemory;
+			if (performanceWithMemory.memory) {
+				const memory = performanceWithMemory.memory;
+				this.debug('Memory', DebugMessages.MEMORY_USAGE, {
+					usedJSHeapSize: `${(memory.usedJSHeapSize / 1048576).toFixed(2)} MB`,
+					totalJSHeapSize: `${(memory.totalJSHeapSize / 1048576).toFixed(2)} MB`,
+					limit: `${(memory.jsHeapSizeLimit / 1048576).toFixed(2)} MB`,
+				});
+			}
 		}
 	}
 
@@ -252,7 +323,7 @@ class Logger {
 	setupConsoleCommands(): void {
 		if (typeof window === 'undefined' || this.isProduction) return;
 
-		(window as any).neverquest = {
+		window.neverquest = {
 			log: this,
 			setLogLevel: (level: string) => {
 				const levelValue = LogLevel[level.toUpperCase() as keyof typeof LogLevel];
@@ -277,15 +348,15 @@ class Logger {
 export const logger = Logger.getInstance();
 
 // Export convenience functions
-export const logError = (category: string, message: string, data?: any) => logger.error(category, message, data);
+export const logError = (category: string, message: string, data?: LogData) => logger.error(category, message, data);
 
-export const logWarn = (category: string, message: string, data?: any) => logger.warn(category, message, data);
+export const logWarn = (category: string, message: string, data?: LogData) => logger.warn(category, message, data);
 
-export const logInfo = (category: string, message: string, data?: any) => logger.info(category, message, data);
+export const logInfo = (category: string, message: string, data?: LogData) => logger.info(category, message, data);
 
-export const logDebug = (category: string, message: string, data?: any) => logger.debug(category, message, data);
+export const logDebug = (category: string, message: string, data?: LogData) => logger.debug(category, message, data);
 
-export const logTrace = (category: string, message: string, data?: any) => logger.trace(category, message, data);
+export const logTrace = (category: string, message: string, data?: LogData) => logger.trace(category, message, data);
 
 export const logTimer = (name: string) => logger.startTimer(name);
 

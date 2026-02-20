@@ -1,7 +1,22 @@
 /**
+ * @fileoverview Visible analog virtual joystick
+ *
+ * This file provides a visual analog joystick with sprites:
+ * - Base and stick sprite display
+ * - Analog force values (0-1) for fine-grained control
+ * - Optional show-on-touch behavior
+ * - Down/Up/Move/Update event emission
+ *
+ * Third-party library by Photon Storm Ltd, adapted for Neverquest.
+ *
  * @author       Richard Davey <rich@photonstorm.com>
  * @copyright    2019 Photon Storm Ltd.
  * @license      {@link http://choosealicense.com/licenses/no-license/|No License}
+ *
+ * @see BaseStick - Base class implementation
+ * @see JoystickScene - Usage context
+ *
+ * @module plugins/VirtualJoystick/Stick
  */
 
 import BaseStick from './BaseStick';

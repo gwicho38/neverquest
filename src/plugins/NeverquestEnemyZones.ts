@@ -1,7 +1,43 @@
+/**
+ * @fileoverview Enemy zone spawning system for Neverquest
+ *
+ * This plugin handles enemy spawning from Tiled map object layers:
+ * - Reads enemy zone objects from tilemap
+ * - Creates spawn zones with configured enemy types
+ * - Spawns enemies based on zone properties
+ * - Manages enemy count limits per zone
+ *
+ * Zone configuration (set in Tiled object properties):
+ * - enemyId: ID from EnemiesSeedConfig
+ * - count: Number of enemies to spawn
+ *
+ * @see EnemiesSeedConfig - Enemy type definitions
+ * @see Enemy - Enemy entity class
+ * @see NeverquestProgrammaticEnemyZones - Programmatic alternative
+ *
+ * @module plugins/NeverquestEnemyZones
+ */
+
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
 import { EnemiesSeedConfig } from '../consts/enemies/EnemiesSeedConfig';
 import { Enemy } from '../entities/Enemy';
+
+/**
+ * Interface for Tiled object properties
+ */
+interface ITiledProperty {
+	name: string;
+	type: string;
+	value: string | number | boolean;
+}
+
+/**
+ * Interface for scenes that contain enemies
+ */
+interface IEnemyScene extends Phaser.Scene {
+	enemies: Enemy[];
+}
 
 /**
  * @class
@@ -84,40 +120,41 @@ export class NeverquestEnemyZones {
 					infoObj.height || 0
 				);
 				if (this.createFromProperties && infoObj.properties) {
-					let number = infoObj.properties.find((f: any) => f.name === this.numberPropertyName);
+					const properties = infoObj.properties as ITiledProperty[];
+					const numberProp = properties.find((f) => f.name === this.numberPropertyName);
+					const textureProp = properties.find((f) => f.name === this.texturePropertyName);
+					const idProp = properties.find((f) => f.name === this.idPropertyName);
 
-					if (number) {
-						number = number.value;
-					}
+					const enemyCount = numberProp ? Number(numberProp.value) : 0;
+					const idValue = idProp ? String(idProp.value) : '0';
+					let textureValue = textureProp ? String(textureProp.value) : '';
 
-					let texture = infoObj.properties.find((f: any) => f.name === this.texturePropertyName);
-
-					const id = infoObj.properties.find((f: any) => f.name === this.idPropertyName);
-
-					const enemyConfig = EnemiesSeedConfig.find((e) => e.id === parseInt(id.value));
+					const enemyConfig = EnemiesSeedConfig.find((e) => e.id === parseInt(idValue));
 
 					if (enemyConfig) {
-						texture = enemyConfig.texture;
+						textureValue = enemyConfig.texture;
 					}
-					for (let i = 0; i < number; i++) {
+					for (let i = 0; i < enemyCount; i++) {
 						const pos = Phaser.Geom.Rectangle.Random(spriteBounds, new Phaser.Geom.Point());
 						const enemy = new Enemy(
 							this.scene,
 							pos.x,
 							pos.y,
-							texture ? texture : 'bat',
-							parseInt(id.value)
+							textureValue ? textureValue : 'bat',
+							parseInt(idValue)
 						);
 						const idleDown = `${this.idlePrefixAnimation}-${this.downAnimationSufix}`;
-						const idleAnimation = texture ? `${texture}-${idleDown}` : `bat-${idleDown}`;
+						const idleAnimation = textureValue ? `${textureValue}-${idleDown}` : `bat-${idleDown}`;
 						enemy.anims.play(idleAnimation);
 						enemy.body.setSize(enemy.width, enemy.height);
-						(this.scene as any).enemies.push(enemy);
+						const enemyScene = this.scene as IEnemyScene;
+						enemyScene.enemies.push(enemy);
 					}
 				}
 				this.zones.push(zone);
 			});
-			(this.scene.physics.add.collider as any)((this.scene as any).enemies, null);
+			const enemyScene = this.scene as IEnemyScene;
+			this.scene.physics.add.collider(enemyScene.enemies, undefined);
 		}
 	}
 }

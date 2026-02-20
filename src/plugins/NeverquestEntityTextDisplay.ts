@@ -1,5 +1,37 @@
+/**
+ * @fileoverview Floating text display for combat feedback
+ *
+ * This plugin displays floating text above entities for:
+ * - Damage numbers (red for damage, green for healing)
+ * - Critical hit indicators
+ * - Miss/dodge text
+ * - Experience gain notifications
+ * - Buff/debuff application text
+ *
+ * Text animations:
+ * - Float upward with fade out
+ * - Scale bounce for criticals
+ * - Color coding by damage type
+ *
+ * @see NeverquestBattleManager - Triggers damage text
+ * @see NeverquestConsumableManager - Triggers healing text
+ *
+ * @module plugins/NeverquestEntityTextDisplay
+ */
+
 import { ENTITIES } from '../consts/Entities';
 import { Alpha, AnimationTiming, Depth, FontFamilies, SpriteOrigins } from '../consts/Numbers';
+
+/**
+ * Interface for entities that can display damage text
+ */
+interface IDamageTarget {
+	container: {
+		x: number;
+		y: number;
+	};
+	entityName: string;
+}
 
 /**
  * This class is responsible for displaying the damage that an entity receives.
@@ -80,7 +112,12 @@ export class NeverquestEntityTextDisplay {
 	 * @param isCritical Whether this is a critical hit
 	 * @param isHealing Whether this is healing
 	 */
-	displayDamage(damage: number, target: any, isCritical: boolean = false, isHealing: boolean = false): void {
+	displayDamage(
+		damage: number,
+		target: IDamageTarget,
+		isCritical: boolean = false,
+		isHealing: boolean = false
+	): void {
 		console.log('[EntityTextDisplay] displayDamage called:', {
 			damage,
 			targetX: target.container?.x,

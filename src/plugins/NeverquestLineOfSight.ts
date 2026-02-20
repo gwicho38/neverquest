@@ -1,6 +1,25 @@
 /**
- * NeverquestLineOfSight Plugin
- * Implements ray casting for line-of-sight detection and vision systems
+ * @fileoverview Line-of-sight and vision cone system for Neverquest
+ *
+ * This plugin implements ray casting for visibility detection:
+ * - Ray casting against tilemap collision layers
+ * - Vision cone calculation for directional sight
+ * - Wall/obstacle intersection detection
+ * - Debug visualization for ray paths
+ *
+ * Configuration options:
+ * - angle: Vision cone angle in degrees
+ * - range: Maximum sight distance in pixels
+ * - rayCount: Number of rays (accuracy vs performance)
+ *
+ * Used by Enemy AI to detect player visibility for:
+ * - Aggro triggering when player is seen
+ * - Breaking chase when line of sight is lost
+ *
+ * @see Enemy - Uses LOS for player detection
+ * @see NeverquestPathfinding - Combined for smart AI
+ *
+ * @module plugins/NeverquestLineOfSight
  */
 
 import Phaser from 'phaser';

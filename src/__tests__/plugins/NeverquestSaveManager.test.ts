@@ -1,4 +1,120 @@
-import { NeverquestSaveManager } from '../../plugins/NeverquestSaveManager';
+import { NeverquestSaveManager, ISaveData, IStoryData } from '../../plugins/NeverquestSaveManager';
+import { StoryFlag, StoryChoice } from '../../plugins/NeverquestStoryFlags';
+
+// Mock NeverquestSpellManager
+jest.mock('../../plugins/NeverquestSpellManager', () => {
+	const mockUnlockedSpells = new Set<string>(['fireball', 'iceShard', 'lightningBolt', 'heal', 'shadowBolt']);
+
+	return {
+		NeverquestSpellManager: jest.fn().mockImplementation(() => ({
+			create: jest.fn(),
+			destroy: jest.fn(),
+			unlockSpell: jest.fn((id: string) => mockUnlockedSpells.add(id)),
+			isSpellUnlocked: jest.fn((id: string) => mockUnlockedSpells.has(id)),
+			getUnlockedSpells: jest.fn(() =>
+				Array.from(mockUnlockedSpells).map((id) => ({ id, name: id, unlocked: true }))
+			),
+			getUnlockedCount: jest.fn(() => mockUnlockedSpells.size),
+			syncWithStoryFlags: jest.fn(),
+			toJSON: jest.fn(() => Array.from(mockUnlockedSpells)),
+			fromJSON: jest.fn((data: string[]) => {
+				mockUnlockedSpells.clear();
+				data.forEach((id) => mockUnlockedSpells.add(id));
+			}),
+			reset: jest.fn(() => {
+				mockUnlockedSpells.clear();
+				['fireball', 'iceShard', 'lightningBolt', 'heal', 'shadowBolt'].forEach((id) =>
+					mockUnlockedSpells.add(id)
+				);
+			}),
+		})),
+	};
+});
+
+// Mock NeverquestAbilityManager
+jest.mock('../../plugins/NeverquestAbilityManager', () => {
+	const mockUnlockedAbilities = new Set<string>();
+
+	return {
+		NeverquestAbilityManager: jest.fn().mockImplementation(() => ({
+			create: jest.fn(),
+			destroy: jest.fn(),
+			setPlayer: jest.fn(),
+			unlockAbility: jest.fn((id: string) => mockUnlockedAbilities.add(id)),
+			isAbilityUnlocked: jest.fn((id: string) => mockUnlockedAbilities.has(id)),
+			getUnlockedAbilities: jest.fn(() =>
+				Array.from(mockUnlockedAbilities).map((id) => ({ id, name: id, unlockLevel: 5 }))
+			),
+			getUnlockedCount: jest.fn(() => mockUnlockedAbilities.size),
+			syncWithStoryFlags: jest.fn(),
+			toJSON: jest.fn(() => Array.from(mockUnlockedAbilities)),
+			fromJSON: jest.fn((data: string[]) => {
+				mockUnlockedAbilities.clear();
+				if (data) data.forEach((id) => mockUnlockedAbilities.add(id));
+			}),
+			reset: jest.fn(() => {
+				mockUnlockedAbilities.clear();
+			}),
+		})),
+	};
+});
+
+// Mock NeverquestStoryFlags
+jest.mock('../../plugins/NeverquestStoryFlags', () => {
+	const mockFlags = new Set<number>();
+	const mockChoices: any[] = [];
+
+	return {
+		StoryFlag: {
+			INTRO_COMPLETE: 0,
+			MET_ELDER: 1,
+			CAVE_BOSS_DEFEATED: 2,
+			ENTERED_CROSSROADS: 3,
+			MET_MERCHANT: 4,
+			MET_FALLEN_KNIGHT: 5,
+			FRAGMENT_RUINS_OBTAINED: 10,
+			FRAGMENT_TEMPLE_OBTAINED: 11,
+			FRAGMENT_GATE_OBTAINED: 12,
+		},
+		NeverquestStoryFlags: jest.fn().mockImplementation(() => ({
+			setFlag: jest.fn((flag: number) => mockFlags.add(flag)),
+			hasFlag: jest.fn((flag: number) => mockFlags.has(flag)),
+			getAllFlags: jest.fn(() => Array.from(mockFlags)),
+			recordChoice: jest.fn((id: string, desc: string, cons: string[]) => {
+				mockChoices.push({ id, description: desc, timestamp: Date.now(), consequences: cons });
+			}),
+			getChoices: jest.fn(() => mockChoices),
+			hasChoice: jest.fn((id: string) => mockChoices.some((c) => c.id === id)),
+			getCurrentAct: jest.fn(() => {
+				if (mockFlags.has(3)) return 2; // ENTERED_CROSSROADS
+				return 1;
+			}),
+			getFragmentCount: jest.fn(() => {
+				let count = 0;
+				if (mockFlags.has(10)) count++;
+				if (mockFlags.has(11)) count++;
+				if (mockFlags.has(12)) count++;
+				return count;
+			}),
+			load: jest.fn(),
+			save: jest.fn(),
+			toJSON: jest.fn(() => ({
+				flags: Array.from(mockFlags),
+				choices: [...mockChoices],
+			})),
+			fromJSON: jest.fn((data: { flags: number[]; choices: any[] }) => {
+				mockFlags.clear();
+				mockChoices.length = 0;
+				data.flags.forEach((f) => mockFlags.add(f));
+				data.choices.forEach((c) => mockChoices.push(c));
+			}),
+			reset: jest.fn(() => {
+				mockFlags.clear();
+				mockChoices.length = 0;
+			}),
+		})),
+	};
+});
 
 describe('NeverquestSaveManager', () => {
 	let saveManager: any;
@@ -60,6 +176,12 @@ describe('NeverquestSaveManager', () => {
 					width: 800,
 					height: 600,
 				},
+			},
+			events: {
+				on: jest.fn(),
+				off: jest.fn(),
+				once: jest.fn(),
+				emit: jest.fn(),
 			},
 		};
 
@@ -512,6 +634,422 @@ describe('NeverquestSaveManager', () => {
 
 			saveManager.saveGame(true);
 			expect(saveManager.hasSaveData(true)).toBe(true);
+		});
+	});
+
+	describe('Story Flags Integration', () => {
+		beforeEach(() => {
+			saveManager.create();
+		});
+
+		it('should initialize storyFlags on create', () => {
+			expect(saveManager.storyFlags).toBeTruthy();
+		});
+
+		it('should call storyFlags.load() on create', () => {
+			expect(saveManager.storyFlags.load).toHaveBeenCalled();
+		});
+
+		it('should include story data in createSaveData', () => {
+			// Set up some story flags
+			saveManager.storyFlags.setFlag(0); // INTRO_COMPLETE
+			saveManager.storyFlags.recordChoice('test_choice', 'A test choice', ['consequence1']);
+
+			const saveData = saveManager.createSaveData();
+
+			expect(saveData).toBeTruthy();
+			expect(saveData?.story).toBeDefined();
+			expect(saveManager.storyFlags.toJSON).toHaveBeenCalled();
+		});
+
+		it('should save story data to localStorage', () => {
+			saveManager.storyFlags.setFlag(0); // INTRO_COMPLETE
+			saveManager.storyFlags.setFlag(3); // ENTERED_CROSSROADS
+
+			const result = saveManager.saveGame(false);
+			expect(result).toBe(true);
+
+			const savedString = localStorage.getItem('neverquest_rpg_save');
+			expect(savedString).toBeTruthy();
+
+			const savedData = JSON.parse(savedString!) as ISaveData;
+			expect(savedData.story).toBeDefined();
+		});
+
+		it('should restore story flags on applySaveData', () => {
+			// Create save with story data
+			const storyData: IStoryData = {
+				flags: [0, 3, 10] as unknown as StoryFlag[], // INTRO_COMPLETE, ENTERED_CROSSROADS, FRAGMENT_RUINS
+				choices: [
+					{
+						id: 'help_knight',
+						description: 'Helped the fallen knight',
+						timestamp: Date.now(),
+						consequences: ['knight_ally'],
+					},
+				] as unknown as StoryChoice[],
+			};
+
+			const saveData: ISaveData = {
+				player: {
+					x: 100,
+					y: 200,
+					attributes: {
+						level: 5,
+						experience: 1000,
+						health: 80,
+						baseHealth: 100,
+						atack: 15,
+						defense: 10,
+						availableStatPoints: 2,
+					},
+					items: [],
+					level: 5,
+					experience: 1000,
+					health: 80,
+				},
+				scene: 'TestScene',
+				timestamp: Date.now(),
+				playtime: 10000,
+				version: '1.0.0',
+				story: storyData,
+			};
+
+			mockScene.player.container.setPosition = jest.fn();
+			mockScene.player.healthBar = { update: jest.fn() };
+
+			const result = saveManager.applySaveData(saveData);
+
+			expect(result).toBe(true);
+			expect(saveManager.storyFlags.fromJSON).toHaveBeenCalledWith(storyData);
+		});
+
+		it('should handle saves without story data (backwards compatibility)', () => {
+			const saveDataWithoutStory: ISaveData = {
+				player: {
+					x: 100,
+					y: 200,
+					attributes: {
+						level: 1,
+						experience: 0,
+						health: 100,
+						baseHealth: 100,
+						atack: 10,
+						defense: 5,
+						availableStatPoints: 0,
+					},
+					items: [],
+					level: 1,
+					experience: 0,
+					health: 100,
+				},
+				scene: 'TestScene',
+				timestamp: Date.now(),
+				playtime: 0,
+				version: '1.0.0',
+				// story is undefined - old save format
+			};
+
+			mockScene.player.container.setPosition = jest.fn();
+			mockScene.player.healthBar = { update: jest.fn() };
+
+			const result = saveManager.applySaveData(saveDataWithoutStory);
+
+			expect(result).toBe(true);
+			// fromJSON should not be called when no story data
+			expect(saveManager.storyFlags.fromJSON).not.toHaveBeenCalled();
+		});
+
+		it('should include storyFlags reference for external access', () => {
+			expect(saveManager.storyFlags).toBeDefined();
+			expect(typeof saveManager.storyFlags.setFlag).toBe('function');
+			expect(typeof saveManager.storyFlags.hasFlag).toBe('function');
+			expect(typeof saveManager.storyFlags.getCurrentAct).toBe('function');
+		});
+
+		it('should persist story progress across save/load cycle', () => {
+			// Set up story state
+			saveManager.storyFlags.setFlag(0); // INTRO_COMPLETE
+			saveManager.storyFlags.setFlag(3); // ENTERED_CROSSROADS
+			saveManager.storyFlags.recordChoice('met_merchant', 'Met the wandering merchant', []);
+
+			// Save
+			saveManager.saveGame(false);
+
+			// Clear and create new instance
+			const newSaveManager = new NeverquestSaveManager(mockScene);
+			newSaveManager.create();
+
+			// Load
+			const loadedData = newSaveManager.loadGame(false);
+			expect(loadedData).toBeTruthy();
+			expect(loadedData?.story).toBeDefined();
+			expect(loadedData?.story?.flags).toBeDefined();
+			expect(loadedData?.story?.choices).toBeDefined();
+		});
+
+		it('should return undefined story when storyFlags is null', () => {
+			saveManager.storyFlags = null;
+			const saveData = saveManager.createSaveData();
+
+			expect(saveData?.story).toBeUndefined();
+		});
+	});
+
+	describe('Spell Manager Integration', () => {
+		beforeEach(() => {
+			saveManager.create();
+		});
+
+		it('should initialize spellManager on create', () => {
+			expect(saveManager.spellManager).toBeTruthy();
+		});
+
+		it('should call spellManager.create() on create', () => {
+			expect(saveManager.spellManager.create).toHaveBeenCalled();
+		});
+
+		it('should sync spell manager with story flags on create', () => {
+			expect(saveManager.spellManager.syncWithStoryFlags).toHaveBeenCalled();
+		});
+
+		it('should include spell data in createSaveData', () => {
+			const saveData = saveManager.createSaveData();
+
+			expect(saveData).toBeTruthy();
+			expect(saveData?.spells).toBeDefined();
+			expect(saveData?.spells?.unlockedSpells).toBeDefined();
+			expect(saveManager.spellManager.toJSON).toHaveBeenCalled();
+		});
+
+		it('should save spell data to localStorage', () => {
+			const result = saveManager.saveGame(false);
+			expect(result).toBe(true);
+
+			const savedString = localStorage.getItem('neverquest_rpg_save');
+			expect(savedString).toBeTruthy();
+
+			const savedData = JSON.parse(savedString!) as ISaveData;
+			expect(savedData.spells).toBeDefined();
+			expect(savedData.spells?.unlockedSpells).toBeDefined();
+		});
+
+		it('should restore spell unlocks on applySaveData', () => {
+			const saveData: ISaveData = {
+				player: {
+					x: 100,
+					y: 200,
+					attributes: {
+						level: 5,
+						experience: 1000,
+						health: 80,
+						baseHealth: 100,
+						atack: 15,
+						defense: 10,
+						availableStatPoints: 2,
+					},
+					items: [],
+					level: 5,
+					experience: 1000,
+					health: 80,
+				},
+				scene: 'TestScene',
+				timestamp: Date.now(),
+				playtime: 10000,
+				version: '1.0.0',
+				spells: {
+					unlockedSpells: ['fireball', 'iceShard', 'flameWave', 'frostNova'],
+				},
+			};
+
+			mockScene.player.container.setPosition = jest.fn();
+			mockScene.player.healthBar = { update: jest.fn() };
+
+			const result = saveManager.applySaveData(saveData);
+
+			expect(result).toBe(true);
+			expect(saveManager.spellManager.fromJSON).toHaveBeenCalledWith([
+				'fireball',
+				'iceShard',
+				'flameWave',
+				'frostNova',
+			]);
+		});
+
+		it('should handle saves without spell data (backwards compatibility)', () => {
+			const saveDataWithoutSpells: ISaveData = {
+				player: {
+					x: 100,
+					y: 200,
+					attributes: {
+						level: 1,
+						experience: 0,
+						health: 100,
+						baseHealth: 100,
+						atack: 10,
+						defense: 5,
+						availableStatPoints: 0,
+					},
+					items: [],
+					level: 1,
+					experience: 0,
+					health: 100,
+				},
+				scene: 'TestScene',
+				timestamp: Date.now(),
+				playtime: 0,
+				version: '1.0.0',
+				// spells is undefined - old save format
+			};
+
+			mockScene.player.container.setPosition = jest.fn();
+			mockScene.player.healthBar = { update: jest.fn() };
+
+			const result = saveManager.applySaveData(saveDataWithoutSpells);
+
+			expect(result).toBe(true);
+			// fromJSON should not be called when no spell data
+			expect(saveManager.spellManager.fromJSON).not.toHaveBeenCalled();
+		});
+
+		it('should include spellManager reference for external access', () => {
+			expect(saveManager.spellManager).toBeDefined();
+			expect(typeof saveManager.spellManager.unlockSpell).toBe('function');
+			expect(typeof saveManager.spellManager.isSpellUnlocked).toBe('function');
+			expect(typeof saveManager.spellManager.getUnlockedSpells).toBe('function');
+		});
+
+		it('should return undefined spells when spellManager is null', () => {
+			saveManager.spellManager = null;
+			const saveData = saveManager.createSaveData();
+
+			expect(saveData?.spells).toBeUndefined();
+		});
+	});
+
+	describe('Ability Manager Integration', () => {
+		beforeEach(() => {
+			saveManager.create();
+		});
+
+		it('should initialize abilityManager on create', () => {
+			expect(saveManager.abilityManager).toBeTruthy();
+		});
+
+		it('should call abilityManager.create() on create', () => {
+			expect(saveManager.abilityManager.create).toHaveBeenCalled();
+		});
+
+		it('should sync ability manager with story flags on create', () => {
+			expect(saveManager.abilityManager.syncWithStoryFlags).toHaveBeenCalled();
+		});
+
+		it('should include ability data in createSaveData', () => {
+			const saveData = saveManager.createSaveData();
+
+			expect(saveData).toBeTruthy();
+			expect(saveData?.abilities).toBeDefined();
+			expect(saveData?.abilities?.unlockedAbilities).toBeDefined();
+			expect(saveManager.abilityManager.toJSON).toHaveBeenCalled();
+		});
+
+		it('should save ability data to localStorage', () => {
+			const result = saveManager.saveGame(false);
+			expect(result).toBe(true);
+
+			const savedString = localStorage.getItem('neverquest_rpg_save');
+			expect(savedString).toBeTruthy();
+
+			const savedData = JSON.parse(savedString!) as ISaveData;
+			expect(savedData.abilities).toBeDefined();
+			expect(savedData.abilities?.unlockedAbilities).toBeDefined();
+		});
+
+		it('should restore ability unlocks on applySaveData', () => {
+			const saveData: ISaveData = {
+				player: {
+					x: 100,
+					y: 200,
+					attributes: {
+						level: 10,
+						experience: 5000,
+						health: 80,
+						baseHealth: 100,
+						atack: 15,
+						defense: 10,
+						availableStatPoints: 2,
+					},
+					items: [],
+					level: 10,
+					experience: 5000,
+					health: 80,
+				},
+				scene: 'TestScene',
+				timestamp: Date.now(),
+				playtime: 10000,
+				version: '1.0.0',
+				abilities: {
+					unlockedAbilities: ['doubleJump', 'sprintBoost'],
+				},
+			};
+
+			mockScene.player.container.setPosition = jest.fn();
+			mockScene.player.healthBar = { update: jest.fn() };
+
+			const result = saveManager.applySaveData(saveData);
+
+			expect(result).toBe(true);
+			expect(saveManager.abilityManager.fromJSON).toHaveBeenCalledWith(['doubleJump', 'sprintBoost']);
+		});
+
+		it('should handle saves without ability data (backwards compatibility)', () => {
+			const saveDataWithoutAbilities: ISaveData = {
+				player: {
+					x: 100,
+					y: 200,
+					attributes: {
+						level: 1,
+						experience: 0,
+						health: 100,
+						baseHealth: 100,
+						atack: 10,
+						defense: 5,
+						availableStatPoints: 0,
+					},
+					items: [],
+					level: 1,
+					experience: 0,
+					health: 100,
+				},
+				scene: 'TestScene',
+				timestamp: Date.now(),
+				playtime: 0,
+				version: '1.0.0',
+				// abilities is undefined - old save format
+			};
+
+			mockScene.player.container.setPosition = jest.fn();
+			mockScene.player.healthBar = { update: jest.fn() };
+
+			const result = saveManager.applySaveData(saveDataWithoutAbilities);
+
+			expect(result).toBe(true);
+			// fromJSON should not be called when no ability data
+			expect(saveManager.abilityManager.fromJSON).not.toHaveBeenCalled();
+		});
+
+		it('should include abilityManager reference for external access', () => {
+			expect(saveManager.abilityManager).toBeDefined();
+			expect(typeof saveManager.abilityManager.unlockAbility).toBe('function');
+			expect(typeof saveManager.abilityManager.isAbilityUnlocked).toBe('function');
+			expect(typeof saveManager.abilityManager.getUnlockedAbilities).toBe('function');
+		});
+
+		it('should return undefined abilities when abilityManager is null', () => {
+			saveManager.abilityManager = null;
+			const saveData = saveManager.createSaveData();
+
+			expect(saveData?.abilities).toBeUndefined();
 		});
 	});
 });

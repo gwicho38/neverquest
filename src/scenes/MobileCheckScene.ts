@@ -1,6 +1,24 @@
+/**
+ * @fileoverview Mobile device and orientation check scene
+ *
+ * This scene validates mobile device requirements:
+ * - Checks for landscape orientation
+ * - Prompts for fullscreen mode
+ * - Detects mobile vs desktop
+ *
+ * Shows rotation prompt if device is in portrait mode.
+ * Transitions to PreloadScene when requirements are met.
+ *
+ * @see PreloadScene - Next scene after checks pass
+ * @see NeverquestUtils - Device detection
+ *
+ * @module scenes/MobileCheckScene
+ */
+
 import Phaser from 'phaser';
 import { FontFamily, UILabels } from '../consts/Messages';
 import { FontSizes } from '../consts/Numbers';
+import { IResizeSize } from '../types';
 
 export class MobileCheckScene extends Phaser.Scene {
 	landscapeImage: Phaser.GameObjects.Image | null;
@@ -52,11 +70,11 @@ export class MobileCheckScene extends Phaser.Scene {
 			{
 				wordWrap: {
 					width: this.cameras.main.width - 50,
+					useAdvancedWrap: false,
 				},
-				wordWrapUseAdvanced: false,
 				fontSize: this.fontSize,
 				fontFamily: this.fontFamily,
-			} as any
+			}
 		);
 
 		this.helpText.setOrigin(0.5, 0.5);
@@ -75,7 +93,7 @@ export class MobileCheckScene extends Phaser.Scene {
 			this.scale.startFullscreen();
 		});
 
-		this.scale.on('resize', (size: any) => {
+		this.scale.on('resize', (size: IResizeSize) => {
 			if (this.scene.isVisible()) {
 				this.landscapeImage!.setPosition(size.width / 2, size.height / 2);
 				this.helpText!.setPosition(size.width / 2, size.height / 2 - this.landscapeImage!.height / 2 - 50);

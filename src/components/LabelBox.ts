@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Label box UI component
+ *
+ * This file provides a simple labeled panel container:
+ * - Wraps a PanelComponent for basic panel display
+ * - Used for labeled information display
+ *
+ * @see PanelComponent - Base panel implementation
+ *
+ * @module components/LabelBox
+ */
+
 import Phaser from 'phaser';
 import { PanelComponent } from './PanelComponent';
 

@@ -1,3 +1,25 @@
+/**
+ * @fileoverview Main gameplay scene for Neverquest
+ *
+ * This is the primary dungeon/exploration scene featuring:
+ * - Player spawn and movement
+ * - Enemy zone spawning
+ * - Tilemap-based world
+ * - Warp points to other areas
+ * - Ambient particle effects
+ * - Background music
+ * - Portal to UpsideDownScene
+ *
+ * Acts as the core dungeon experience with full gameplay systems.
+ *
+ * @see Player - Main player entity
+ * @see NeverquestMapCreator - Loads tilemap
+ * @see NeverquestBattleManager - Combat handling
+ * @see NeverquestWarp - Scene transitions
+ *
+ * @module scenes/MainScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestWarp } from '../plugins/NeverquestWarp';
 import { NeverquestObjectMarker } from '../plugins/NeverquestObjectMarker';
@@ -9,15 +31,17 @@ import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
 import { HexColors, NumericColors } from '../consts/Colors';
 import { Alpha, Scale, CameraValues, Depth } from '../consts/Numbers';
 import { UILabels, SaveMessages, FontFamily } from '../consts/Messages';
+import { Player } from '../entities/Player';
+import { ISystemsWithAnimatedTiles } from '../types/SceneTypes';
 
 export class MainScene extends Phaser.Scene {
-	player: any;
+	player: Player | null;
 	mapCreator: NeverquestMapCreator | null;
 	map: Phaser.Tilemaps.Tilemap | null;
 	joystickScene: Phaser.Scene | null;
 	particles: NeverquestEnvironmentParticles | null;
 	themeSound: Phaser.Sound.BaseSound | null;
-	enemies: any[];
+	enemies: Phaser.GameObjects.GameObject[];
 	neverquestEnemyZones: NeverquestEnemyZones | null;
 	saveManager: NeverquestSaveManager | null;
 	upsideDownPortal: Phaser.GameObjects.Zone | null;
@@ -99,7 +123,7 @@ export class MainScene extends Phaser.Scene {
 
 		this.scene.launch('HUDScene', { player: this.player, map: this.mapCreator.map });
 
-		(this.sys as any).animatedTiles.init(this.mapCreator.map);
+		(this.sys as ISystemsWithAnimatedTiles).animatedTiles?.init(this.mapCreator.map);
 		this.particles = new NeverquestEnvironmentParticles(this, this.mapCreator.map);
 		this.particles.create();
 

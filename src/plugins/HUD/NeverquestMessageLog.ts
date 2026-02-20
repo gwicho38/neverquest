@@ -1,3 +1,24 @@
+/**
+ * @fileoverview In-game message log for events and combat feedback
+ *
+ * This plugin displays scrolling messages for:
+ * - Combat events (damage dealt/received)
+ * - Item pickups and usage
+ * - Quest updates
+ * - System notifications
+ *
+ * Features:
+ * - Color-coded message types
+ * - Message history with scrolling
+ * - Configurable max visible messages
+ * - Semi-transparent background
+ *
+ * @see HUDScene - Parent scene for HUD elements
+ * @see NeverquestBattleManager - Combat message source
+ *
+ * @module plugins/HUD/NeverquestMessageLog
+ */
+
 import Phaser from 'phaser';
 import { HexColors, NumericColors } from '../../consts/Colors';
 import { UILabels, MessageKeywords } from '../../consts/Messages';

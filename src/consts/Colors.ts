@@ -1,6 +1,18 @@
 /**
- * Color constants used throughout the game
- * All colors should be defined here to maintain consistency
+ * @fileoverview Color constants for consistent theming
+ *
+ * This file defines all color values used throughout the game:
+ * - HexColors: CSS hex strings for text styles
+ * - NumericColors: Numeric values for Phaser graphics
+ * - SpellColors: Elemental magic colors
+ * - DamageTypeColors: Combat damage type indicators
+ *
+ * All colors should be defined here to maintain visual consistency.
+ *
+ * @see HexColors - For text and CSS styling
+ * @see NumericColors - For Phaser graphics API
+ *
+ * @module consts/Colors
  */
 
 // =============================================================================
@@ -29,6 +41,9 @@ export const HexColors = {
 
 	// Blues
 	BLUE: '#0000ff',
+	BLUE_LIGHT: '#66aaff',
+	BLUE_SKY: '#aaccff',
+	BLUE_DARK: '#0a2948',
 
 	// Yellows / Oranges
 	YELLOW: '#ffff00',
@@ -183,3 +198,24 @@ export const SpellColors = {
 
 export type HexColor = (typeof HexColors)[keyof typeof HexColors];
 export type NumericColor = (typeof NumericColors)[keyof typeof NumericColors];
+
+// =============================================================================
+// LEGACY ALIAS (for backwards compatibility)
+// =============================================================================
+
+export const Colors = {
+	// Common text colors (hex strings for Phaser text)
+	WHITE: HexColors.WHITE,
+	BLACK: HexColors.BLACK,
+	GRAY: HexColors.GRAY,
+	LIGHT_GRAY: HexColors.GRAY_LIGHT,
+	DARK_GRAY: HexColors.GRAY_DARK,
+	RED: HexColors.RED,
+	GREEN: HexColors.GREEN,
+	BLUE: HexColors.BLUE,
+	YELLOW: HexColors.YELLOW,
+	GOLD: HexColors.GOLD,
+	ORANGE: HexColors.ORANGE,
+	CYAN: '#00ffff',
+	PURPLE: '#aa00ff',
+} as const;

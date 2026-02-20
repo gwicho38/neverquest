@@ -1,3 +1,22 @@
+/**
+ * @fileoverview Game item database seed data
+ *
+ * This file defines all in-game items with their properties:
+ * - Consumable potions (health, attack buffs)
+ * - Equipment items (weapons)
+ * - Item scripts for effect execution
+ *
+ * Script format: ACTION STAT AMOUNT [DURATION]
+ * - rec hp 2 = Recover 2 HP
+ * - buff atk 5 60 = Buff attack by 5 for 60 seconds
+ *
+ * @see NeverquestConsumableManager - Executes item scripts
+ * @see InventoryScene - Displays items
+ * @see Item - Item entity class
+ *
+ * @module consts/DB_SEED/Items
+ */
+
 import { BUFF_TYPES } from './BuffTypes';
 import { ITEM_TYPE } from './ItemTypes';
 

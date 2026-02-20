@@ -1,8 +1,45 @@
+/**
+ * @fileoverview Consumable item usage and buff management for Neverquest
+ *
+ * This plugin handles consumable item effects including:
+ * - Health potion consumption and recovery
+ * - Temporary stat buffs (strength, defense, etc.)
+ * - Buff duration tracking and expiration
+ * - Visual feedback via text displays
+ * - Sound effect playback
+ *
+ * Consumable types supported:
+ * - RECOVERY: Instant health restoration
+ * - BUFF: Temporary attribute bonuses
+ * - ATTACK: Damage boost effects
+ * - DEFENSE: Protection boost effects
+ *
+ * @see InventoryScene - Triggers consumable usage
+ * @see Player - Receives consumable effects
+ * @see NeverquestEntityTextDisplay - Shows recovery text
+ *
+ * @module plugins/NeverquestConsumableManager
+ */
+
 import { ConsumableBonus } from '../models/ConsumableBonus';
+import { BuffType } from '../models/BuffType';
+import { Player } from '../entities/Player';
 import { NeverquestEntityTextDisplay } from './NeverquestEntityTextDisplay';
 import { HUDScene } from '../scenes/HUDScene';
 import { ConsumableMessages } from '../consts/Messages';
 import { ConsumableManagerValues } from '../consts/Numbers';
+
+/**
+ * Interface for consumable items that can be used by the ConsumableManager.
+ * Supports both IItemConfig (sfx) and Item entity (useSfx) patterns.
+ */
+interface IConsumableItem {
+	name: string;
+	script: string;
+	sfx?: string;
+	useSfx?: string;
+	buffType?: BuffType | number;
+}
 
 /**
  * This class is responsible for Manage all the consumable actions.
@@ -19,11 +56,18 @@ export class NeverquestConsumableManager {
 	}
 
 	/**
+	 * Gets the sound effect key from an item, supporting both sfx and useSfx properties.
+	 */
+	private getItemSfx(item: IConsumableItem): string {
+		return item.sfx || item.useSfx || '';
+	}
+
+	/**
 	 * Checks what kind of item is being used.
 	 * @param item the Item that is being used.
 	 * @param player The player that will use the item.
 	 */
-	useItem(item: any, player: any): void {
+	useItem(item: IConsumableItem, player: Player): void {
 		const scriptList = item.script.split(';').filter((v: string) => v);
 		if (scriptList.length > 0) {
 			scriptList.forEach((script: string) => {
@@ -50,7 +94,7 @@ export class NeverquestConsumableManager {
 	 * @param action The script action that will be performed.
 	 * @param player The player that will use the item.
 	 */
-	recover(item: any, action: string[], player: any): void {
+	recover(item: IConsumableItem, action: string[], player: Player): void {
 		// Not very Optimized.
 		this.neverquestEntityTextDisplay = new NeverquestEntityTextDisplay(player.scene);
 
@@ -63,10 +107,9 @@ export class NeverquestConsumableManager {
 					(player.attributes.health += healAmount)
 				);
 				player.healthBar.update(player.attributes.health);
-				if (player.neverquestHUDProgressBar)
-					player.neverquestHUDProgressBar.updateHealth(player.attributes.health);
+				if (player.neverquestHUDProgressBar) player.neverquestHUDProgressBar.updateHealth();
 				this.neverquestEntityTextDisplay.displayDamage(healAmount, player, false, true);
-				player.scene.sound.play(item.useSfx);
+				player.scene.sound.play(this.getItemSfx(item));
 				// Log item usage
 				HUDScene.log(player.scene, ConsumableMessages.USED_ITEM_HP_RESTORE(item.name, healAmount));
 				break;
@@ -89,7 +132,7 @@ export class NeverquestConsumableManager {
 	 * @param action The script action that will be performed.
 	 * @param player The player that will use the item.
 	 */
-	buff(item: any, action: string[], player: any): void {
+	buff(item: IConsumableItem, action: string[], player: Player): void {
 		switch (action[1]) {
 			case 'hp':
 				// Sets the Health, but doesn't exceed the maximum base health.
@@ -99,13 +142,12 @@ export class NeverquestConsumableManager {
 				// SP buff not yet implemented
 				break;
 			case 'atk': {
-				const consumableBonus: ConsumableBonus | undefined = player.attributes.bonus.consumable.find(
-					(consumableItem: ConsumableBonus) => {
-						return consumableItem.uniqueId === item.buffType.id;
-					}
+				const buffId = typeof item.buffType === 'number' ? item.buffType : (item.buffType?.id ?? 0);
+				const consumableBonus = player.attributes.bonus.consumable.find(
+					(consumableItem) => consumableItem.uniqueId === buffId
 				);
 				if (consumableBonus) {
-					player.scene.sound.play(item.useSfx);
+					player.scene.sound.play(this.getItemSfx(item));
 					consumableBonus.timer.reset({
 						callbackScope: this,
 						delay: consumableBonus.time * ConsumableManagerValues.BUFF_DURATION_MULTIPLIER, // Time to restore the attributes to it's default value.
@@ -115,14 +157,14 @@ export class NeverquestConsumableManager {
 				} else {
 					// Add the item
 					const bonusStatus = new ConsumableBonus(
-						item.buffType.id,
+						buffId,
 						'atack',
 						parseInt(action[2], 10),
 						parseInt(action[3], 10)
 					);
 					this.changeStats(player, bonusStatus);
 
-					player.scene.sound.play(item.useSfx);
+					player.scene.sound.play(this.getItemSfx(item));
 					bonusStatus.timer = player.scene.time.addEvent({
 						callbackScope: this,
 						delay: bonusStatus.time * ConsumableManagerValues.BUFF_DURATION_MULTIPLIER, // Time to restore the attributes to it's default value.
@@ -146,8 +188,9 @@ export class NeverquestConsumableManager {
 	 * @param bonus The bonus that will be applied.
 	 * @param sign positive or negative sign.
 	 */
-	changeStats(player: any, bonus: ConsumableBonus, sign: number = 1): void {
-		player.attributes[bonus.statBonus] = player.attributes[bonus.statBonus] + bonus.value * sign;
+	changeStats(player: Player, bonus: ConsumableBonus, sign: number = 1): void {
+		const currentValue = player.attributes[bonus.statBonus] as number;
+		player.attributes[bonus.statBonus] = currentValue + bonus.value * sign;
 		const index = player.attributes.bonus.consumable.indexOf(bonus);
 		if (index != -1) player.attributes.bonus.consumable.splice(index, 1);
 	}

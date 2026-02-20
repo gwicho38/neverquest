@@ -78,3 +78,34 @@ export interface IHUDScene extends Phaser.Scene {
 	/** Experience bar display component */
 	expBar?: Phaser.GameObjects.Graphics;
 }
+
+/**
+ * Interface for scenes that support scene-to-scene warps
+ * Used by NeverquestWarp for scene transitions
+ */
+export interface IWarpableScene extends IGameScene {
+	/** Stops the scene's background music before transition */
+	stopSceneMusic?: () => void;
+}
+
+/**
+ * Interface for AnimatedTiles plugin added to scene systems
+ */
+export interface IAnimatedTilesPlugin {
+	/** Initialize animated tiles for a tilemap */
+	init: (map: Phaser.Tilemaps.Tilemap) => void;
+	/** Update animation rate */
+	setRate?: (rate: number, mapIndex?: number, layerIndex?: number) => void;
+	/** Resume animations */
+	resume?: (mapIndex?: number, layerIndex?: number) => void;
+	/** Pause animations */
+	pause?: (mapIndex?: number, layerIndex?: number) => void;
+}
+
+/**
+ * Extended Systems interface that includes the AnimatedTiles plugin
+ */
+export interface ISystemsWithAnimatedTiles extends Phaser.Scenes.Systems {
+	/** AnimatedTiles scene plugin for tile animations */
+	animatedTiles?: IAnimatedTilesPlugin;
+}

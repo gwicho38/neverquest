@@ -1,3 +1,22 @@
+/**
+ * @fileoverview Alternate dimension "Upside Down" scene for Neverquest
+ *
+ * This scene presents a dark alternate dimension featuring:
+ * - Inverted/mirrored version of main world
+ * - Dark eerie atmosphere with particles
+ * - Unique enemy encounters
+ * - Special collectibles
+ * - Exit portal with visual effects
+ *
+ * Accessible via portal in MainScene.
+ * Inspired by Stranger Things Upside Down aesthetic.
+ *
+ * @see MainScene - Entry portal location
+ * @see NeverquestEnvironmentParticles - Floating particles
+ *
+ * @module scenes/UpsideDownScene
+ */
+
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { PlayerConfig } from '../consts/player/Player';
@@ -41,7 +60,7 @@ export class UpsideDownScene extends Phaser.Scene {
 	private distortionTimer: Phaser.Time.TimerEvent | null = null;
 	private fogParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
 	private ashParticles: Phaser.GameObjects.Particles.ParticleEmitter | null = null;
-	private enemies: any[] = [];
+	private enemies: Phaser.GameObjects.GameObject[] = [];
 	private neverquestEnemyZones: NeverquestEnemyZones | null = null;
 	private portalSprite: Phaser.GameObjects.Sprite | null = null;
 
@@ -60,7 +79,7 @@ export class UpsideDownScene extends Phaser.Scene {
 	/**
 	 * Initialize scene with data from previous scene
 	 */
-	init(data: { previousScene?: string; playerData?: any }): void {
+	init(data: { previousScene?: string; playerData?: Record<string, unknown> }): void {
 		if (data && data.previousScene) {
 			this.previousScene = data.previousScene;
 		}
@@ -97,9 +116,9 @@ export class UpsideDownScene extends Phaser.Scene {
 
 		// Apply eerie effects to the player
 		if (this.player && this.player.container) {
-			this.player.container.list.forEach((child: any) => {
-				if (child.setTint) {
-					child.setTint(NumericColors.PURPLE_MUTED);
+			this.player.container.list.forEach((child: Phaser.GameObjects.GameObject) => {
+				if ('setTint' in child && typeof child.setTint === 'function') {
+					(child as Phaser.GameObjects.Sprite).setTint(NumericColors.PURPLE_MUTED);
 				}
 			});
 		}
@@ -120,8 +139,7 @@ export class UpsideDownScene extends Phaser.Scene {
 		this.createVignetteEffect();
 
 		// Set up warps and markers
-		// NOTE: Type assertions needed as NeverquestWarp expects specific scene/player interfaces
-		const neverquestWarp = new NeverquestWarp(this as never, this.player as never, this.map);
+		const neverquestWarp = new NeverquestWarp(this, this.player, this.map);
 		neverquestWarp.createWarps();
 
 		const interactiveMarkers = new NeverquestObjectMarker(this, this.map);
@@ -140,7 +158,9 @@ export class UpsideDownScene extends Phaser.Scene {
 		});
 
 		// Initialize animated tiles
-		(this.sys as any).animatedTiles.init(this.map);
+		(this.sys as unknown as { animatedTiles: { init: (map: Phaser.Tilemaps.Tilemap) => void } }).animatedTiles.init(
+			this.map
+		);
 
 		// Add eerie background music/ambient sound
 		this.sound.volume = Alpha.MEDIUM;

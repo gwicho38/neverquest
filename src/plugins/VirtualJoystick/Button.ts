@@ -1,7 +1,23 @@
 /**
+ * @fileoverview Virtual button for touch/click input
+ *
+ * This file provides a virtual button with sprite display:
+ * - Up/Down frame switching for visual feedback
+ * - Digital on/off input (no pressure)
+ * - Keyboard binding support
+ * - Repeat rate for held buttons
+ * - Circular or rectangular hit areas
+ *
+ * Third-party library by Photon Storm Ltd, adapted for Neverquest.
+ *
  * @author       Richard Davey <rich@photonstorm.com>
  * @copyright    2019 Photon Storm Ltd.
  * @license      {@link http://choosealicense.com/licenses/no-license/|No License}
+ *
+ * @see VirtualJoystickPlugin - Button factory
+ * @see JoystickScene - Usage context
+ *
+ * @module plugins/VirtualJoystick/Button
  */
 
 import CONST from './const';

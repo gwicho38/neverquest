@@ -1,3 +1,32 @@
+/**
+ * @fileoverview Keyboard and mouse input handling for Neverquest
+ *
+ * This plugin processes keyboard and mouse input for:
+ * - Movement (WASD or arrow keys)
+ * - Attack and block (mouse buttons or keyboard)
+ * - Menu navigation (keyboard)
+ * - Scene toggles (hotkeys)
+ * - Spell wheel (number keys or mouse wheel)
+ *
+ * Key bindings:
+ * - WASD/Arrows: Movement
+ * - Space: Jump
+ * - Shift: Roll/dodge
+ * - Left Click: Attack
+ * - Right Click: Block
+ * - E: Use item
+ * - Q: Spell wheel
+ * - I: Inventory
+ * - C: Attributes
+ *
+ * @see NeverquestGamePadController - Gamepad alternative
+ * @see NeverquestBattleManager - Receives attack/block input
+ * @see Player - Receives movement input
+ *
+ * @module plugins/NeverquestKeyboardMouseController
+ */
+
+import { Player } from '../entities/Player';
 import { AttributeSceneName } from '../scenes/AttributeScene';
 import { SpellWheelSceneName } from '../scenes/SpellWheelScene';
 import { SceneToggleWatcher } from '../scenes/watchers/SceneToggleWatcher';
@@ -18,7 +47,7 @@ export class NeverquestKeyboardMouseController {
 	/**
 	 * The Player that will receive the inputs and interactions.
 	 */
-	player: any;
+	player: Player;
 
 	/**
 	 * The Neverquest Battle Manager.
@@ -61,7 +90,7 @@ export class NeverquestKeyboardMouseController {
 	 * @param scene The Scene which this class is a child.
 	 * @param player The player to manage the input.
 	 */
-	constructor(scene: Phaser.Scene, player: any) {
+	constructor(scene: Phaser.Scene, player: Player) {
 		this.scene = scene;
 		this.player = player;
 		this.neverquestBattleManager = null;

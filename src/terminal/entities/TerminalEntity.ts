@@ -1,3 +1,19 @@
+/**
+ * @fileoverview Terminal entity representation for CLI gameplay
+ *
+ * This file provides the entity model for terminal mode:
+ * - Implements IBaseEntity interface for compatibility
+ * - ASCII/emoji symbol rendering with colors
+ * - Walking animation frames for player character
+ * - Health, damage, and healing mechanics
+ *
+ * @see TerminalGame - Entity management
+ * @see TerminalMap - Entity positioning
+ * @see BaseEntity - Phaser entity equivalent
+ *
+ * @module terminal/entities/TerminalEntity
+ */
+
 import { IBaseEntity } from '../../entities/BaseEntity';
 import { IEntityAttributes } from '../../entities/EntityAttributes';
 import { EntitySpeed, TerminalEntityValues } from '../../consts/Numbers';

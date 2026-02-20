@@ -1,3 +1,17 @@
+/**
+ * @fileoverview Virtual joystick constants
+ *
+ * This file defines constants used by the VirtualJoystick plugin:
+ * - Motion lock modes (NONE, HORIZONTAL, VERTICAL)
+ * - Button shape types (CIRC_BUTTON, RECT_BUTTON)
+ *
+ * @see VirtualJoystickPlugin - Uses these constants
+ * @see BaseStick - Motion lock usage
+ * @see Button - Shape type usage
+ *
+ * @module plugins/VirtualJoystick/const
+ */
+
 export default {
 	/**
 	 * Used by the motionLock method. Defines full freedom of movement.

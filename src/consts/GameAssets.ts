@@ -1,3 +1,66 @@
+/**
+ * @fileoverview Game asset configuration and loading lists
+ *
+ * This file defines all assets to be loaded during preload:
+ * - Images: UI elements, sprites, backgrounds
+ * - Tilemaps: Level data from Tiled exports
+ * - Audio: Music and sound effects
+ * - Atlases: Sprite sheets with JSON data
+ * - Aseprite: Animated sprites from Aseprite
+ *
+ * Assets are loaded by PreloadScene using these configurations.
+ *
+ * @see PreloadScene - Asset loading implementation
+ * @see AssetCacheManager - Caching utilities
+ *
+ * @module consts/GameAssets
+ */
+
+/**
+ * Interface for image asset configuration
+ */
+export interface IImageAsset {
+	name: string;
+	image: string;
+}
+
+/**
+ * Interface for tilemap asset configuration
+ * Note: json can be either a path string or imported JSON object
+ */
+export interface ITilemapAsset {
+	name: string;
+	json: string | object;
+}
+
+/**
+ * Interface for audio asset configuration
+ */
+export interface IAudioAsset {
+	name: string;
+	audio: string;
+}
+
+/**
+ * Interface for atlas asset configuration (texture atlas with JSON data)
+ * Note: json can be either a path string or imported JSON object
+ */
+export interface IAtlasAsset {
+	name: string;
+	image: string;
+	json: string | object;
+}
+
+/**
+ * Interface for Aseprite animation configuration
+ * Note: json can be either a path string or imported JSON object
+ */
+export interface IAsepriteAsset {
+	name: string;
+	image: string;
+	json: string | object;
+}
+
 import tiles from '../assets/maps/tilesets/Overworld.png';
 import tiles_overworld from '../assets/maps/tilesets/Overworld-extruded.png';
 import tutorial_tileset from '../assets/maps/tilesets/tutorial_tileset_extruded.png';
@@ -147,7 +210,7 @@ import plus_small_button_json from '../assets/sprites/plus_small_button.json';
 import minus_small_button from '../assets/sprites/minus_small_button.png';
 import minus_small_button_json from '../assets/sprites/minus_small_button.json';
 
-export const Images = [
+export const Images: IImageAsset[] = [
 	{
 		name: 'tiles',
 		image: tiles,
@@ -412,7 +475,7 @@ export const Images = [
 	},
 ];
 
-export const AtlasConfig = [
+export const AtlasConfig: IAtlasAsset[] = [
 	{
 		name: 'character',
 		image: atlas_character_image,
@@ -450,7 +513,7 @@ export const AtlasConfig = [
 	},
 ];
 
-export const TilemapConfig = [
+export const TilemapConfig: ITilemapAsset[] = [
 	{
 		name: 'larus',
 		json: tile_map_json,
@@ -473,7 +536,7 @@ export const TilemapConfig = [
 	},
 ];
 
-export const NeverquestAudios = [
+export const NeverquestAudios: IAudioAsset[] = [
 	{
 		name: 'space_sound',
 		audio: space_sound_key,
@@ -588,7 +651,7 @@ export const NeverquestAudios = [
 	},
 ];
 
-export const ASEPRITE_CONFIG = [
+export const ASEPRITE_CONFIG: IAsepriteAsset[] = [
 	{
 		name: 'plus_small_button',
 		image: plus_small_button,

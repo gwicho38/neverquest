@@ -31,6 +31,15 @@ import { NeverquestVideoOpener } from './NeverquestVideoOpener';
 import { NumericColors } from '../consts/Colors';
 import { Alpha, Depth, FontFamilies, DialogBox } from '../consts/Numbers';
 import { DialogBoxMessages } from '../consts/Messages';
+import type Button from './VirtualJoystick/Button';
+
+/**
+ * Minimal interface for JoystickScene to access mobile buttons
+ */
+interface IJoystickSceneWithButtons {
+	buttonA?: Button | null;
+	buttonB?: Button | null;
+}
 
 // Interface for dialog chat data
 export interface IDialogChat {
@@ -55,6 +64,7 @@ export interface IDialogTextMessage extends Phaser.GameObjects.Text {
 // Interface for dialog object (extends Phaser GameObject with NineSlice-like properties)
 export interface IDialog extends Phaser.GameObjects.GameObject {
 	textMessage?: IDialogTextMessage;
+	backgroundRect?: Phaser.GameObjects.Rectangle;
 	visible: boolean;
 	x: number;
 	y: number;
@@ -103,8 +113,8 @@ export class NeverquestDialogBox {
 	public leftNameText: Phaser.GameObjects.Text;
 	public rightNameText: Phaser.GameObjects.Text;
 	public keyObj: Phaser.Input.Keyboard.Key;
-	public buttonA: any;
-	public buttonB: any;
+	public buttonA: Button | null;
+	public buttonB: Button | null;
 	public neverquestTypingSoundManager: NeverquestTypingSoundManager;
 	public neverquestVideoOpener: NeverquestVideoOpener;
 	public isOverlapingChat: boolean;
@@ -258,18 +268,18 @@ export class NeverquestDialogBox {
 		this.justFastForwarded = false;
 
 		// Initialize dialog objects (will be created in create method)
-		this.dialog = null as any;
-		this.actionButton = null as any;
-		this.interactionIcon = null as any;
-		this.leftPortraitImage = null as any;
-		this.rightPortraitImage = null as any;
-		this.leftNameText = null as any;
-		this.rightNameText = null as any;
-		this.keyObj = null as any;
+		this.dialog = null as unknown as IDialog;
+		this.actionButton = null as unknown as Phaser.GameObjects.Image;
+		this.interactionIcon = null as unknown as Phaser.GameObjects.Sprite;
+		this.leftPortraitImage = null as unknown as Phaser.GameObjects.Image;
+		this.rightPortraitImage = null as unknown as Phaser.GameObjects.Image;
+		this.leftNameText = null as unknown as Phaser.GameObjects.Text;
+		this.rightNameText = null as unknown as Phaser.GameObjects.Text;
+		this.keyObj = null as unknown as Phaser.Input.Keyboard.Key;
 		this.buttonA = null;
 		this.buttonB = null;
-		this.neverquestTypingSoundManager = null as any;
-		this.neverquestVideoOpener = null as any;
+		this.neverquestTypingSoundManager = null as unknown as NeverquestTypingSoundManager;
+		this.neverquestVideoOpener = null as unknown as NeverquestVideoOpener;
 	}
 
 	/**
@@ -348,7 +358,7 @@ export class NeverquestDialogBox {
 		) as unknown as IDialog;
 
 		// Store reference to background rect AFTER dialog is created
-		(this.dialog as any).backgroundRect = dialogBg;
+		this.dialog.backgroundRect = dialogBg;
 
 		// Tint the dialog box black to make the paper texture dark
 		this.dialog.setTint(NumericColors.BLACK);
@@ -433,11 +443,11 @@ export class NeverquestDialogBox {
 		this.interactionIcon.anims.play(this.animationIteractionIconName);
 
 		// Get mobile buttons from joystick scene
-		const joystickScene = this.scene.scene.get('JoystickScene');
+		const joystickScene = this.scene.scene.get('JoystickScene') as IJoystickSceneWithButtons | undefined;
 		if (joystickScene) {
-			if ((joystickScene as any).buttonA || (joystickScene as any).buttonB) {
-				this.buttonA = (joystickScene as any).buttonA;
-				this.buttonB = (joystickScene as any).buttonB;
+			if (joystickScene.buttonA || joystickScene.buttonB) {
+				this.buttonA = joystickScene.buttonA ?? null;
+				this.buttonB = joystickScene.buttonB ?? null;
 			}
 		}
 	}
@@ -699,8 +709,8 @@ export class NeverquestDialogBox {
 		this.currentPage = 0;
 		this.dialog.visible = true;
 		// Show the black background rectangle
-		if ((this.dialog as any).backgroundRect) {
-			(this.dialog as any).backgroundRect.visible = true;
+		if (this.dialog.backgroundRect) {
+			this.dialog.backgroundRect.visible = true;
 		}
 		this.canShowDialog = false;
 
@@ -734,8 +744,8 @@ export class NeverquestDialogBox {
 		// Hide UI elements
 		this.dialog.visible = false;
 		// Hide the black background rectangle
-		if ((this.dialog as any).backgroundRect) {
-			(this.dialog as any).backgroundRect.visible = false;
+		if (this.dialog.backgroundRect) {
+			this.dialog.backgroundRect.visible = false;
 		}
 		if (this.dialog.textMessage) {
 			this.dialog.textMessage.visible = false;
@@ -889,8 +899,8 @@ export class NeverquestDialogBox {
 			this.dialog.setSize(this.cameraWidth - this.margin * 2, this.dialogHeight);
 
 			// Update background rectangle position and size
-			if ((this.dialog as any).backgroundRect) {
-				const bgRect = (this.dialog as any).backgroundRect;
+			if (this.dialog.backgroundRect) {
+				const bgRect = this.dialog.backgroundRect;
 				bgRect.x = this.margin;
 				bgRect.y = dialogY;
 				bgRect.width = this.cameraWidth - this.margin * 2;

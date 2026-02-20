@@ -1,4 +1,19 @@
 /**
+ * @fileoverview Tileset image configuration model
+ *
+ * This file defines the TilesetImageConfig model class:
+ * - Maps Tiled tileset names to Phaser asset names
+ * - Configures tile dimensions, margins, and spacing
+ * - Used by NeverquestMapCreator for tilemap loading
+ *
+ * @see NeverquestMapCreator - Tilemap loading system
+ * @see GameAssets - Asset key definitions
+ * @see TilesetGuide - Tileset usage documentation
+ *
+ * @module models/TilesetImageConfig
+ */
+
+/**
  * @class
  */
 export class TilesetImageConfig {

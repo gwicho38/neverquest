@@ -172,7 +172,7 @@ describe('Logger', () => {
 
 			const buffer = logger.getBuffer();
 			expect(buffer[0].data).toHaveProperty('stack');
-			expect(buffer[0].data.stack).toBeDefined();
+			expect((buffer[0].data as { stack: unknown }).stack).toBeDefined();
 		});
 	});
 
@@ -313,7 +313,7 @@ describe('Logger', () => {
 
 			const buffer = logger.getBuffer();
 			expect(buffer).toHaveLength(1);
-			expect(buffer[0].data.nested).toBeDefined();
+			expect((buffer[0].data as { nested: unknown }).nested).toBeDefined();
 		});
 	});
 });

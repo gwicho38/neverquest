@@ -1,3 +1,19 @@
+/**
+ * @fileoverview Terminal UI renderer using blessed library
+ *
+ * This file provides the terminal user interface:
+ * - Screen management with blessed library
+ * - Game viewport, status panel, and log display
+ * - Optional debug panel for development
+ * - Input handling for quit commands
+ * - Mouse support for log scrolling
+ *
+ * @see TerminalGame - Uses renderer for display
+ * @see blessed - Node.js terminal UI library
+ *
+ * @module terminal/TerminalRenderer
+ */
+
 import blessed from 'blessed';
 import { TerminalMessages } from '../consts/Messages';
 

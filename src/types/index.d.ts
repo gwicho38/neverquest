@@ -1,3 +1,14 @@
+/**
+ * @fileoverview TypeScript module declarations for third-party packages
+ *
+ * This file provides ambient type declarations for:
+ * - Phaser plugins (nineslice, juice, rex plugins)
+ * - Asset file imports (images, audio, video, JSON)
+ * - Window global extensions (game instance)
+ *
+ * @module types/index.d
+ */
+
 declare module 'phaser3-juice-plugin';
 declare module 'phaser3-nineslice';
 declare module 'phaser3-rex-plugins/plugins/outlinepipeline.js';

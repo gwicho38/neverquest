@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Terminal animation system for visual effects
+ *
+ * This file provides animation capabilities for terminal rendering:
+ * - Temporary visual effects (damage numbers, particles)
+ * - Attack, block, death, and heal animations
+ * - Particle burst effects for combat feedback
+ * - Effect layering and expiration management
+ *
+ * @see TerminalGame - Uses animator for combat feedback
+ * @see TerminalMap - Integrates effects into rendering
+ *
+ * @module terminal/TerminalAnimator
+ */
+
 import { AnimationTiming } from '../consts/Numbers';
 
 /**

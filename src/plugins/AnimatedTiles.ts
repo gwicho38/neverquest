@@ -1,7 +1,24 @@
 /**
+ * @fileoverview Animated tilemap tiles plugin for Phaser 3
+ *
+ * This plugin enables animated tiles from Tiled map exports:
+ * - Reads animation data from tileset definitions
+ * - Updates tile frames based on animation timing
+ * - Supports multiple tilemaps per scene
+ * - Configurable animation rate
+ * - Pause/resume functionality
+ *
+ * Animation data comes from Tiled's tileset animation editor.
+ * Each tile can have multiple frames with individual durations.
+ *
  * @author       Niklas Berg <nkholski@niklasberg.se>
  * @copyright    2018 Niklas Berg
  * @license      {@link https://github.com/nkholski/phaser3-animated-tiles/blob/master/LICENSE|MIT License}
+ *
+ * @see Tiled Map Editor - https://www.mapeditor.org/
+ * @see phaser3-animated-tiles - Original plugin
+ *
+ * @module plugins/AnimatedTiles
  */
 
 //
@@ -9,6 +26,28 @@
 //
 
 import { ErrorMessages } from '../consts/Messages';
+
+/**
+ * Interface for frame data from Tiled animation
+ */
+interface ITiledFrameData {
+	duration: number;
+	tileid: number;
+}
+
+/**
+ * Interface for tile data with animation property
+ */
+interface ITileDataWithAnimation {
+	animation?: ITiledFrameData[];
+}
+
+/**
+ * Interface for tileset tileData property - maps tile indices to tile data
+ */
+interface ITilesetTileData {
+	[index: string]: ITileDataWithAnimation;
+}
 
 interface TileAnimationFrame {
 	duration: number;
@@ -254,7 +293,7 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 	//  Called when a Scene is destroyed by the Scene Manager. There is no coming back from a destroyed Scene, so clear up all resources here.
 	destroy(): void {
 		this.shutdown();
-		this.scene = undefined as any;
+		this.scene = undefined as unknown as Phaser.Scene;
 	}
 
 	getAnimatedTiles(map: Phaser.Tilemaps.Tilemap): AnimatedTileData[] {
@@ -264,7 +303,7 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 		map.tilesets.forEach(
 			// Go through the data stored on each tile (not tile on the tilemap but tile in the tileset)
 			(tileset) => {
-				const tileData: any = tileset.tileData;
+				const tileData = tileset.tileData as ITilesetTileData;
 				Object.keys(tileData).forEach((index) => {
 					let indexNum = parseInt(index);
 					// If tile has animation info we'll dive into it
@@ -277,7 +316,7 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 							rate: 1, // multiplier, set to 2 for double speed or 0.25 quarter speed
 						};
 						// push all frames to the animatedTileData
-						tileData[indexNum].animation.forEach((frameData: any) => {
+						tileData[indexNum].animation!.forEach((frameData: ITiledFrameData) => {
 							const frame: TileAnimationFrame = {
 								duration: frameData.duration,
 								tileid: frameData.tileid + tileset.firstgid,
@@ -329,7 +368,12 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 		return animatedTiles;
 	}
 
-	putTileAt(_layer: any, _tile: any, _x: number, _y: number): void {
+	putTileAt(
+		_layer: Phaser.Tilemaps.TilemapLayer,
+		_tile: Phaser.Tilemaps.Tile | number,
+		_x: number,
+		_y: number
+	): void {
 		// Replaces putTileAt of the native API, but updates the list of animatedTiles in the process.
 		// No need to call updateAnimatedTiles as required for other modificatons of the tile-map
 	}
@@ -361,7 +405,10 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 			mapAnimData.animatedTiles.forEach((tileAnimData) => {
 				tileAnimData.tiles.forEach((tiles, layerIndex) => {
 					const layer = mapAnimData.map.layers[layerIndex];
-					if (layer.tilemapLayer && (layer.tilemapLayer as any).type === 'StaticTilemapLayer') {
+					if (
+						layer.tilemapLayer &&
+						(layer.tilemapLayer as Phaser.Tilemaps.TilemapLayer).type === 'StaticTilemapLayer'
+					) {
 						return;
 					}
 					for (let x = chkX; x < chkX + chkW; x++) {
@@ -385,10 +432,21 @@ class AnimatedTiles extends Phaser.Plugins.ScenePlugin {
 	}
 }
 
+/**
+ * Extended PluginManager interface with register method
+ */
+interface IPluginManagerWithRegister extends Phaser.Plugins.PluginManager {
+	register: (key: string, plugin: typeof Phaser.Plugins.ScenePlugin, mapping: string) => Phaser.Plugins.PluginManager;
+}
+
 //  Static function called by the PluginFile Loader.
-(AnimatedTiles as any).register = function (PluginManager: Phaser.Plugins.PluginManager) {
+(
+	AnimatedTiles as typeof AnimatedTiles & {
+		register: (PluginManager: Phaser.Plugins.PluginManager) => void;
+	}
+).register = function (PluginManager: Phaser.Plugins.PluginManager) {
 	//  Register this plugin with the PluginManager, so it can be added to Scenes.
-	(PluginManager as any).register('AnimatedTiles', AnimatedTiles, 'animatedTiles');
+	(PluginManager as IPluginManagerWithRegister).register('AnimatedTiles', AnimatedTiles, 'animatedTiles');
 };
 
 export default AnimatedTiles;

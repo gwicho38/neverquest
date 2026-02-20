@@ -3,7 +3,7 @@ import { CHATS } from '../../../consts/DB_SEED/Chats';
 describe('CHATS', () => {
 	it('should export an array of chat configurations', () => {
 		expect(Array.isArray(CHATS)).toBe(true);
-		expect(CHATS.length).toBe(9);
+		expect(CHATS.length).toBe(14);
 	});
 
 	it('should have all chats with valid structure', () => {
@@ -23,6 +23,6 @@ describe('CHATS', () => {
 
 	it('should include all expected chat configurations', () => {
 		const chatIds = CHATS.map((chat) => chat.id);
-		expect(chatIds.length).toBe(9);
+		expect(chatIds.length).toBe(14);
 	});
 });

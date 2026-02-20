@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Main game entry point and Phaser configuration
+ *
+ * This file initializes the Neverquest game:
+ * - Phaser.Game configuration with plugins
+ * - Scene registration and load order
+ * - Physics, input, and scaling settings
+ * - Error handling and crash reporting
+ * - Debug utilities initialization
+ *
+ * @see PreloadScene - Asset loading
+ * @see MainScene - Primary gameplay
+ * @see CrashReporter - Error tracking
+ *
+ * @module index
+ */
+
 import Phaser from 'phaser';
 import { Plugin as NineSlicePlugin } from 'phaser3-nineslice';
 import OutlinePipelinePlugin from 'phaser3-rex-plugins/plugins/outlinepipeline-plugin.js';
@@ -6,8 +23,13 @@ import YoutubePlayerPlugin from 'phaser3-rex-plugins/plugins/youtubeplayer-plugi
 import UIPlugin from 'phaser3-rex-plugins/templates/ui/ui-plugin.js';
 import { AttributeScene } from './scenes/AttributeScene';
 // import { CaveScene } from './scenes/CaveScene';
+import { CrossroadsScene } from './scenes/CrossroadsScene';
 import { DialogScene } from './scenes/DialogScene';
 import { DungeonScene } from './scenes/DungeonScene';
+import { IceCavernsScene } from './scenes/IceCavernsScene';
+import { SkyIslandsScene } from './scenes/SkyIslandsScene';
+import { UnderwaterTempleScene } from './scenes/UnderwaterTempleScene';
+import { VolcanicDungeonsScene } from './scenes/VolcanicDungeonsScene';
 // import { GameOverScene } from './scenes/GameOverScene';
 import { HUDScene } from './scenes/HUDScene';
 import { IntroScene } from './scenes/IntroScene';
@@ -18,6 +40,10 @@ import { MainScene } from './scenes/MainScene';
 // import { MobileCheckScene } from './scenes/MobileCheckScene';
 // import { OverworldScene } from './scenes/OverworldScene';
 import { PreloadScene } from './scenes/PreloadScene';
+import { QuestLogScene } from './scenes/QuestLogScene';
+import { CharacterStatsScene } from './scenes/CharacterStatsScene';
+import { JournalScene } from './scenes/JournalScene';
+import { SurvivalModeScene } from './scenes/SurvivalModeScene';
 // NOTE: UpsideDownScene is available but currently disabled
 // import { UpsideDownScene } from './scenes/UpsideDownScene';
 import { SpellWheelScene } from './scenes/SpellWheelScene';
@@ -58,13 +84,18 @@ const config: Phaser.Types.Core.GameConfig = {
 		preBoot: function (_game: Phaser.Game) {
 			// Set willReadFrequently for Phaser's internal canvas contexts
 			const originalGetContext = HTMLCanvasElement.prototype.getContext;
-			HTMLCanvasElement.prototype.getContext = function (type: string, attributes?: any): any {
+			HTMLCanvasElement.prototype.getContext = function (
+				this: HTMLCanvasElement,
+				type: string,
+				attributes?: CanvasRenderingContext2DSettings | WebGLContextAttributes
+			): RenderingContext | null {
 				if (type === '2d') {
-					attributes = attributes || {};
-					attributes.willReadFrequently = true;
+					const attrs = (attributes || {}) as CanvasRenderingContext2DSettings;
+					attrs.willReadFrequently = true;
+					return originalGetContext.call(this, type, attrs);
 				}
 				return originalGetContext.call(this, type, attributes);
-			};
+			} as typeof HTMLCanvasElement.prototype.getContext;
 		},
 	},
 	scene: [
@@ -75,6 +106,12 @@ const config: Phaser.Types.Core.GameConfig = {
 		MainMenuScene,
 		// UpsideDownScene,
 		DungeonScene,
+		IceCavernsScene, // Ice Caverns biome (level 15-20)
+		VolcanicDungeonsScene, // Volcanic Dungeons biome (level 20-25)
+		SkyIslandsScene, // Sky Islands biome (level 25-30)
+		UnderwaterTempleScene, // Underwater Temple biome (level 25-30)
+		CrossroadsScene, // New story hub scene
+		SurvivalModeScene, // Wave-based survival mode
 		// TownScene,
 		// CaveScene,
 		// OverworldScene,
@@ -87,6 +124,9 @@ const config: Phaser.Types.Core.GameConfig = {
 		HUDScene,
 		InventoryScene,
 		AttributeScene,
+		QuestLogScene, // Story progress tracking
+		CharacterStatsScene, // Detailed character stats
+		JournalScene, // Lore and discovery collection
 		// SettingScene,
 		// VideoPlayerScene,
 		// GameOverScene,
@@ -150,7 +190,7 @@ try {
 	game = new Phaser.Game(config);
 
 	// Make game globally available for debugging
-	(window as any).game = game;
+	window.game = game;
 
 	// Initialize debug utilities
 	logger.setupConsoleCommands();

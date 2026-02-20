@@ -1,11 +1,53 @@
+/**
+ * @fileoverview UI navigation and interface controller for Neverquest
+ *
+ * This plugin manages menu navigation and UI element selection:
+ * - Keyboard/gamepad navigation between UI elements
+ * - Element highlighting with outline effects
+ * - Matrix-based menu layouts (rows and columns)
+ * - Menu history stack for back navigation
+ * - Close action handling
+ *
+ * Supports navigation patterns:
+ * - Linear menus (up/down through items)
+ * - Grid menus (2D navigation)
+ * - Nested menus with history
+ *
+ * @see NeverquestOutlineEffect - Highlights selected elements
+ * @see NeverquestGamePadController - Gamepad input integration
+ * @see NeverquestKeyboardMouseController - Keyboard input integration
+ *
+ * @module plugins/NeverquestInterfaceController
+ */
+
 import { NeverquestOutlineEffect } from './NeverquestOutlineEffect';
 import { ErrorMessages } from '../consts/Messages';
 
-interface InterfaceElement {
-	element: any;
+/**
+ * Interface for UI elements that can be highlighted/selected
+ */
+type UIElement = Phaser.GameObjects.GameObject | Phaser.GameObjects.Sprite | Phaser.GameObjects.Image | null;
+
+/**
+ * Interface for close action configuration
+ */
+interface CloseActionConfig {
+	element?: UIElement | unknown;
 	action: string;
-	context: any;
-	args: any;
+	context: unknown;
+	args: unknown;
+}
+
+/**
+ * Close action can be a config object or null
+ */
+type CloseAction = CloseActionConfig | null;
+
+interface InterfaceElement {
+	element: UIElement | unknown;
+	action: string;
+	context: unknown;
+	args: unknown;
 }
 
 interface MenuHistoryItem {
@@ -13,7 +55,7 @@ interface MenuHistoryItem {
 	currentMatrixRow: number;
 	currentMatrixCol: number;
 	currentElementAction: InterfaceElement | null;
-	closeAction: any;
+	closeAction: CloseAction;
 }
 
 /**
@@ -58,7 +100,7 @@ export class NeverquestInterfaceController {
 	/**
 	 * This will trigger the Back or close function.
 	 */
-	closeAction: any;
+	closeAction: CloseAction;
 
 	/**
 	 * The navigation sound effect. You should change it to match the action the player will perform.
@@ -427,18 +469,20 @@ export class NeverquestInterfaceController {
 	 * Sets the outline effect to the current selected element.
 	 * @param element
 	 */
-	updateHighlightedElement(element: any): void {
+	updateHighlightedElement(element: UIElement | unknown): void {
 		// element.tint = 0xff00ff;
-		if (this.scene && this.scene.sys && element) this.outlineEffect.applyEffect(element);
+		if (this.scene && this.scene.sys && element)
+			this.outlineEffect.applyEffect(element as Phaser.GameObjects.GameObject);
 	}
 
 	/**
 	 * Removes the outline effect to the previously selected element.
 	 * @param element
 	 */
-	removeSelection(element: any): void {
+	removeSelection(element: UIElement | unknown): void {
 		// element.tint = 0xffffff;
-		if (this.scene && this.scene.sys && element) this.outlineEffect.removeEffect(element);
+		if (this.scene && this.scene.sys && element)
+			this.outlineEffect.removeEffect(element as Phaser.GameObjects.GameObject);
 	}
 
 	/**
@@ -478,20 +522,23 @@ export class NeverquestInterfaceController {
 	 * @param _args
 	 * @returns
 	 */
-	executeFunctionByName(functionName: string, context: any, args: any): any {
+	executeFunctionByName(functionName: string, context: unknown, args: unknown): unknown {
 		if (functionName) {
 			const namespaces = functionName.split('.');
 			const func = namespaces.pop()!;
+			let currentContext = context as Record<string, unknown>;
 			for (let i = 0; i < namespaces.length; i++) {
-				context = context[namespaces[i]];
-				if (!context) {
+				const nextContext = currentContext[namespaces[i]];
+				if (!nextContext || typeof nextContext !== 'object') {
 					return null; // Namespace doesn't exist
 				}
+				currentContext = nextContext as Record<string, unknown>;
 			}
-			if (context && typeof context[func] === 'function') {
+			const funcRef = currentContext[func];
+			if (currentContext && typeof funcRef === 'function') {
 				// Ensure args is an array for apply()
 				const argsArray = Array.isArray(args) ? args : args ? [args] : [];
-				return context[func].apply(context, argsArray);
+				return funcRef.apply(currentContext, argsArray);
 			}
 			return null; // Function doesn't exist
 		} else {

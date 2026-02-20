@@ -1,10 +1,37 @@
 /**
- * NeverquestPathfinding Plugin
- * Uses EasyStarJS for A* pathfinding on tilemaps
+ * @fileoverview A* pathfinding system for Neverquest
+ *
+ * This plugin provides pathfinding capabilities using EasyStarJS:
+ * - A* algorithm for optimal path calculation
+ * - Tilemap-based walkability grid
+ * - Diagonal movement support
+ * - Path visualization for debugging
+ * - Async path calculation
+ *
+ * Configuration options:
+ * - walkableTiles: Array of walkable tile indices
+ * - allowDiagonal: Enable 8-direction movement
+ * - dontCrossCorners: Prevent corner cutting
+ * - iterationsPerFrame: Performance tuning
+ *
+ * Used by Enemy AI for player chasing behavior.
+ *
+ * @see Enemy - Uses pathfinding for AI navigation
+ * @see NeverquestLineOfSight - Combined with LOS for smart AI
+ *
+ * @module plugins/NeverquestPathfinding
  */
 
 import EasyStar from 'easystarjs';
 import Phaser from 'phaser';
+
+/**
+ * EasyStar path node position
+ */
+interface IPathNode {
+	x: number;
+	y: number;
+}
 import { NumericColors } from '../consts/Colors';
 import { Alpha } from '../consts/Numbers';
 
@@ -179,7 +206,7 @@ export class NeverquestPathfinding {
 			return;
 		}
 
-		this.easystar.findPath(start.tileX, start.tileY, end.tileX, end.tileY, (path: any[]) => {
+		this.easystar.findPath(start.tileX, start.tileY, end.tileX, end.tileY, (path: IPathNode[] | null) => {
 			if (path === null) {
 				callback(null);
 				return;

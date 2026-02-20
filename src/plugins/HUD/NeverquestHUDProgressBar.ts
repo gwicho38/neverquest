@@ -1,5 +1,38 @@
 /**
- * This class is responsible for Creating gthe HP and SP Bars on the HUD system.
+ * @fileoverview HUD progress bars for health and experience display
+ *
+ * This plugin renders HP and XP bars in the heads-up display:
+ * - Health bar with color gradient (green → yellow → red)
+ * - Experience bar showing progress to next level
+ * - Smooth transition animations
+ * - Positioned in viewport corner
+ *
+ * Updates automatically when player takes damage or gains XP.
+ *
+ * @see HUDScene - Parent scene for HUD elements
+ * @see Player - Data source for health/XP values
+ *
+ * @module plugins/HUD/NeverquestHUDProgressBar
+ */
+
+import Phaser from 'phaser';
+
+/**
+ * Interface for entities that can be tracked by the HUD progress bar.
+ * Requires access to health and experience attributes.
+ */
+interface IProgressBarPlayer {
+	attributes: {
+		health: number;
+		baseHealth: number;
+		experience: number;
+		nextLevelExperience: number;
+	};
+	neverquestHUDProgressBar: NeverquestHUDProgressBar | null;
+}
+
+/**
+ * This class is responsible for Creating the HP and SP Bars on the HUD system.
  * @class
  */
 export class NeverquestHUDProgressBar {
@@ -11,7 +44,7 @@ export class NeverquestHUDProgressBar {
 	/**
 	 * The player that this progressbar will represent.
 	 */
-	player: any;
+	player: IProgressBarPlayer;
 
 	/**
 	 * The asset name of the green health bar.
@@ -69,7 +102,7 @@ export class NeverquestHUDProgressBar {
 	 * @param width The width of the Bars.
 	 * @param player The player that will have it's statuses shown.
 	 */
-	constructor(scene: Phaser.Scene, x: number, y: number, width: number, player: any) {
+	constructor(scene: Phaser.Scene, x: number, y: number, width: number, player: IProgressBarPlayer) {
 		this.scene = scene;
 		this.player = player;
 

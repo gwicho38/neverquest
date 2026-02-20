@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Bat enemy configuration
+ *
+ * This file defines the Bat enemy type:
+ * - Animation definitions (idle, walk, attack per direction)
+ * - Combat stats (health, attack, defense, speed)
+ * - Drop table with item chances
+ *
+ * Bat: Fast flying enemy with moderate attack.
+ *
+ * @see Enemy - Enemy entity class
+ * @see NeverquestEnemyZones - Spawns enemies
+ * @see EnemiesSeedConfig - Enemy registry
+ *
+ * @module consts/enemies/bat
+ */
+
 import { EntityDrops } from '../../models/EntityDrops';
 
 export const Bat = [

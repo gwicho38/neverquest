@@ -1,7 +1,21 @@
 /**
+ * @fileoverview Virtual joystick plugin for mobile touch controls
+ *
+ * This file provides the main plugin for virtual joystick creation:
+ * - Factory for Stick, HiddenStick, DPad, and Button objects
+ * - Automatic pointer management for multi-touch
+ * - Scene lifecycle integration (boot, start, shutdown, destroy)
+ *
+ * Third-party library by Photon Storm Ltd, adapted for Neverquest.
+ *
  * @author       Richard Davey <rich@photonstorm.com>
  * @copyright    2019 Photon Storm Ltd.
  * @license      {@link http://choosealicense.com/licenses/no-license/|No License}
+ *
+ * @see JoystickScene - Primary usage context
+ * @see NeverquestGamePadController - Physical controller alternative
+ *
+ * @module plugins/VirtualJoystick/VirtualJoystickPlugin
  */
 
 import CONST from './const';

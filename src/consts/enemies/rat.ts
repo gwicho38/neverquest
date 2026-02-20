@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Rat enemy configuration
+ *
+ * This file defines the Rat enemy type:
+ * - Animation definitions (idle, walk, attack per direction)
+ * - Combat stats (low health, low attack)
+ * - Drop table (100% red potion)
+ *
+ * Rat: Basic starter enemy, easiest to defeat.
+ *
+ * @see Enemy - Enemy entity class
+ * @see NeverquestEnemyZones - Spawns enemies
+ * @see EnemiesSeedConfig - Enemy registry
+ *
+ * @module consts/enemies/rat
+ */
+
 import { EntityDrops } from '../../models/EntityDrops';
 
 export const Rat = [

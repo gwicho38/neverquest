@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Room books dialog
+ *
+ * This dialog triggers near bookshelves:
+ * - Mentions an unread book
+ * - References missing glasses item
+ *
+ * @see NeverquestDialogBox - Displays dialogs
+ * @see Chats - Dialog registry
+ *
+ * @module consts/DB_SEED/chats/RoomBooksInfo
+ */
+
 export default {
 	id: 4,
 	chat: [

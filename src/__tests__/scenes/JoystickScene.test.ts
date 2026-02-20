@@ -306,27 +306,27 @@ describe('JoystickScene', () => {
 		});
 
 		it('should realign phantom stick when released', () => {
-			scene.phantomStick.isDown = false;
+			scene.phantomStick!.isDown = false;
 
 			const pointerupCall = mockInput.on.mock.calls.find((call: any) => call[0] === 'pointerup');
 			const handler = pointerupCall[1];
 
-			scene.phantomStick.alignBottomLeft.mockClear();
+			(scene.phantomStick!.alignBottomLeft as jest.Mock).mockClear();
 			handler();
 
-			expect(scene.phantomStick.alignBottomLeft).toHaveBeenCalled();
+			expect(scene.phantomStick!.alignBottomLeft).toHaveBeenCalled();
 		});
 
 		it('should not realign if stick is still down', () => {
-			scene.phantomStick.isDown = true;
+			scene.phantomStick!.isDown = true;
 
 			const pointerupCall = mockInput.on.mock.calls.find((call: any) => call[0] === 'pointerup');
 			const handler = pointerupCall[1];
 
-			scene.phantomStick.alignBottomLeft.mockClear();
+			(scene.phantomStick!.alignBottomLeft as jest.Mock).mockClear();
 			handler();
 
-			expect(scene.phantomStick.alignBottomLeft).not.toHaveBeenCalled();
+			expect(scene.phantomStick!.alignBottomLeft).not.toHaveBeenCalled();
 		});
 	});
 
@@ -340,10 +340,10 @@ describe('JoystickScene', () => {
 			const resizeCall = mockScale.on.mock.calls.find((call: any) => call[0] === 'resize');
 			const handler = resizeCall[1];
 
-			scene.stick.alignBottomLeft.mockClear();
+			(scene.stick!.alignBottomLeft as jest.Mock).mockClear();
 			handler({ width: 1024, height: 768 });
 
-			expect(scene.stick.alignBottomLeft).toHaveBeenCalled();
+			expect(scene.stick!.alignBottomLeft).toHaveBeenCalled();
 		});
 
 		it('should reposition button A on resize', () => {
@@ -384,7 +384,7 @@ describe('JoystickScene', () => {
 		});
 
 		it('should trigger attack when button A pressed', () => {
-			const downCall = scene.buttonA.on.mock.calls.find((call: any) => call[0] === 'down');
+			const downCall = (scene.buttonA!.on as jest.Mock).mock.calls.find((call: unknown[]) => call[0] === 'down');
 			const handler = downCall[1];
 
 			handler();
@@ -393,9 +393,9 @@ describe('JoystickScene', () => {
 		});
 
 		it('should not attack if player not active', () => {
-			scene.player.active = false;
+			scene.player!.active = false;
 
-			const downCall = scene.buttonA.on.mock.calls.find((call: any) => call[0] === 'down');
+			const downCall = (scene.buttonA!.on as jest.Mock).mock.calls.find((call: unknown[]) => call[0] === 'down');
 			const handler = downCall[1];
 
 			(scene.neverquestBattleManager!.atack as jest.Mock).mockClear();
@@ -405,9 +405,9 @@ describe('JoystickScene', () => {
 		});
 
 		it('should not attack if player cannot attack', () => {
-			scene.player.canAtack = false;
+			scene.player!.canAtack = false;
 
-			const downCall = scene.buttonA.on.mock.calls.find((call: any) => call[0] === 'down');
+			const downCall = (scene.buttonA!.on as jest.Mock).mock.calls.find((call: unknown[]) => call[0] === 'down');
 			const handler = downCall[1];
 
 			(scene.neverquestBattleManager!.atack as jest.Mock).mockClear();
@@ -417,9 +417,9 @@ describe('JoystickScene', () => {
 		});
 
 		it('should not attack if player is already attacking', () => {
-			scene.player.isAtacking = true;
+			scene.player!.isAtacking = true;
 
-			const downCall = scene.buttonA.on.mock.calls.find((call: any) => call[0] === 'down');
+			const downCall = (scene.buttonA!.on as jest.Mock).mock.calls.find((call: unknown[]) => call[0] === 'down');
 			const handler = downCall[1];
 
 			(scene.neverquestBattleManager!.atack as jest.Mock).mockClear();
@@ -431,7 +431,7 @@ describe('JoystickScene', () => {
 		it('should handle null player gracefully', () => {
 			scene.player = null;
 
-			const downCall = scene.buttonA.on.mock.calls.find((call: any) => call[0] === 'down');
+			const downCall = (scene.buttonA!.on as jest.Mock).mock.calls.find((call: unknown[]) => call[0] === 'down');
 			const handler = downCall[1];
 
 			expect(() => handler()).not.toThrow();

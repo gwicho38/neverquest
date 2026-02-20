@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Lake view dialog
+ *
+ * This dialog triggers at scenic lake viewpoints:
+ * - Player admires the view
+ * - Atmospheric flavor text
+ *
+ * @see NeverquestDialogBox - Displays dialogs
+ * @see Chats - Dialog registry
+ *
+ * @module consts/DB_SEED/chats/LakeView
+ */
+
 export default {
 	id: 8,
 	chat: [

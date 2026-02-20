@@ -1,4 +1,34 @@
+/**
+ * @fileoverview General utility functions for Neverquest
+ *
+ * This class provides static utility methods:
+ * - Mobile device detection
+ * - Dynamic function execution by name
+ * - String/number conversions
+ * - Browser detection
+ *
+ * Used throughout the codebase for common operations.
+ *
+ * @module utils/NeverquestUtils
+ */
+
 import { SpecialNumbers } from '../consts/Numbers';
+
+/**
+ * Extended Window interface for legacy Opera detection
+ */
+declare global {
+	interface Window {
+		opera?: string;
+	}
+}
+
+/**
+ * Type for dynamic function context objects
+ * Used by executeFunctionByName for dynamic method dispatch
+ * Must be an object type that allows dynamic property access
+ */
+type DynamicContext = object;
 
 /**
  * @class
@@ -22,26 +52,31 @@ export class NeverquestUtils {
 				).test(a.substr(0, 4))
 			)
 				check = true;
-		})(navigator.userAgent || navigator.vendor || (window as any).opera);
+		})(navigator.userAgent || navigator.vendor || window.opera || '');
 		return check;
 	}
 
 	/**
 	 * Executes the function on the correct Context.
-	 * @param { string } functionName - The name of the function to execute (can be namespaced with dots)
-	 * @param { any } context - The context object on which to execute the function
-	 * @param { any } args - Additional arguments to pass to the function
-	 * @returns { any | null } - The result of the function execution or null if no function name provided
+	 * @param functionName - The name of the function to execute (can be namespaced with dots)
+	 * @param context - The context object on which to execute the function
+	 * @param funcArgs - Additional arguments to pass to the function
+	 * @returns The result of the function execution or null if no function name provided
 	 */
-	static executeFunctionByName(functionName: string, context: any, ..._funcArgs: any[]): any | null {
+	static executeFunctionByName(functionName: string, context: DynamicContext, ...funcArgs: unknown[]): unknown {
 		if (functionName) {
-			const args = Array.prototype.slice.call(arguments, 2);
 			const namespaces = functionName.split('.');
 			const func = namespaces.pop();
+			let currentContext = context as Record<string, unknown>;
+
 			for (let i = 0; i < namespaces.length; i++) {
-				context = context[namespaces[i]];
+				currentContext = currentContext[namespaces[i]] as Record<string, unknown>;
 			}
-			return context[func].apply(context, args);
+
+			if (func && typeof currentContext[func] === 'function') {
+				return (currentContext[func] as (...args: unknown[]) => unknown).apply(currentContext, funcArgs);
+			}
+			return null;
 		} else {
 			return null;
 		}

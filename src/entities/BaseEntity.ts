@@ -1,4 +1,21 @@
 /**
+ * @fileoverview Base entity interface and class for game objects
+ *
+ * This file defines the common interface for all game entities:
+ * - State flags (attacking, blocking, moving, etc.)
+ * - Physics body reference
+ * - Direction and facing
+ * - Hit zone for combat
+ *
+ * Extended by Player and Enemy classes.
+ *
+ * @see Player - Player entity implementation
+ * @see Enemy - Enemy entity implementation
+ *
+ * @module entities/BaseEntity
+ */
+
+/**
  * Base entity interface for all game entities
  */
 export interface IBaseEntity {
