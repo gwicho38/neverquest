@@ -1,6 +1,19 @@
 /**
- * Particle Pool for reusing particle emitters
- * Improves performance by avoiding constant creation/destruction
+ * @fileoverview Particle emitter object pooling for performance
+ *
+ * This plugin manages reusable particle emitter pools:
+ * - Avoids frequent emitter creation/destruction
+ * - Reduces garbage collection pressure
+ * - Handles complex configs separately (emitZone, etc.)
+ * - Per-texture pool management
+ *
+ * Significantly improves performance in particle-heavy scenes.
+ *
+ * @see ObjectPool - Generic pooling implementation
+ * @see CombatEffects - Uses pooled particles
+ * @see SpellEffects - Uses pooled particles
+ *
+ * @module plugins/effects/ParticlePool
  */
 
 import Phaser from 'phaser';

@@ -1,3 +1,15 @@
+/**
+ * @fileoverview Device-based icon texture switching utility
+ *
+ * This file provides device-responsive texture management:
+ * - Changes game object textures based on device type
+ * - Used for mobile vs desktop icon differences
+ *
+ * @see SceneToggleWatcher - Scene visibility management
+ *
+ * @module scenes/watchers/IconDeviceChange
+ */
+
 import Phaser from 'phaser';
 
 /**

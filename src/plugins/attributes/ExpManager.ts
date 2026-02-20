@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Experience and leveling system for Neverquest
+ *
+ * This static class manages experience gain and level-ups:
+ * - Awards XP from enemy kills
+ * - Calculates level progression
+ * - Allocates stat points on level-up
+ * - Displays XP gain text and particles
+ * - Updates health on level-up
+ *
+ * XP curve is configured in ExperienceCurve.ts.
+ * Level-up triggers NeverquestAbilityManager checks.
+ *
+ * @see NeverquestBattleManager - Awards XP on kills
+ * @see NeverquestAbilityManager - Checks level milestones
+ * @see ExperienceCurve - XP requirements per level
+ *
+ * @module plugins/attributes/ExpManager
+ */
+
 import { NeverquestEntityTextDisplay } from '../NeverquestEntityTextDisplay';
 import { HUDScene } from '../../scenes/HUDScene';
 import { ParticlePool } from '../effects/ParticlePool';
@@ -30,6 +50,7 @@ interface Entity {
 		x: number;
 		y: number;
 	};
+	entityName: string;
 }
 
 export class ExpManager {
@@ -119,6 +140,12 @@ export class ExpManager {
 		// Use particle pool for better performance
 		const pool = this.getParticlePool(entity.scene);
 
+		const emitZone: Phaser.Types.GameObjects.Particles.ParticleEmitterEdgeZoneConfig = {
+			type: 'edge',
+			source: logoSource,
+			quantity: 1,
+		};
+
 		const particleConfig: Phaser.Types.GameObjects.Particles.ParticleEmitterConfig = {
 			lifespan: 300,
 			gravityY: 10,
@@ -126,7 +153,7 @@ export class ExpManager {
 			scale: { start: 0, end: Alpha.FOG_START, ease: 'Quad.easeOut' },
 			alpha: { start: 1, end: 0, ease: 'Quad.easeIn' },
 			blendMode: 'ADD',
-			emitZone: { type: 'edge', source: logoSource, quantity: 1 } as any,
+			emitZone: emitZone,
 		};
 
 		// Burst 50 particles at once for level-up effect

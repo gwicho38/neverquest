@@ -1,6 +1,46 @@
+/**
+ * @fileoverview Entity attribute calculation and management
+ *
+ * This class handles derived stat calculations from base attributes:
+ * - Converts raw attributes (STR, VIT, AGI, DEX, INT) to combat stats
+ * - Applies equipment bonuses
+ * - Applies consumable/buff effects
+ * - Tracks stat point allocation
+ *
+ * Stat derivation formulas:
+ * - Attack: STR * 2 + equipment bonus
+ * - Defense: VIT * 1.5 + equipment bonus
+ * - Speed: AGI * 1.2 + base speed
+ * - Critical: DEX * 0.5%
+ * - Magic: INT * 2
+ *
+ * @see EntityAttributes - Stores calculated values
+ * @see Player - Primary user of attribute calculations
+ * @see ATTRIBUTES_CONST - Base stat modifiers
+ *
+ * @module plugins/attributes/AttributesManager
+ */
+
 import { ATTRIBUTES_CONST } from '../../consts/AttributesConst';
 import lodash from 'lodash';
 import { BUFF_TYPES } from '../../consts/DB_SEED/BuffTypes';
+import { IConsumableBonus } from '../../entities/EntityAttributes';
+
+/**
+ * Valid attribute keys for raw attributes
+ */
+export type RawAttributeKey = 'str' | 'vit' | 'agi' | 'dex' | 'int';
+
+/**
+ * Raw attributes record type
+ */
+export interface IRawAttributes {
+	str: number;
+	vit: number;
+	agi: number;
+	dex: number;
+	[key: string]: number;
+}
 
 interface EntityStats {
 	level: number;
@@ -13,22 +53,26 @@ interface EntityStats {
 	critical: number;
 	flee: number;
 	hit: number;
-	rawAttributes: {
-		str: number;
-		vit: number;
-		agi: number;
-		dex: number;
-	};
+	rawAttributes: IRawAttributes;
 	availableStatPoints: number;
 	bonus: {
-		consumable: Array<{ uniqueId: number; value: string }>;
+		consumable: IConsumableBonus[];
 	};
 }
 
 interface Entity {
 	attributes: EntityStats;
-	healthBar?: any;
-	neverquestHUDProgressBar?: any;
+	healthBar?: {
+		full: number;
+		health?: number;
+		update: (health: number) => void;
+		draw?: () => void;
+	};
+	neverquestHUDProgressBar?: {
+		updateExp?: (exp: number, nextExp: number) => void;
+		updateHp?: (hp: number, maxHp: number) => void;
+		updateHealth?: () => void;
+	};
 }
 
 /**
@@ -161,9 +205,9 @@ export class AttributesManager {
 			const level_atack_bonus = level_multiplier * ATTRIBUTES_CONST.ATK.BONUS_LEVEL_MULTIPLIER;
 			let consumable_atack = 0;
 			this.entity.attributes.bonus.consumable.forEach((item) => {
-				Object.keys(BUFF_TYPES).forEach((key) => {
-					if (item.uniqueId === (BUFF_TYPES as any)[key].id) {
-						consumable_atack += parseInt(item.value);
+				Object.values(BUFF_TYPES).forEach((buffType) => {
+					if (item.uniqueId === buffType.id) {
+						consumable_atack += item.value;
 					}
 				});
 			});
@@ -211,17 +255,17 @@ export class AttributesManager {
 		}
 	}
 
-	addAttribute(attribute: string, amount: number, _lastRawAttributes: any): void {
+	addAttribute(attribute: RawAttributeKey, amount: number, _lastRawAttributes: IRawAttributes): void {
 		if (this.entity.attributes.availableStatPoints >= amount) {
-			(this.entity.attributes.rawAttributes as any)[attribute] += amount;
+			this.entity.attributes.rawAttributes[attribute] += amount;
 			this.entity.attributes.availableStatPoints -= amount;
 			this.changedAttribute = true;
 		}
 	}
 
-	removeAttribute(attribute: string, amount: number, lastRawAttributes: any): void {
-		if ((this.entity.attributes.rawAttributes as any)[attribute] > lastRawAttributes[attribute]) {
-			(this.entity.attributes.rawAttributes as any)[attribute] -= amount;
+	removeAttribute(attribute: RawAttributeKey, amount: number, lastRawAttributes: IRawAttributes): void {
+		if (this.entity.attributes.rawAttributes[attribute] > lastRawAttributes[attribute]) {
+			this.entity.attributes.rawAttributes[attribute] -= amount;
 			this.entity.attributes.availableStatPoints += amount;
 			this.changedAttribute = true;
 		}

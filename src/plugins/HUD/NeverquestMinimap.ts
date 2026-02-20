@@ -1,6 +1,19 @@
 /**
- * Minimap Plugin for Neverquest
- * Displays a small map in the bottom-left corner of the viewport
+ * @fileoverview Minimap display for navigation assistance
+ *
+ * This plugin renders a miniature map in the viewport corner:
+ * - Renders tilemap in scaled-down form
+ * - Player position marker
+ * - Enemy/NPC markers (optional)
+ * - Scroll position tracking
+ * - Configurable size and position
+ *
+ * Helps players navigate larger maps and track entities.
+ *
+ * @see HUDScene - Parent scene for HUD elements
+ * @see NeverquestMapCreator - Source tilemap data
+ *
+ * @module plugins/HUD/NeverquestMinimap
  */
 
 import Phaser from 'phaser';
@@ -8,9 +21,20 @@ import { NumericColors } from '../../consts/Colors';
 import { Dimensions, Alpha } from '../../consts/Numbers';
 import { DebugMessages } from '../../consts/Messages';
 
+/**
+ * Interface for entities that can be tracked on the minimap.
+ * Only requires container position for player marker placement.
+ */
+interface IMinimapTrackable {
+	container: {
+		x: number;
+		y: number;
+	};
+}
+
 export class NeverquestMinimap {
 	scene: Phaser.Scene;
-	player: any;
+	player: IMinimapTrackable;
 	map: Phaser.Tilemaps.Tilemap;
 
 	// Minimap container
@@ -40,10 +64,10 @@ export class NeverquestMinimap {
 	/**
 	 * Creates a new Minimap
 	 * @param scene The parent scene
-	 * @param player The player object to track
+	 * @param player The player object to track (must have container.x and container.y)
 	 * @param map The tilemap to render
 	 */
-	constructor(scene: Phaser.Scene, player: any, map: Phaser.Tilemaps.Tilemap) {
+	constructor(scene: Phaser.Scene, player: IMinimapTrackable, map: Phaser.Tilemaps.Tilemap) {
 		this.scene = scene;
 		this.player = player;
 		this.map = map;
@@ -214,12 +238,9 @@ export class NeverquestMinimap {
 			console.log(`  Center offsets: (${centerOffsetX}, ${centerOffsetY})`);
 		}
 
-		// Create a temporary graphics object for drawing
+		// Create a temporary graphics object for drawing at origin
 		const tempGraphics = this.scene.add.graphics();
-
-		// Draw a test rectangle in top-left corner to verify coordinate system
-		tempGraphics.fillStyle(NumericColors.RED, 1);
-		tempGraphics.fillRect(0, 0, 10, 10);
+		tempGraphics.setPosition(0, 0);
 
 		let minX = Infinity,
 			maxX = -Infinity,
@@ -271,13 +292,13 @@ export class NeverquestMinimap {
 
 						// Tile calculation (logging disabled to reduce console spam)
 
-						// Only draw if tile is COMPLETELY within minimap bounds
-						const tileSize = Math.max(1, tileScale);
+						// Only draw if tile is at least partially within minimap bounds
+						const tileSize = Math.max(1, Math.ceil(tileScale));
 						if (
-							pixelX >= 0 &&
-							pixelX + tileSize <= this.width &&
-							pixelY >= 0 &&
-							pixelY + tileSize <= this.height
+							pixelX + tileSize >= 0 &&
+							pixelX <= this.width &&
+							pixelY + tileSize >= 0 &&
+							pixelY <= this.height
 						) {
 							// Track actual draw bounds
 							minX = Math.min(minX, pixelX);

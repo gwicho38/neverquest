@@ -1,7 +1,22 @@
 /**
+ * @fileoverview Digital directional pad for 4-way input
+ *
+ * This file provides a D-Pad with digital (on/off) direction:
+ * - Four directional frames (up/down/left/right/neutral)
+ * - NES-style digital input (no analog values)
+ * - Direction change events (moveleft, moveright, etc.)
+ * - Repeat rate for held directions
+ *
+ * Third-party library by Photon Storm Ltd, adapted for Neverquest.
+ *
  * @author       Richard Davey <rich@photonstorm.com>
  * @copyright    2019 Photon Storm Ltd.
  * @license      {@link http://choosealicense.com/licenses/no-license/|No License}
+ *
+ * @see BaseStick - Base class implementation
+ * @see Stick - Analog alternative
+ *
+ * @module plugins/VirtualJoystick/DPad
  */
 
 import BaseStick from './BaseStick';

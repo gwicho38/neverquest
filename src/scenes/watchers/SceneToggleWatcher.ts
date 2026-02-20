@@ -1,3 +1,17 @@
+/**
+ * @fileoverview Scene visibility toggle utility
+ *
+ * This file provides scene management utilities:
+ * - Toggles scene visibility (launch/stop)
+ * - Manages player state during scene transitions
+ * - Controls canMove and canAtack flags appropriately
+ *
+ * @see IconDeviceChange - Device-based texture changes
+ * @see InventoryScene - Common toggle target
+ *
+ * @module scenes/watchers/SceneToggleWatcher
+ */
+
 import Phaser from 'phaser';
 import { Player } from '../../entities/Player';
 

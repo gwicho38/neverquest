@@ -1,7 +1,22 @@
 /**
+ * @fileoverview Invisible touch-anywhere virtual joystick
+ *
+ * This file provides an invisible analog joystick:
+ * - Activates on any screen touch
+ * - No visual sprites (hidden)
+ * - Analog force values for player movement
+ * - Useful for full-screen touch control
+ *
+ * Third-party library by Photon Storm Ltd, adapted for Neverquest.
+ *
  * @author       Richard Davey <rich@photonstorm.com>
  * @copyright    2019 Photon Storm Ltd.
  * @license      {@link http://choosealicense.com/licenses/no-license/|No License}
+ *
+ * @see BaseStick - Base class implementation
+ * @see Stick - Visible alternative
+ *
+ * @module plugins/VirtualJoystick/HiddenStick
  */
 
 import BaseStick from './BaseStick';
