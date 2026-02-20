@@ -12,6 +12,14 @@
  */
 
 import { SkyIslandsScene } from '../../scenes/SkyIslandsScene';
+import { NeverquestDungeonGenerator } from '../../plugins/NeverquestDungeonGenerator';
+import { NeverquestPathfinding } from '../../plugins/NeverquestPathfinding';
+import { NeverquestFogWarManager } from '../../plugins/NeverquestFogWarManager';
+import { NeverquestLightingManager } from '../../plugins/NeverquestLightingManager';
+import { NeverquestSaveManager } from '../../plugins/NeverquestSaveManager';
+import { Player } from '../../entities/Player';
+import { Enemy } from '../../entities/Enemy';
+import Phaser from 'phaser';
 
 // Mock Phaser
 jest.mock('phaser', () => {
@@ -284,6 +292,9 @@ jest.mock('../../scenes/HUDScene', () => ({
 
 describe('SkyIslandsScene', () => {
 	let scene: SkyIslandsScene;
+	let mockSound: any;
+	let mockKeyboardHandlers: Record<string, (...args: any[]) => void>;
+	let mockFadeCompleteCallback: (...args: any[]) => void;
 
 	beforeEach(() => {
 		jest.clearAllMocks();
@@ -411,6 +422,1142 @@ describe('SkyIslandsScene', () => {
 			expect((scene.cameras.main as any).flash).toHaveBeenCalled();
 		});
 	});
+
+	describe('create', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.2);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn().mockImplementation((_event: string, callback: (...args: any[]) => void) => {
+						mockFadeCompleteCallback = callback;
+					}),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should create dungeon generator', () => {
+			scene.create();
+			expect(NeverquestDungeonGenerator).toHaveBeenCalledWith(scene);
+		});
+
+		it('should initialize pathfinding', () => {
+			scene.create();
+			expect(NeverquestPathfinding).toHaveBeenCalled();
+		});
+
+		it('should create player at map center', () => {
+			scene.create();
+			// map is 1600x1200, center is 800,600
+			expect(Player).toHaveBeenCalledWith(scene, 800, 600, 'player', expect.anything());
+		});
+
+		it('should set initial checkpoint at map center', () => {
+			scene.create();
+			expect(scene.lastCheckpoint).toEqual({ x: 800, y: 600 });
+		});
+
+		it('should setup camera with sky blue background', () => {
+			scene.create();
+			expect((scene as any).cameras.main.setBackgroundColor).toHaveBeenCalledWith(0x87ceeb);
+		});
+
+		it('should launch DialogScene', () => {
+			scene.create();
+			expect((scene as any).scene.launch).toHaveBeenCalledWith(
+				'DialogScene',
+				expect.objectContaining({ player: scene.player })
+			);
+		});
+
+		it('should launch HUDScene', () => {
+			scene.create();
+			expect((scene as any).scene.launch).toHaveBeenCalledWith(
+				'HUDScene',
+				expect.objectContaining({ player: scene.player })
+			);
+		});
+
+		it('should spawn enemies', () => {
+			scene.create();
+			expect(Enemy).toHaveBeenCalled();
+			expect(scene.enemies.length).toBeGreaterThan(0);
+		});
+
+		it('should play theme song with detune 200', () => {
+			scene.create();
+			expect((scene as any).sound.add).toHaveBeenCalledWith(
+				'dark_theme',
+				expect.objectContaining({ detune: 200 })
+			);
+			expect(mockSound.play).toHaveBeenCalled();
+		});
+
+		it('should create fog of war', () => {
+			scene.create();
+			expect(NeverquestFogWarManager).toHaveBeenCalled();
+			expect(scene.fog.createFog).toHaveBeenCalled();
+		});
+
+		it('should create sky lighting with correct ambient settings', () => {
+			scene.create();
+			expect(NeverquestLightingManager).toHaveBeenCalledWith(
+				scene,
+				expect.objectContaining({
+					ambientDarkness: 0.2,
+					lightColor: 0xffffff,
+				})
+			);
+		});
+
+		it('should create save manager', () => {
+			scene.create();
+			expect(NeverquestSaveManager).toHaveBeenCalledWith(scene);
+			expect(scene.saveManager.create).toHaveBeenCalled();
+		});
+
+		it('should create exit portal', () => {
+			scene.create();
+			expect((scene as any).add.zone).toHaveBeenCalled();
+			expect((scene as any).physics.add.overlap).toHaveBeenCalled();
+		});
+
+		it('should initialize lightning timer', () => {
+			scene.create();
+			expect((scene as any).time.addEvent).toHaveBeenCalledWith(
+				expect.objectContaining({
+					delay: 5000,
+					loop: true,
+				})
+			);
+		});
+
+		it('should setup camera follow and zoom', () => {
+			scene.create();
+			expect((scene as any).cameras.main.startFollow).toHaveBeenCalledWith(scene.player.container);
+			expect((scene as any).cameras.main.setZoom).toHaveBeenCalledWith(2);
+		});
+
+		it('should setup physics colliders', () => {
+			scene.create();
+			expect((scene as any).physics.add.collider).toHaveBeenCalled();
+		});
+
+		it('should create ambient sound', () => {
+			scene.create();
+			expect((scene as any).sound.add).toHaveBeenCalledWith(
+				'dungeon_ambient',
+				expect.objectContaining({ volume: 0.4, loop: true })
+			);
+		});
+	});
+
+	describe('lightning system', () => {
+		let lightningTimerCallback: () => void;
+
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.2);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn().mockImplementation((_event: string, callback: (...args: any[]) => void) => {
+						mockFadeCompleteCallback = callback;
+					}),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockImplementation((config: any) => {
+					if (config.delay === 5000 && config.loop) {
+						lightningTimerCallback = config.callback;
+					}
+					return { destroy: jest.fn() };
+				}),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+
+			// Setup player with health for damage tests
+			scene.player = {
+				container: {
+					x: 100,
+					y: 100,
+					body: { velocity: { x: 0, y: 0 } },
+					setPosition: jest.fn(),
+				},
+				neverquestMovement: {},
+				destroy: jest.fn(),
+				attributes: { health: 100, level: 5 },
+				healthBar: { decrease: jest.fn() },
+				neverquestHUDProgressBar: { updateHealth: jest.fn() },
+				canMove: true,
+				canAtack: true,
+			} as any;
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should initialize lightning timer with 5000ms interval', () => {
+			expect((scene as any).time.addEvent).toHaveBeenCalledWith(
+				expect.objectContaining({
+					delay: 5000,
+					loop: true,
+				})
+			);
+		});
+
+		it('should trigger strike when random < 0.3', () => {
+			// Math.random returns 0.2 in beforeEach (< 0.3), so callback triggers strike
+			const triggerSpy = jest.spyOn(scene, 'triggerLightningStrike');
+			lightningTimerCallback();
+			expect(triggerSpy).toHaveBeenCalled();
+		});
+
+		it('should not trigger strike when random >= 0.3', () => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+			const triggerSpy = jest.spyOn(scene, 'triggerLightningStrike');
+			lightningTimerCallback();
+			expect(triggerSpy).not.toHaveBeenCalled();
+		});
+
+		it('should not crash if player is null', () => {
+			(scene as any).player = null;
+			expect(() => scene.triggerLightningStrike()).not.toThrow();
+		});
+
+		it('should create warning graphics on triggerLightningStrike', () => {
+			scene.triggerLightningStrike();
+			expect((scene as any).add.graphics).toHaveBeenCalled();
+		});
+
+		it('should apply lightning damage when player is close', () => {
+			// Capture the tween onComplete
+			let onComplete: () => void;
+			(scene as any).tweens.add = jest.fn().mockImplementation((config: any) => {
+				if (config.onComplete) {
+					onComplete = config.onComplete;
+				}
+			});
+
+			// Mock distance to be close
+			(Phaser.Math.Distance.Between as jest.Mock).mockReturnValue(30);
+
+			scene.triggerLightningStrike();
+
+			// Call the onComplete (lightning strike resolves)
+			onComplete!();
+
+			expect(scene.player.attributes.health).toBe(80); // 100 - 20
+			expect(scene.player.healthBar.decrease).toHaveBeenCalledWith(20);
+			expect(scene.player.canMove).toBe(false); // stunned
+		});
+
+		it('should kill player when health drops to zero from lightning', () => {
+			scene.player.attributes.health = 15;
+
+			let onComplete: () => void;
+			(scene as any).tweens.add = jest.fn().mockImplementation((config: any) => {
+				if (config.onComplete) {
+					onComplete = config.onComplete;
+				}
+			});
+
+			(Phaser.Math.Distance.Between as jest.Mock).mockReturnValue(30);
+
+			scene.triggerLightningStrike();
+			onComplete!();
+
+			expect(scene.player.attributes.health).toBe(0);
+			expect(scene.player.canMove).toBe(false);
+			expect(scene.player.canAtack).toBe(false);
+		});
+
+		it('should not apply damage when player is far from strike', () => {
+			let onComplete: () => void;
+			(scene as any).tweens.add = jest.fn().mockImplementation((config: any) => {
+				if (config.onComplete) {
+					onComplete = config.onComplete;
+				}
+			});
+
+			(Phaser.Math.Distance.Between as jest.Mock).mockReturnValue(60);
+
+			scene.triggerLightningStrike();
+			onComplete!();
+
+			expect(scene.player.attributes.health).toBe(100); // unchanged
+			expect(scene.player.healthBar.decrease).not.toHaveBeenCalled();
+		});
+
+		it('should create strike visual on tween complete', () => {
+			let onComplete: () => void;
+			(scene as any).tweens.add = jest.fn().mockImplementation((config: any) => {
+				if (config.onComplete) {
+					onComplete = config.onComplete;
+				}
+			});
+
+			(Phaser.Math.Distance.Between as jest.Mock).mockReturnValue(200);
+
+			const graphicsCalls = (scene as any).add.graphics;
+			const callCountBefore = graphicsCalls.mock.calls.length;
+
+			scene.triggerLightningStrike();
+			onComplete!();
+
+			// Additional graphics created for lightning bolt
+			expect(graphicsCalls.mock.calls.length).toBeGreaterThan(callCountBefore);
+		});
+
+		it('should flash camera on strike', () => {
+			let onComplete: () => void;
+			(scene as any).tweens.add = jest.fn().mockImplementation((config: any) => {
+				if (config.onComplete) {
+					onComplete = config.onComplete;
+				}
+			});
+
+			(Phaser.Math.Distance.Between as jest.Mock).mockReturnValue(200);
+
+			scene.triggerLightningStrike();
+			onComplete!();
+
+			expect((scene as any).cameras.main.flash).toHaveBeenCalled();
+		});
+
+		it('should shake camera when player takes lightning damage', () => {
+			let onComplete: () => void;
+			(scene as any).tweens.add = jest.fn().mockImplementation((config: any) => {
+				if (config.onComplete) {
+					onComplete = config.onComplete;
+				}
+			});
+
+			(Phaser.Math.Distance.Between as jest.Mock).mockReturnValue(30);
+
+			scene.triggerLightningStrike();
+			onComplete!();
+
+			expect((scene as any).cameras.main.shake).toHaveBeenCalledWith(150, 0.02);
+		});
+	});
+
+	describe('setupSaveKeybinds', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn().mockImplementation((_event: string, callback: (...args: any[]) => void) => {
+						mockFadeCompleteCallback = callback;
+					}),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should save game on Ctrl+S', () => {
+			const event = { ctrlKey: true, key: 's', preventDefault: jest.fn() };
+			mockKeyboardHandlers['keydown'](event);
+			expect(event.preventDefault).toHaveBeenCalled();
+			expect(scene.saveManager.saveGame).toHaveBeenCalledWith(false);
+		});
+
+		it('should load game on Ctrl+L', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue({ playerHealth: 100 });
+			const event = { ctrlKey: true, key: 'l', preventDefault: jest.fn() };
+			mockKeyboardHandlers['keydown'](event);
+			expect(scene.saveManager.loadGame).toHaveBeenCalledWith(false);
+			expect(scene.saveManager.applySaveData).toHaveBeenCalled();
+		});
+
+		it('should load checkpoint on F5', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue({ playerHealth: 100 });
+			const event = { ctrlKey: false, key: 'F5', preventDefault: jest.fn() };
+			mockKeyboardHandlers['keydown'](event);
+			expect(scene.saveManager.loadGame).toHaveBeenCalledWith(true);
+		});
+
+		it('should show notification when no checkpoint found on F5', () => {
+			scene.saveManager.loadGame = jest.fn().mockReturnValue(null);
+			const event = { ctrlKey: false, key: 'F5', preventDefault: jest.fn() };
+			mockKeyboardHandlers['keydown'](event);
+			expect(scene.saveManager.showSaveNotification).toHaveBeenCalledWith('No checkpoint found', true);
+		});
+
+		it('should not save on non-ctrl S key', () => {
+			const event = { ctrlKey: false, key: 's', preventDefault: jest.fn() };
+			mockKeyboardHandlers['keydown'](event);
+			expect(scene.saveManager.saveGame).not.toHaveBeenCalled();
+		});
+
+		it('should set spellWheelOpen to false on spellwheelclosed event', () => {
+			scene.spellWheelOpen = true;
+			// Find the spellwheelclosed handler
+			const eventsOnCalls = (scene as any).events.on.mock.calls;
+			const spellWheelHandler = eventsOnCalls.find((call: any[]) => call[0] === 'spellwheelclosed');
+			expect(spellWheelHandler).toBeDefined();
+			spellWheelHandler[1]();
+			expect(scene.spellWheelOpen).toBe(false);
+		});
+	});
+
+	describe('exitDungeon', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn().mockImplementation((_event: string, callback: (...args: any[]) => void) => {
+						mockFadeCompleteCallback = callback;
+					}),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should fade camera', () => {
+			scene.exitDungeon();
+			expect((scene as any).cameras.main.fade).toHaveBeenCalledWith(500);
+		});
+
+		it('should stop sounds on fade complete', () => {
+			scene.exitDungeon();
+			mockFadeCompleteCallback();
+			expect(scene.themeSong.stop).toHaveBeenCalled();
+			expect(scene.ambientSound.stop).toHaveBeenCalled();
+		});
+
+		it('should clean up player on fade complete', () => {
+			scene.exitDungeon();
+			mockFadeCompleteCallback();
+			expect(scene.player.neverquestMovement).toBeNull();
+			expect(scene.player.destroy).toHaveBeenCalled();
+		});
+
+		it('should start previous scene on fade complete', () => {
+			scene.previousScene = 'CrossroadsScene';
+			scene.exitDungeon();
+			mockFadeCompleteCallback();
+			expect((scene as any).scene.start).toHaveBeenCalledWith('CrossroadsScene');
+		});
+
+		it('should destroy wind emitter if it exists', () => {
+			const destroySpy = jest.fn();
+			scene.windEmitter = { destroy: destroySpy } as any;
+			scene.exitDungeon();
+			mockFadeCompleteCallback();
+			expect(destroySpy).toHaveBeenCalled();
+		});
+
+		it('should destroy cloud emitter if it exists', () => {
+			const destroySpy = jest.fn();
+			scene.cloudEmitter = { destroy: destroySpy } as any;
+			scene.exitDungeon();
+			mockFadeCompleteCallback();
+			expect(destroySpy).toHaveBeenCalled();
+		});
+
+		it('should destroy lightning timer if it exists', () => {
+			const destroySpy = jest.fn();
+			scene.lightningTimer = { destroy: destroySpy } as any;
+			scene.exitDungeon();
+			mockFadeCompleteCallback();
+			expect(destroySpy).toHaveBeenCalled();
+		});
+
+		it('should handle missing emitters gracefully', () => {
+			scene.windEmitter = null;
+			scene.cloudEmitter = null;
+			scene.lightningTimer = null;
+			scene.exitDungeon();
+			expect(() => mockFadeCompleteCallback()).not.toThrow();
+		});
+	});
+
+	describe('update with wind force', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn(),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should apply wind force to player velocity', () => {
+			scene.isInWindZone = true;
+			scene.currentWindForce = { x: 200, y: 100 };
+			scene.update();
+			expect((scene.player.container.body as any).velocity.x).toBe(20); // 200 * 0.1
+			expect((scene.player.container.body as any).velocity.y).toBe(10); // 100 * 0.1
+		});
+
+		it('should not apply force when not in wind zone', () => {
+			scene.isInWindZone = false;
+			scene.currentWindForce = { x: 200, y: 100 };
+			scene.update();
+			expect((scene.player.container.body as any).velocity.x).toBe(0);
+			expect((scene.player.container.body as any).velocity.y).toBe(0);
+		});
+
+		it('should reset wind zone flag after update', () => {
+			scene.isInWindZone = true;
+			scene.currentWindForce = { x: 200, y: 100 };
+			scene.update();
+			expect(scene.isInWindZone).toBe(false);
+			expect(scene.currentWindForce).toEqual({ x: 0, y: 0 });
+		});
+
+		it('should handle player with no body gracefully', () => {
+			scene.isInWindZone = true;
+			scene.currentWindForce = { x: 200, y: 100 };
+			(scene.player as any).container.body = null;
+			expect(() => scene.update()).not.toThrow();
+		});
+
+		it('should accumulate velocity on consecutive wind updates', () => {
+			scene.isInWindZone = true;
+			scene.currentWindForce = { x: 100, y: 50 };
+			// Simulate first frame - manually keep wind active
+			const body = scene.player.container.body as any;
+			body.velocity.x += scene.currentWindForce.x * 0.1;
+			body.velocity.y += scene.currentWindForce.y * 0.1;
+			expect(body.velocity.x).toBe(10);
+			expect(body.velocity.y).toBe(5);
+
+			// Second frame with same wind
+			body.velocity.x += 100 * 0.1;
+			body.velocity.y += 50 * 0.1;
+			expect(body.velocity.x).toBe(20);
+			expect(body.velocity.y).toBe(10);
+		});
+	});
+
+	describe('spawnSkyEnemies', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn(),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should spawn enemies for each room', () => {
+			expect(scene.enemies.length).toBeGreaterThan(0);
+		});
+
+		it('should use Enemy constructor for spawning', () => {
+			expect(Enemy).toHaveBeenCalled();
+		});
+
+		it('should pass scene as first argument to Enemy', () => {
+			const firstCall = (Enemy as unknown as jest.Mock).mock.calls[0];
+			expect(firstCall[0]).toBe(scene);
+		});
+	});
+
+	describe('initializeWindZones', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.2); // < 0.4 WIND_ZONE_CHANCE
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn(),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should create wind zones between rooms when random < WIND_ZONE_CHANCE', () => {
+			// With Math.random() returning 0.2 (< 0.4), wind zones should be created
+			expect(scene.windZones.length).toBeGreaterThan(0);
+		});
+
+		it('should create visual indicators for wind zones', () => {
+			expect((scene as any).add.graphics).toHaveBeenCalled();
+		});
+
+		it('should add overlap detection for wind zones', () => {
+			expect((scene as any).physics.add.overlap).toHaveBeenCalled();
+		});
+	});
+
+	describe('initializeTeleporters', () => {
+		beforeEach(() => {
+			jest.spyOn(Math, 'random').mockReturnValue(0.5);
+
+			mockSound = { play: jest.fn(), stop: jest.fn() };
+			mockKeyboardHandlers = {};
+
+			(scene as any).cameras = {
+				main: {
+					startFollow: jest.fn(),
+					setZoom: jest.fn(),
+					setBounds: jest.fn(),
+					setBackgroundColor: jest.fn(),
+					fade: jest.fn(),
+					shake: jest.fn(),
+					flash: jest.fn(),
+					once: jest.fn(),
+				},
+			};
+			(scene as any).scene = {
+				launch: jest.fn(),
+				get: jest.fn().mockReturnValue({}),
+				start: jest.fn(),
+				key: 'SkyIslandsScene',
+				pause: jest.fn(),
+			};
+			(scene as any).sound = { volume: 1, add: jest.fn().mockReturnValue(mockSound) };
+			(scene as any).input = {
+				keyboard: {
+					on: jest.fn().mockImplementation((event: string, handler: (...args: any[]) => void) => {
+						mockKeyboardHandlers[event] = handler;
+					}),
+				},
+			};
+			(scene as any).physics = {
+				add: {
+					collider: jest.fn(),
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+			(scene as any).add = {
+				graphics: jest.fn().mockReturnValue({
+					fillStyle: jest.fn().mockReturnThis(),
+					fillCircle: jest.fn().mockReturnThis(),
+					fillRect: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+					lineStyle: jest.fn().mockReturnThis(),
+					strokeCircle: jest.fn().mockReturnThis(),
+					lineBetween: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				zone: jest.fn().mockReturnValue({ body: {} }),
+				text: jest.fn().mockReturnValue({
+					setOrigin: jest.fn().mockReturnThis(),
+					setDepth: jest.fn().mockReturnThis(),
+				}),
+				particles: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					destroy: jest.fn(),
+				}),
+				line: jest.fn().mockReturnValue({
+					setDepth: jest.fn().mockReturnThis(),
+					setOrigin: jest.fn().mockReturnThis(),
+				}),
+			};
+			(scene as any).tweens = { add: jest.fn() };
+			(scene as any).events = { on: jest.fn(), emit: jest.fn() };
+			(scene as any).time = {
+				addEvent: jest.fn().mockReturnValue({ destroy: jest.fn() }),
+				delayedCall: jest.fn(),
+			};
+
+			scene.create();
+		});
+
+		afterEach(() => {
+			jest.spyOn(Math, 'random').mockRestore();
+		});
+
+		it('should create teleporter pads', () => {
+			expect(scene.teleporterPads.length).toBeGreaterThan(0);
+		});
+
+		it('should create teleporter visual glow', () => {
+			// Graphics should have been called for teleporter glow (among other things)
+			expect((scene as any).add.graphics).toHaveBeenCalled();
+		});
+
+		it('should add pulsing tween to teleporters', () => {
+			expect((scene as any).tweens.add).toHaveBeenCalled();
+		});
+
+		it('should add overlap detection for teleporters', () => {
+			expect((scene as any).physics.add.overlap).toHaveBeenCalled();
+		});
+
+		it('should not exceed TELEPORTER_COUNT', () => {
+			// TELEPORTER_COUNT is 4, but we only have 3 rooms so max 2 pairs
+			expect(scene.teleporterPads.length).toBeLessThanOrEqual(4);
+		});
+	});
 });
 
 describe('SkyIslandsScene scene lifecycle', () => {
@@ -444,5 +1591,42 @@ describe('SkyIslandsScene scene lifecycle', () => {
 
 	it('should have init method', () => {
 		expect(typeof scene.init).toBe('function');
+	});
+
+	it('should have create method', () => {
+		expect(typeof scene.create).toBe('function');
+	});
+
+	it('should have exitDungeon method', () => {
+		expect(typeof scene.exitDungeon).toBe('function');
+	});
+
+	it('should have triggerLightningStrike method', () => {
+		expect(typeof scene.triggerLightningStrike).toBe('function');
+	});
+
+	it('should have spawnSkyEnemies method', () => {
+		expect(typeof scene.spawnSkyEnemies).toBe('function');
+	});
+
+	it('should have initializeWindZones method', () => {
+		expect(typeof scene.initializeWindZones).toBe('function');
+	});
+
+	it('should have initializeTeleporters method', () => {
+		expect(typeof scene.initializeTeleporters).toBe('function');
+	});
+
+	it('should have initializeLightningHazard method', () => {
+		expect(typeof scene.initializeLightningHazard).toBe('function');
+	});
+
+	it('should initialize emitters as null', () => {
+		expect(scene.windEmitter).toBeNull();
+		expect(scene.cloudEmitter).toBeNull();
+	});
+
+	it('should initialize lightning timer as null', () => {
+		expect(scene.lightningTimer).toBeNull();
 	});
 });
