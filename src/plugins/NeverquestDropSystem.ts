@@ -1,13 +1,34 @@
+/**
+ * @fileoverview Item drop system for defeated enemies
+ *
+ * This file provides loot generation from entities:
+ * - Chance-based item drop calculations
+ * - Animated item spawning with float effect
+ * - Configurable drop pools per entity
+ *
+ * @see EntityDrops - Drop configuration model
+ * @see Item - Dropped item entity
+ * @see NeverquestBattleManager - Triggers drops on enemy death
+ *
+ * @module plugins/NeverquestDropSystem
+ */
+
 import { Item } from '../entities/Item';
 
-interface PlayerDrops {
+/**
+ * Item drop configuration
+ */
+export interface IDropConfig {
 	id: number;
 	chance: number;
 }
 
-interface EntityWithDrops extends Phaser.GameObjects.Sprite {
-	id: number;
-	drops: PlayerDrops[];
+/**
+ * Interface for entities that can drop items
+ */
+export interface IEntityWithDrops extends Phaser.GameObjects.Sprite {
+	id: string | number | null;
+	drops: IDropConfig[];
 	container: Phaser.GameObjects.Container;
 }
 
@@ -24,24 +45,24 @@ export class NeverquestDropSystem {
 	/**
 	 * The id of the entity that will drop something.
 	 */
-	entityId: number;
+	entityId: string | number | null;
 
 	/**
 	 * The Entity that will drop the items.
 	 */
-	entity: EntityWithDrops;
+	entity: IEntityWithDrops;
 
 	/**
 	 * The items that the entity will drop.
 	 */
-	drops: PlayerDrops[];
+	drops: IDropConfig[];
 
 	/**
 	 * Drops the items from an entity.
 	 */
 	dropItems: () => void;
 
-	constructor(scene: Phaser.Scene, entity: EntityWithDrops) {
+	constructor(scene: Phaser.Scene, entity: IEntityWithDrops) {
 		this.scene = scene;
 		this.entityId = entity.id;
 		this.entity = entity;

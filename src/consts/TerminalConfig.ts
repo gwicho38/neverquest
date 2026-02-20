@@ -1,4 +1,20 @@
 /**
+ * @fileoverview Terminal/debug mode configuration
+ *
+ * This file defines terminal-based game configuration:
+ * - Player symbol and color for terminal display
+ * - Enemy types with stats for terminal mode
+ * - Health, attack, and visual symbols
+ *
+ * Used for debug/terminal rendering of the game.
+ *
+ * @see Logger - Terminal output system
+ * @see DebugHelper - Debug visualization
+ *
+ * @module consts/TerminalConfig
+ */
+
+/**
  * Terminal game specific configuration constants
  */
 

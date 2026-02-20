@@ -1,6 +1,26 @@
 /**
- * NeverquestLightingManager Plugin
- * Implements atmospheric lighting with radial gradients, torch mechanics, and dynamic shadows
+ * @fileoverview Dynamic lighting system for Neverquest
+ *
+ * This plugin creates atmospheric lighting effects:
+ * - Ambient darkness overlay
+ * - Player torch/light source following
+ * - Static light sources (torches, lanterns)
+ * - Light flickering effects
+ * - Smooth light radius transitions
+ *
+ * Light source configuration:
+ * - radius: Light reach in pixels
+ * - color: Light tint color
+ * - intensity: Brightness level
+ * - flicker: Enable/disable flicker effect
+ *
+ * Uses RenderTexture for efficient per-pixel lighting.
+ *
+ * @see CaveScene - Uses dynamic lighting
+ * @see DungeonScene - Uses dynamic lighting
+ * @see NeverquestFogWarManager - Similar reveal pattern
+ *
+ * @module plugins/NeverquestLightingManager
  */
 
 import Phaser from 'phaser';

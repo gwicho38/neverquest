@@ -1,5 +1,37 @@
+/**
+ * @fileoverview Fog of war system for Neverquest
+ *
+ * This plugin creates a fog of war effect that reveals map areas:
+ * - Renders dark overlay covering unexplored areas
+ * - Reveals circular area around player position
+ * - Persists revealed areas (permanent reveal)
+ * - Smooth transition at fog edges
+ *
+ * Uses RenderTexture for efficient per-pixel fog rendering.
+ * Player position is tracked each frame to update revealed areas.
+ *
+ * Best used in dungeon/cave scenes for exploration feel.
+ * Can be disabled for open-world scenes.
+ *
+ * @see CaveScene - Uses fog of war
+ * @see DungeonScene - Uses fog of war
+ *
+ * @module plugins/NeverquestFogWarManager
+ */
+
 import { NumericColors } from '../consts/Colors';
 import { Alpha, Depth, Scale } from '../consts/Numbers';
+
+/**
+ * Interface for entities trackable by the fog of war system.
+ * Only requires container position for fog reveal calculations.
+ */
+interface IFogTrackable {
+	container: {
+		x: number;
+		y: number;
+	};
+}
 
 /**
  * @class
@@ -18,7 +50,7 @@ export class NeverquestFogWarManager {
 	/**
 	 * The player that will reveal the fog of war of the map.
 	 */
-	private player: any; // Player entity with container property
+	private player: IFogTrackable;
 
 	/**
 	 * This is the fog of war itself. This will be the texture to be used to make the cool
@@ -64,7 +96,7 @@ export class NeverquestFogWarManager {
 	 * @param map The map to cover with the fog of war.
 	 * @param player The player that will reveal the map with the mask.
 	 */
-	constructor(scene: Phaser.Scene, map: Phaser.Tilemaps.Tilemap, player: Phaser.Physics.Arcade.Sprite) {
+	constructor(scene: Phaser.Scene, map: Phaser.Tilemaps.Tilemap, player: IFogTrackable) {
 		this.scene = scene;
 		this.map = map;
 		this.player = player;

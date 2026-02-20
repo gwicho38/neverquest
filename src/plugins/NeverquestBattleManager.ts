@@ -30,6 +30,77 @@ import { HUDScene } from '../scenes/HUDScene';
 import { NumericColors } from '../consts/Colors';
 import { CombatNumbers, Alpha } from '../consts/Numbers';
 import { GameMessages } from '../consts/Messages';
+import { IEntityAttributes } from '../entities/EntityAttributes';
+import { NeverquestHealthBar } from './NeverquestHealthBar';
+import { NeverquestHUDProgressBar } from './HUD/NeverquestHUDProgressBar';
+
+/**
+ * Interface for scenes that support combat with player and enemies.
+ */
+interface ICombatScene extends Phaser.Scene {
+	/** Reference to player entity */
+	player?: ICombatEntity;
+	/** Array of enemy entities */
+	enemies?: ICombatEntity[];
+	/** Index signature for dynamic property access */
+	[key: string]: unknown;
+}
+
+/**
+ * Interface for entities that can participate in combat.
+ * Both Player and Enemy implement this interface.
+ */
+export interface ICombatEntity {
+	/** The entity's scene reference */
+	scene: Phaser.Scene;
+	/** Entity type identifier (e.g., "Player", "Enemy") */
+	entityName: string;
+	/** Combat and stat attributes */
+	attributes: IEntityAttributes;
+	/** Health bar display component */
+	healthBar: NeverquestHealthBar;
+	/** Container for physics positioning */
+	container: Phaser.GameObjects.Container;
+	/** Zone for hit detection */
+	hitZone: Phaser.GameObjects.Zone;
+	/** Animation state machine */
+	anims: Phaser.Animations.AnimationState;
+	/** Texture reference */
+	texture: Phaser.Textures.Texture;
+	/** Current animation frame */
+	frame: Phaser.Textures.Frame;
+	/** Horizontal flip state */
+	flipX: boolean;
+	/** Entity active state */
+	active: boolean;
+	/** Movement speed */
+	speed: number;
+
+	// Combat state flags
+	isAtacking: boolean;
+	canAtack: boolean;
+	canMove: boolean;
+	canTakeDamage: boolean;
+	isBlocking: boolean;
+	canBlock: boolean;
+	isSwimming: boolean;
+
+	// HUD reference (Player only, optional)
+	neverquestHUDProgressBar?: NeverquestHUDProgressBar | null;
+	// XP value (Enemy only, optional)
+	exp?: number;
+
+	// Methods
+	setTint(color: number): this;
+	clearTint(): this;
+	once(event: string | symbol, fn: (...args: unknown[]) => void, context?: unknown): this;
+	on(event: string | symbol, fn: (...args: unknown[]) => void, context?: unknown): this;
+	off(event: string | symbol, fn?: (...args: unknown[]) => void, context?: unknown): this;
+
+	// Enemy-specific methods (optional)
+	dropItems?(): void;
+	destroyAll?(): void;
+}
 
 /**
  * Manages all combat interactions in the game.
@@ -96,8 +167,9 @@ export class NeverquestBattleManager extends AnimationNames {
 
 	/**
 	 * The plugin that will make the hit effect to the player and enemy.
+	 * Uses PhaserJuice library for visual effects (no TypeScript definitions available).
 	 */
-	phaserJuice: any | null;
+	phaserJuice: InstanceType<typeof PhaserJuice> | null;
 
 	/**
 	 * The atack variation. This number represents a percentage of variation of the damage.
@@ -159,7 +231,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * template uses a 16x16 hitbox sprite.
 	 * @param atacker The atacker
 	 */
-	createHitBox(atacker: any): Phaser.Physics.Arcade.Sprite {
+	createHitBox(atacker: ICombatEntity): Phaser.Physics.Arcade.Sprite {
 		const hitbox = atacker.scene.physics.add.sprite(
 			atacker.container.x,
 			atacker.container.y,
@@ -171,6 +243,7 @@ export class NeverquestBattleManager extends AnimationNames {
 
 		hitbox.alpha = Alpha.LIGHT;
 		hitbox.depth = 50;
+		const hitZoneBody = atacker.hitZone.body as Phaser.Physics.Arcade.Body;
 		if (atacker.frame.name.includes(this.atackDirectionFrameName.up)) {
 			hitbox.body.setOffset(0, 4);
 			const rotation = -1.57;
@@ -179,7 +252,7 @@ export class NeverquestBattleManager extends AnimationNames {
 				rotation,
 				{
 					x: atacker.container.x,
-					y: atacker.container.y - atacker.hitZone.body.height / this.hitboxOffsetDividerY,
+					y: atacker.container.y - hitZoneBody.height / this.hitboxOffsetDividerY,
 				},
 				atacker
 			);
@@ -190,7 +263,7 @@ export class NeverquestBattleManager extends AnimationNames {
 				hitbox,
 				rotation,
 				{
-					x: atacker.container.x + atacker.hitZone.body.width,
+					x: atacker.container.x + hitZoneBody.width,
 					y: atacker.container.y,
 				},
 				atacker
@@ -203,7 +276,7 @@ export class NeverquestBattleManager extends AnimationNames {
 				rotation,
 				{
 					x: atacker.container.x,
-					y: atacker.container.y + atacker.hitZone.body.height / this.hitboxOffsetDividerY,
+					y: atacker.container.y + hitZoneBody.height / this.hitboxOffsetDividerY,
 				},
 				atacker
 			);
@@ -214,7 +287,7 @@ export class NeverquestBattleManager extends AnimationNames {
 				hitbox,
 				rotation,
 				{
-					x: atacker.container.x - atacker.hitZone.body.width,
+					x: atacker.container.x - hitZoneBody.width,
 					y: atacker.container.y,
 				},
 				atacker
@@ -234,7 +307,7 @@ export class NeverquestBattleManager extends AnimationNames {
 		hitbox: Phaser.Physics.Arcade.Sprite,
 		rotation: number,
 		position: { x: number; y: number },
-		_atacker: any
+		_atacker: ICombatEntity
 	): void {
 		hitbox.setRotation(rotation);
 		hitbox.setPosition(position.x, position.y);
@@ -246,7 +319,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * @param atacker Usually the atacker is the player.
 	 * @param target  Usually the target is the enemy.
 	 */
-	takeDamage(atacker: any, target: any): void {
+	takeDamage(atacker: ICombatEntity, target: ICombatEntity): void {
 		// Randomizes the name of the damage sound.
 		let damageName = this.damageSoundNames[Math.floor(Math.random() * this.damageSoundNames.length)];
 		let damage = this.randomDamage(atacker.attributes.atack - target.attributes.defense);
@@ -289,14 +362,16 @@ export class NeverquestBattleManager extends AnimationNames {
 					this.handlePlayerDeath(target);
 				} else {
 					// Enemy died
-					HUDScene.log(atacker.scene, GameMessages.ENEMY_DEFEATED_WITH_EXP(targetName, target.exp));
+					const enemyExp = target.exp ?? 0;
+					HUDScene.log(atacker.scene, GameMessages.ENEMY_DEFEATED_WITH_EXP(targetName, enemyExp));
 					if (atacker.entityName === ENTITIES.Player) {
-						ExpManager.addExp(atacker, target.exp);
+						// Cast through unknown to satisfy ExpManager.Entity interface which has additional Phaser sprite properties
+						ExpManager.addExp(atacker as unknown as Parameters<typeof ExpManager.addExp>[0], enemyExp);
 					}
-					setTimeout((_t) => {
-						if (target.entityName === this.enemyConstructorName) target.dropItems();
+					setTimeout(() => {
+						if (target.entityName === this.enemyConstructorName && target.dropItems) target.dropItems();
 						target.anims.stop();
-						target.destroyAll();
+						if (target.destroyAll) target.destroyAll();
 					}, 100);
 				}
 			}
@@ -368,7 +443,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * This method will perform the block routine, reducing incoming damage.
 	 * @param blocker the entity that will block.
 	 */
-	block(blocker: any): void {
+	block(blocker: ICombatEntity): void {
 		console.log('[BattleManager] Block called:', {
 			canBlock: blocker.canBlock,
 			canMove: blocker.canMove,
@@ -398,7 +473,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * This method will stop the block routine.
 	 * @param blocker the entity that will stop blocking.
 	 */
-	stopBlock(blocker: any): void {
+	stopBlock(blocker: ICombatEntity): void {
 		console.log('[BattleManager] StopBlock called:', {
 			isBlocking: blocker.isBlocking,
 			canBlock: blocker.canBlock,
@@ -433,7 +508,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * The atacker should have a body in order to stop him from walking as the movement is expected to be done with Velocity.
 	 * @param atacker the atacker.
 	 */
-	atack(atacker: any): void {
+	atack(atacker: ICombatEntity): void {
 		console.log('[BattleManager] Attack attempted:', {
 			canAtack: atacker.canAtack,
 			canMove: atacker.canMove,
@@ -477,13 +552,14 @@ export class NeverquestBattleManager extends AnimationNames {
 			}
 
 			// Stores the enemies that where atacked on the current animation.
-			const atackedEnemies: any[] = [];
+			const atackedEnemies: ICombatEntity[] = [];
 			// Destroys the slash atack if the atacker dies.
-			atacker.scene.events.on('update', (_update: any) => {
+			atacker.scene.events.on('update', () => {
 				if (hitBoxSprite && hitBoxSprite.active && atacker && !atacker.active) {
 					hitBoxSprite.destroy();
 				}
 
+				const combatScene = atacker.scene as ICombatScene;
 				if (
 					hitBoxSprite &&
 					hitBoxSprite.active &&
@@ -493,17 +569,18 @@ export class NeverquestBattleManager extends AnimationNames {
 				) {
 					atacker.scene.physics.overlap(
 						hitBoxSprite,
-						atacker.scene[this.enemiesVariableName],
+						combatScene[this.enemiesVariableName] as Phaser.Physics.Arcade.Sprite[],
 
-						(_h: any, enemy: any) => {
-							this.takeDamage(atacker, enemy);
-							enemy.canTakeDamage = false;
+						(_h, enemy) => {
+							const enemyEntity = enemy as unknown as ICombatEntity;
+							this.takeDamage(atacker, enemyEntity);
+							enemyEntity.canTakeDamage = false;
 							// Note: canAtack is already false from line 396, don't set it again here
 							// as it can override the animation completion handler that restores it
-							atackedEnemies.push(enemy);
+							atackedEnemies.push(enemyEntity);
 						},
-						(_h: any, enemy: any) => {
-							return enemy.canTakeDamage;
+						(_h, enemy) => {
+							return (enemy as unknown as ICombatEntity).canTakeDamage;
 						}
 					);
 				} else if (
@@ -513,28 +590,28 @@ export class NeverquestBattleManager extends AnimationNames {
 					atacker.active &&
 					atacker.entityName === this.enemyConstructorName
 				) {
+					const playerEntity = combatScene[this.playerVariableName] as ICombatEntity;
 					atacker.scene.physics.overlap(
 						hitBoxSprite,
-						atacker.scene[this.playerVariableName].hitZone,
-						(_h: any, _e: any) => {
-							const enemy = atacker.scene[this.playerVariableName];
-							this.takeDamage(atacker, enemy);
-							enemy.canTakeDamage = false;
-							atackedEnemies.push(enemy);
+						playerEntity.hitZone,
+						() => {
+							this.takeDamage(atacker, playerEntity);
+							playerEntity.canTakeDamage = false;
+							atackedEnemies.push(playerEntity);
 							// Note: canAtack is already false from line 396, don't set it again here
 							// if (atacker.anims.getProgress() === 1) {
 							// as it can override the animation completion handler that restores it
 							// }
 						},
-						(_h: any, _e: any) => {
-							const enemy = atacker.scene[this.playerVariableName];
-							return enemy.canTakeDamage;
+						() => {
+							return playerEntity.canTakeDamage;
 						}
 					);
 				}
 			});
 			// Animations events have to come before the animation is played, they are triggered propperly.
-			atacker.once(Phaser.Animations.Events.ANIMATION_START, (start: any) => {
+			atacker.once(Phaser.Animations.Events.ANIMATION_START, (...args: unknown[]) => {
+				const start = args[0] as Phaser.Animations.Animation;
 				if (
 					start.key === `${texture}-${this.atkPrefixAnimation}-${atackAnimation[2]}` &&
 					atacker.entityName === this.PlayerConstructorName
@@ -545,7 +622,8 @@ export class NeverquestBattleManager extends AnimationNames {
 
 			// Create a handler we can reference for removal
 			let attackCompleted = false;
-			const completeAttackHandler = (animationState: any) => {
+			const completeAttackHandler = (...args: unknown[]) => {
+				const animationState = args[0] as Phaser.Animations.Animation;
 				console.log('[BattleManager] Animation complete event:', {
 					animKey: animationState.key,
 					expectedKey: `${texture}-${this.atkPrefixAnimation}-${atackAnimation[2]}`,
@@ -639,7 +717,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * Resets the 'canTakeDamage' state to true.
 	 * @param atackedEnemies
 	 */
-	resetEnemyState(atackedEnemies: any[]): void {
+	resetEnemyState(atackedEnemies: ICombatEntity[]): void {
 		if (atackedEnemies && atackedEnemies.length) {
 			atackedEnemies.forEach((e) => {
 				e.canTakeDamage = true;
@@ -651,7 +729,7 @@ export class NeverquestBattleManager extends AnimationNames {
 	 * Handles player death by launching the GameOver scene
 	 * @param player The player entity that died
 	 */
-	handlePlayerDeath(player: any): void {
+	handlePlayerDeath(player: ICombatEntity): void {
 		console.log('[BattleManager] Player died - triggering game over');
 
 		// Disable player controls
@@ -664,9 +742,10 @@ export class NeverquestBattleManager extends AnimationNames {
 
 		// Fade out music if it exists
 		const scene = player.scene;
-		if (scene.themeSound && scene.themeSound.isPlaying) {
+		const sceneWithSound = scene as Phaser.Scene & { themeSound?: Phaser.Sound.BaseSound };
+		if (sceneWithSound.themeSound && sceneWithSound.themeSound.isPlaying) {
 			scene.tweens.add({
-				targets: scene.themeSound,
+				targets: sceneWithSound.themeSound,
 				volume: 0,
 				duration: 1000,
 				ease: 'Power2',

@@ -1,26 +1,75 @@
+/**
+ * @fileoverview Virtual joystick touch controls for mobile play
+ *
+ * This scene renders touch controls for mobile devices:
+ * - Movement joystick (analog stick)
+ * - Attack button
+ * - Block button
+ * - Jump/roll buttons
+ *
+ * Runs as overlay on gameplay scenes.
+ * Uses VirtualJoystickPlugin for input handling.
+ *
+ * @see VirtualJoystickPlugin - Touch input processing
+ * @see NeverquestMovement - Receives joystick input
+ * @see NeverquestBattleManager - Receives button input
+ *
+ * @module scenes/JoystickScene
+ */
+
 import Phaser from 'phaser';
 import joystick from '../plugins/VirtualJoystick/VirtualJoystickPlugin';
 import joystick_atlas_image from '../assets/sprites/joystick-0.png';
 import joystick_json from '../assets/sprites/joystick.json';
-import { NeverquestBattleManager } from '../plugins/NeverquestBattleManager';
+import { NeverquestBattleManager, type ICombatEntity } from '../plugins/NeverquestBattleManager';
 import { JoystickValues } from '../consts/Numbers';
+import type VirtualJoystick from '../plugins/VirtualJoystick/VirtualJoystickPlugin';
+import type Stick from '../plugins/VirtualJoystick/Stick';
+import type HiddenStick from '../plugins/VirtualJoystick/HiddenStick';
+import type Button from '../plugins/VirtualJoystick/Button';
+
+/**
+ * Interface for resize event data from Phaser Scale Manager
+ */
+interface IResizeEventData {
+	width: number;
+	height: number;
+}
+
+/**
+ * Minimal interface for player used in JoystickScene
+ * Uses only the properties actually needed for button actions
+ */
+interface IJoystickPlayer {
+	active?: boolean;
+	canAtack?: boolean;
+	isAtacking?: boolean;
+	[key: string]: unknown; // Allow additional properties
+}
+
+/**
+ * Interface for JoystickScene init arguments
+ */
+interface IJoystickSceneInitArgs {
+	player: IJoystickPlayer;
+}
 
 export class JoystickScene extends Phaser.Scene {
 	useOnScreenControls: boolean;
-	player: any;
-	stick: any;
+	player: IJoystickPlayer | null;
+	stick: HiddenStick | null;
 	buttonAName: string;
 	buttonBName: string;
-	buttonA: any;
-	buttonB: any;
+	buttonA: Button | null;
+	buttonB: Button | null;
 	atlasName: string;
 	isMobile: boolean;
 	stickPositionMultiplier: number;
 	buttonAMultiplierXposition: number;
 	buttonAMultiplierYposition: number;
 	neverquestBattleManager: NeverquestBattleManager | null;
-	phantomStick: any;
-	pad: any;
+	phantomStick: Stick | null;
+	pad!: VirtualJoystick;
 
 	constructor() {
 		super({
@@ -48,7 +97,7 @@ export class JoystickScene extends Phaser.Scene {
 		this.load.atlas(this.atlasName, joystick_atlas_image, joystick_json);
 	}
 
-	init(args: any): void {
+	init(args: IJoystickSceneInitArgs): void {
 		this.player = args.player;
 	}
 
@@ -99,7 +148,7 @@ export class JoystickScene extends Phaser.Scene {
 				}
 			});
 
-			this.scale.on('resize', (resize: any) => {
+			this.scale.on('resize', (resize: IResizeEventData) => {
 				if (this.stick) {
 					const position_resized =
 						Math.sqrt(resize.width ** 2 + resize.height ** 2) * this.stickPositionMultiplier;
@@ -128,7 +177,9 @@ export class JoystickScene extends Phaser.Scene {
 		if (this.buttonA) {
 			this.buttonA.on('down', () => {
 				if (this.player && this.player.active && this.player.canAtack && !this.player.isAtacking) {
-					this.neverquestBattleManager.atack(this.player);
+					// At runtime this.player is a full Player object with all required properties
+					// The IJoystickPlayer interface is just for type-safe property access
+					this.neverquestBattleManager!.atack(this.player as unknown as ICombatEntity);
 				}
 			});
 		}

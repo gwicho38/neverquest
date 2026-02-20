@@ -1,3 +1,18 @@
+/**
+ * @fileoverview Game introduction dialog
+ *
+ * This dialog plays at game start introducing:
+ * - Game Master welcome message
+ * - Lucius (player character) introduction
+ * - Future Lucius mysterious encounter
+ * - Hints about exploration and treasure
+ *
+ * @see NeverquestDialogBox - Displays dialogs
+ * @see Chats - Dialog registry
+ *
+ * @module consts/DB_SEED/chats/IntroductionChat
+ */
+
 export default {
 	id: 1,
 	chat: [

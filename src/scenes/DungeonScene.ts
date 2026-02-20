@@ -1,3 +1,24 @@
+/**
+ * @fileoverview Procedurally generated dungeon scene for Neverquest
+ *
+ * This scene creates randomized dungeon layouts featuring:
+ * - Procedural room and corridor generation
+ * - Fog of war exploration
+ * - Dynamic torch lighting
+ * - AI pathfinding for enemies
+ * - Line-of-sight detection
+ * - Exit portal to previous scene
+ *
+ * Roguelike experience with each run generating a unique map.
+ *
+ * @see NeverquestDungeonGenerator - Procedural layout
+ * @see NeverquestFogWarManager - Fog of war
+ * @see NeverquestLightingManager - Dynamic lighting
+ * @see NeverquestPathfinding - Enemy AI navigation
+ *
+ * @module scenes/DungeonScene
+ */
+
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { NeverquestDungeonGenerator } from '../plugins/NeverquestDungeonGenerator';

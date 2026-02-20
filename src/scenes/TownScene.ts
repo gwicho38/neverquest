@@ -1,3 +1,22 @@
+/**
+ * @fileoverview Village/town scene for Neverquest
+ *
+ * This scene represents a safe village area featuring:
+ * - Town tilemap with buildings and NPCs
+ * - No enemy encounters (safe zone)
+ * - NPC dialog interactions
+ * - Warp back to Overworld
+ * - Save point location
+ *
+ * Hub for story progression and NPC interactions in Act 1.
+ *
+ * @see OverworldScene - Connected forest area
+ * @see NeverquestDialogBox - NPC conversations
+ * @see NeverquestTiledInfoBox - Dialog triggers
+ *
+ * @module scenes/TownScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestWarp } from '../plugins/NeverquestWarp';
 import { NeverquestObjectMarker } from '../plugins/NeverquestObjectMarker';
@@ -8,15 +27,17 @@ import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
 import { CameraValues, Alpha } from '../consts/Numbers';
 import { SaveMessages } from '../consts/Messages';
+import { Player } from '../entities/Player';
+import { ISystemsWithAnimatedTiles } from '../types/SceneTypes';
 
 export class TownScene extends Phaser.Scene {
-	player: any;
+	player: Player | null;
 	mapCreator: NeverquestMapCreator | null;
 	map: Phaser.Tilemaps.Tilemap | null;
 	joystickScene: Phaser.Scene | null;
 	particles: NeverquestEnvironmentParticles | null;
 	themeSound: Phaser.Sound.BaseSound | null;
-	enemies: any[];
+	enemies: Phaser.GameObjects.GameObject[];
 	neverquestEnemyZones: NeverquestEnemyZones | null;
 	saveManager: NeverquestSaveManager | null;
 
@@ -69,7 +90,7 @@ export class TownScene extends Phaser.Scene {
 
 		this.scene.launch('HUDScene', { player: this.player, map: this.mapCreator.map });
 
-		(this.sys as any).animatedTiles.init(this.mapCreator.map);
+		(this.sys as ISystemsWithAnimatedTiles).animatedTiles?.init(this.mapCreator.map);
 		this.particles = new NeverquestEnvironmentParticles(this, this.mapCreator.map);
 		this.particles.create();
 

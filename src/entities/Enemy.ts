@@ -1,3 +1,25 @@
+/**
+ * @fileoverview Enemy entity class for hostile creatures
+ *
+ * This class represents all hostile NPCs in the game:
+ * - Configuration-driven enemy types (rat, bat, ogre, etc.)
+ * - AI behavior (patrol, chase, attack)
+ * - Pathfinding integration for navigation
+ * - Line-of-sight detection for player awareness
+ * - Health bar display
+ * - Drop system for loot
+ * - Experience rewards on death
+ *
+ * Extends BaseEntity for common entity functionality.
+ *
+ * @see EnemiesSeedConfig - Enemy type definitions
+ * @see NeverquestPathfinding - AI navigation
+ * @see NeverquestLineOfSight - Player detection
+ * @see NeverquestBattleManager - Combat handling
+ *
+ * @module entities/Enemy
+ */
+
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
 import { NeverquestAnimationManager } from '../plugins/NeverquestAnimationManager';
@@ -12,6 +34,40 @@ import { EnemiesSeedConfig } from '../consts/enemies/EnemiesSeedConfig';
 import { IEnemyConfig } from '../types/EnemyTypes';
 import { EntitySpeed, AnimationTiming, CombatNumbers } from '../consts/Numbers';
 import { ErrorMessages } from '../consts/Messages';
+import { EntityDrops } from '../models/EntityDrops';
+
+/**
+ * Interface for player-like game objects with required properties for combat
+ */
+interface ITargetEntity {
+	entityName: string;
+	container: Phaser.GameObjects.Container;
+	hitZone: Phaser.GameObjects.Zone;
+}
+
+/**
+ * Interface for scene with line-of-sight system
+ */
+interface ISceneWithLineOfSight extends Phaser.Scene {
+	lineOfSight?: {
+		isVisible: (x1: number, y1: number, x2: number, y2: number) => boolean;
+	};
+}
+
+/**
+ * Interface for scene with pathfinding system
+ */
+interface ISceneWithPathfinding extends Phaser.Scene {
+	pathfinding?: {
+		findPath: (
+			startX: number,
+			startY: number,
+			endX: number,
+			endY: number,
+			callback: (path: Phaser.Math.Vector2[] | null) => void
+		) => void;
+	};
+}
 
 export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	// BaseEntity properties
@@ -39,7 +95,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	public atack: number;
 	public defense: number;
 	public speed: number;
-	public drops: any[];
+	public drops: EntityDrops[];
 	public exp: number;
 	public neverquestAnimationManager: NeverquestAnimationManager;
 	public neverquestBattleManager: NeverquestBattleManager;
@@ -100,13 +156,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 		this.hitZone = this.scene.add.zone(0, 0, this.width, this.height);
 		this.scene.physics.add.existing(this.hitZone);
 
-		this.healthBar = new NeverquestHealthBar(
-			this.scene,
-			0,
-			0,
-			this.attributes.health,
-			this.attributes.maxHealth
-		) as any;
+		this.healthBar = new NeverquestHealthBar(this.scene, 0, 0, this.attributes.health, this.attributes.maxHealth);
 
 		this.x = 0;
 		this.y = 0;
@@ -126,7 +176,8 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 
 		this.anims.play(idleAnimation);
 		this.scene.events.on('update', this.onUpdate, this);
-		Object.assign(this, new (NeverquestDropSystem as any)(scene, this, enemyConfig));
+		// Mix in drop system functionality
+		Object.assign(this, new NeverquestDropSystem(scene, this));
 	}
 
 	public setAttributes(attributes: IEnemyConfig): void {
@@ -159,9 +210,10 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 		let enemiesInRange = this.scene.physics.overlapCirc(this.container.x, this.container.y, this.perceptionRange);
 
 		for (let target of enemiesInRange) {
-			if (target && target.gameObject && (target.gameObject as any).entityName === ENTITIES.Player) {
+			const targetEntity = target.gameObject as unknown as ITargetEntity;
+			if (target && target.gameObject && targetEntity.entityName === ENTITIES.Player) {
 				// Check line-of-sight if available
-				const sceneWithLOS = this.scene as any;
+				const sceneWithLOS = this.scene as ISceneWithLineOfSight;
 				let hasLineOfSight = true; // Default to true for backward compatibility
 
 				if (sceneWithLOS.lineOfSight) {
@@ -169,15 +221,15 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 					hasLineOfSight = sceneWithLOS.lineOfSight.isVisible(
 						this.container.x,
 						this.container.y,
-						(target.gameObject as any).container.x,
-						(target.gameObject as any).container.y
+						targetEntity.container.x,
+						targetEntity.container.y
 					);
 				}
 
 				// Only pursue if we can see the player
 				if (hasLineOfSight) {
 					let overlaps = false;
-					this.scene.physics.overlap((target.gameObject as any).hitZone, this, (_t: any, _enemy: any) => {
+					this.scene.physics.overlap(targetEntity.hitZone, this, () => {
 						overlaps = true;
 						this.stopMovement();
 						if (this.canAtack) this.neverquestBattleManager.atack(this);
@@ -186,12 +238,12 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 					inRange = true;
 					if (!overlaps && !this.isAtacking) {
 						// Try to use pathfinding if available
-						const sceneWithPathfinding = this.scene as any;
+						const sceneWithPathfinding = this.scene as ISceneWithPathfinding;
 						if (sceneWithPathfinding.pathfinding) {
-							this.followPathToTarget((target.gameObject as any).container);
+							this.followPathToTarget(targetEntity.container);
 						} else {
 							// Fallback to direct movement (old behavior)
-							this.moveDirectlyToTarget((target.gameObject as any).container);
+							this.moveDirectlyToTarget(targetEntity.container);
 						}
 					}
 				}
@@ -224,7 +276,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 				const velocity = this.scene.physics.velocityFromAngle(Phaser.Math.RadToDeg(angle), this.speed);
 				const body = this.container.body as Phaser.Physics.Arcade.Body;
 				body.setVelocity(velocity.x, velocity.y);
-				(this.neverquestAnimationManager as any).animateWithAngle(
+				this.neverquestAnimationManager.animateWithAngle(
 					`${this.texture.key}-${this.walkPrefixAnimation}`,
 					angle
 				);
@@ -245,10 +297,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 		const body = this.container.body as Phaser.Physics.Arcade.Body;
 		const angle = Math.atan2(body.velocity.y, body.velocity.x);
 
-		(this.neverquestAnimationManager as any).animateWithAngle(
-			`${this.texture.key}-${this.walkPrefixAnimation}`,
-			angle
-		);
+		this.neverquestAnimationManager.animateWithAngle(`${this.texture.key}-${this.walkPrefixAnimation}`, angle);
 		this.changeBodySize(this.width, this.height);
 	}
 
@@ -257,7 +306,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 	 */
 	private followPathToTarget(target: Phaser.GameObjects.Container): void {
 		const now = this.scene.time.now;
-		const sceneWithPathfinding = this.scene as any;
+		const sceneWithPathfinding = this.scene as ISceneWithPathfinding;
 
 		// Update path periodically or if we don't have one
 		if (!this.currentPath || now - this.lastPathUpdate > this.pathUpdateInterval) {
@@ -295,7 +344,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 				const body = this.container.body as Phaser.Physics.Arcade.Body;
 				body.setVelocity(velocity.x, velocity.y);
 
-				(this.neverquestAnimationManager as any).animateWithAngle(
+				this.neverquestAnimationManager.animateWithAngle(
 					`${this.texture.key}-${this.walkPrefixAnimation}`,
 					angle
 				);
@@ -308,7 +357,7 @@ export class Enemy extends Phaser.Physics.Arcade.Sprite implements IBaseEntity {
 		const body = this.container.body as Phaser.Physics.Arcade.Body;
 		body.setAcceleration(0, 0);
 		body.setVelocity(0, 0);
-		(this.neverquestAnimationManager as any).setIdleAnimation();
+		this.neverquestAnimationManager.setIdleAnimation();
 		this.changeBodySize(this.width, this.height);
 	}
 

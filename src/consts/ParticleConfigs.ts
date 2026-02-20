@@ -1,6 +1,21 @@
 /**
- * Particle Effect Configurations
- * Reusable particle emitter configurations for spells, combat, and environmental effects
+ * @fileoverview Particle emitter configurations for visual effects
+ *
+ * This file defines reusable particle configurations for:
+ * - Fire spells: Fireball, Fire Trail, Flame Wave
+ * - Ice spells: Ice Shard, Frost Nova, Frozen Ground
+ * - Lightning spells: Lightning Bolt, Static Field
+ * - Holy spells: Heal, Divine Shield, Resurrection
+ * - Dark spells: Poison Cloud, Shadow Bolt, Curse
+ * - Combat effects: Hit impacts, blocks, deaths
+ *
+ * All configurations use Phaser particle emitter format.
+ *
+ * @see SpellEffects - Uses spell particle configs
+ * @see CombatEffects - Uses combat particle configs
+ * @see NeverquestEnvironmentParticles - Ambient effects
+ *
+ * @module consts/ParticleConfigs
  */
 
 import Phaser from 'phaser';
@@ -18,7 +33,7 @@ export const FIREBALL_PARTICLE: ParticleConfig = {
 	lifespan: { min: 300, max: 600 },
 	gravityY: -50,
 	tint: [0xff6600, 0xff3300, 0xff0000],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const FIRE_TRAIL_PARTICLE: ParticleConfig = {
@@ -28,7 +43,7 @@ export const FIRE_TRAIL_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.8, end: 0 },
 	lifespan: 400,
 	tint: [0xff8800, 0xff4400],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 	frequency: 30,
 };
 
@@ -39,7 +54,7 @@ export const FLAME_WAVE_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: 800,
 	tint: [0xffaa00, 0xff5500, 0xdd0000],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 /**
@@ -52,7 +67,7 @@ export const ICE_SHARD_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 400, max: 700 },
 	tint: [0x88ccff, 0x4499ff, 0x0066cc],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const FROST_NOVA_PARTICLE: ParticleConfig = {
@@ -62,7 +77,7 @@ export const FROST_NOVA_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 500, max: 900 },
 	tint: [0xaaddff, 0x66aaff, 0x0088ff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const FROZEN_GROUND_PARTICLE: ParticleConfig = {
@@ -72,7 +87,7 @@ export const FROZEN_GROUND_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.6, end: 0 },
 	lifespan: { min: 2000, max: 3000 },
 	tint: [0xccddff, 0x88ccff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 	frequency: 100,
 };
 
@@ -86,7 +101,7 @@ export const LIGHTNING_BOLT_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 100, max: 300 },
 	tint: [0xffffff, 0xaaccff, 0x6699ff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const CHAIN_LIGHTNING_PARTICLE: ParticleConfig = {
@@ -95,7 +110,7 @@ export const CHAIN_LIGHTNING_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: 200,
 	tint: [0xffffff, 0xccddff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const STATIC_FIELD_PARTICLE: ParticleConfig = {
@@ -105,7 +120,7 @@ export const STATIC_FIELD_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.8, end: 0 },
 	lifespan: { min: 300, max: 600 },
 	tint: [0xffffff, 0x99ccff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 	frequency: 50,
 };
 
@@ -120,7 +135,7 @@ export const HEAL_PARTICLE: ParticleConfig = {
 	lifespan: { min: 800, max: 1200 },
 	gravityY: -100,
 	tint: [0xffee88, 0xffdd44, 0xffcc00],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const DIVINE_SHIELD_PARTICLE: ParticleConfig = {
@@ -130,7 +145,7 @@ export const DIVINE_SHIELD_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.8, end: 0 },
 	lifespan: { min: 1000, max: 1500 },
 	tint: [0xffffaa, 0xffee66],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 	frequency: 80,
 };
 
@@ -142,7 +157,7 @@ export const RESURRECTION_PARTICLE: ParticleConfig = {
 	lifespan: { min: 1000, max: 1500 },
 	gravityY: -150,
 	tint: [0xffffff, 0xffffdd, 0xffee99],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 /**
@@ -155,7 +170,7 @@ export const POISON_CLOUD_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.6, end: 0 },
 	lifespan: { min: 2000, max: 3000 },
 	tint: [0x44ff44, 0x00cc00, 0x008800],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 	frequency: 100,
 };
 
@@ -166,7 +181,7 @@ export const SHADOW_BOLT_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.8, end: 0 },
 	lifespan: { min: 300, max: 600 },
 	tint: [0x8844ff, 0x6622cc, 0x440099],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 };
 
 export const CURSE_PARTICLE: ParticleConfig = {
@@ -177,7 +192,7 @@ export const CURSE_PARTICLE: ParticleConfig = {
 	lifespan: { min: 800, max: 1200 },
 	gravityY: 50,
 	tint: [0x663399, 0x441166],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 	frequency: 80,
 };
 
@@ -191,7 +206,7 @@ export const HIT_IMPACT_PHYSICAL: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 200, max: 400 },
 	tint: [0xffffff, 0xcccccc],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 };
 
 export const HIT_IMPACT_FIRE: ParticleConfig = {
@@ -201,7 +216,7 @@ export const HIT_IMPACT_FIRE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 300, max: 500 },
 	tint: [0xff8800, 0xff3300, 0xcc0000],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const HIT_IMPACT_ICE: ParticleConfig = {
@@ -211,7 +226,7 @@ export const HIT_IMPACT_ICE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 400, max: 600 },
 	tint: [0xaaddff, 0x4499ff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const HIT_IMPACT_LIGHTNING: ParticleConfig = {
@@ -221,7 +236,7 @@ export const HIT_IMPACT_LIGHTNING: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 150, max: 300 },
 	tint: [0xffffff, 0xccddff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const CRITICAL_HIT_PARTICLE: ParticleConfig = {
@@ -231,7 +246,7 @@ export const CRITICAL_HIT_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 300, max: 600 },
 	tint: [0xffff00, 0xffaa00, 0xff8800],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const BLOCK_PARRY_PARTICLE: ParticleConfig = {
@@ -241,7 +256,7 @@ export const BLOCK_PARRY_PARTICLE: ParticleConfig = {
 	alpha: { start: 1, end: 0 },
 	lifespan: { min: 200, max: 400 },
 	tint: [0xffffcc, 0xffffaa],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const DEATH_EXPLOSION_PARTICLE: ParticleConfig = {
@@ -252,7 +267,7 @@ export const DEATH_EXPLOSION_PARTICLE: ParticleConfig = {
 	lifespan: { min: 500, max: 1000 },
 	gravityY: 100,
 	tint: [0xffcccc, 0xff8888, 0xff4444],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 };
 
 export const BLOOD_SPLATTER_PARTICLE: ParticleConfig = {
@@ -263,7 +278,7 @@ export const BLOOD_SPLATTER_PARTICLE: ParticleConfig = {
 	lifespan: { min: 400, max: 800 },
 	gravityY: 200,
 	tint: [0xcc0000, 0x990000],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 };
 
 /**
@@ -276,7 +291,7 @@ export const RAIN_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.6, end: 0.3 },
 	lifespan: 2000,
 	tint: [0x88ccff, 0xaaddff],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 	gravityY: 300,
 };
 
@@ -287,7 +302,7 @@ export const SNOW_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.8, end: 0.5 },
 	lifespan: 5000,
 	tint: [0xffffff, 0xeeeeff],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 	gravityY: 30,
 };
 
@@ -299,7 +314,7 @@ export const LAVA_BUBBLE_PARTICLE: ParticleConfig = {
 	lifespan: { min: 1000, max: 2000 },
 	gravityY: -20,
 	tint: [0xff6600, 0xff3300, 0xcc0000],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 };
 
 export const WATER_SPLASH_PARTICLE: ParticleConfig = {
@@ -310,7 +325,7 @@ export const WATER_SPLASH_PARTICLE: ParticleConfig = {
 	lifespan: { min: 300, max: 600 },
 	gravityY: 300,
 	tint: [0x88ccff, 0x66aaee],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 };
 
 export const TORCH_FLAME_PARTICLE: ParticleConfig = {
@@ -321,7 +336,7 @@ export const TORCH_FLAME_PARTICLE: ParticleConfig = {
 	lifespan: { min: 400, max: 800 },
 	gravityY: -50,
 	tint: [0xffaa66, 0xff8844, 0xff6622],
-	blendMode: 'ADD' as any,
+	blendMode: 'ADD',
 	frequency: 50,
 };
 
@@ -332,7 +347,7 @@ export const DUST_CLOUD_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.4, end: 0 },
 	lifespan: { min: 600, max: 1000 },
 	tint: [0xaa9988, 0x998877],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 };
 
 export const FOG_MIST_PARTICLE: ParticleConfig = {
@@ -342,7 +357,7 @@ export const FOG_MIST_PARTICLE: ParticleConfig = {
 	alpha: { start: 0.3, end: 0 },
 	lifespan: { min: 4000, max: 6000 },
 	tint: [0xcccccc, 0xaaaaaa],
-	blendMode: 'NORMAL' as any,
+	blendMode: 'NORMAL',
 	frequency: 200,
 };
 
@@ -369,7 +384,7 @@ export function createCustomParticleConfig(overrides: Partial<ParticleConfig>): 
 		scale: { start: 1, end: 0.1 },
 		alpha: { start: 1, end: 0 },
 		lifespan: 500,
-		blendMode: 'NORMAL' as any,
+		blendMode: 'NORMAL',
 	};
 
 	return { ...base, ...overrides };

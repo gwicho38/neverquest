@@ -1,9 +1,41 @@
 /**
- * Crash Reporter for Electron App
- * Handles error logging, crash reporting, and user feedback
+ * @fileoverview Crash reporting and error handling for Neverquest
+ *
+ * This utility handles error capture and reporting:
+ * - Captures unhandled exceptions
+ * - Sanitizes game state for reports
+ * - Collects platform and architecture info
+ * - Limits object depth for safe serialization
+ * - Version tracking
+ *
+ * Designed for Electron app integration.
+ *
+ * @see Logger - Logging integration
+ *
+ * @module utils/CrashReporter
  */
 
 import { ArchitectureConstants, PlatformConstants, UserAgentArchDetection } from '../consts/Messages';
+
+/**
+ * Represents sanitized game state for crash reports.
+ * Uses unknown for maximum flexibility while maintaining type safety.
+ */
+export type GameStateData = unknown;
+
+/**
+ * Type for arbitrary objects that need depth limiting
+ */
+type DeepObject = Record<string, unknown> | unknown[] | unknown;
+
+/**
+ * Extended Window interface for app version
+ */
+declare global {
+	interface Window {
+		APP_VERSION?: string;
+	}
+}
 
 export interface CrashReport {
 	timestamp: string;
@@ -17,7 +49,7 @@ export interface CrashReport {
 	};
 	userAgent?: string;
 	memoryUsage?: NodeJS.MemoryUsage;
-	gameState?: any;
+	gameState?: GameStateData;
 }
 
 export class CrashReporter {
@@ -45,7 +77,7 @@ export class CrashReporter {
 			});
 
 			// Handle unhandled promise rejections
-			process.on('unhandledRejection', (reason: any, _promise: Promise<any>) => {
+			process.on('unhandledRejection', (reason: unknown, _promise: Promise<unknown>) => {
 				const error = reason instanceof Error ? reason : new Error(String(reason));
 				this.reportCrash('unhandledRejection', error);
 			});
@@ -66,7 +98,7 @@ export class CrashReporter {
 		}
 	}
 
-	public reportCrash(type: string, error: Error, gameState?: any): void {
+	public reportCrash(type: string, error: Error, gameState?: GameStateData): void {
 		const crashReport: CrashReport = {
 			timestamp: new Date().toISOString(),
 			version: this.getAppVersion(),
@@ -100,8 +132,8 @@ export class CrashReporter {
 
 	private getAppVersion(): string {
 		// Try to get version from package.json or window object
-		if (typeof window !== 'undefined' && (window as any).APP_VERSION) {
-			return (window as any).APP_VERSION;
+		if (typeof window !== 'undefined' && window.APP_VERSION) {
+			return window.APP_VERSION;
 		}
 		return '0.1.1'; // Default version
 	}
@@ -146,24 +178,27 @@ export class CrashReporter {
 		return undefined;
 	}
 
-	private sanitizeGameState(gameState: any): any {
+	private sanitizeGameState(gameState: GameStateData): GameStateData {
 		// Remove sensitive data from game state
 		if (!gameState || typeof gameState !== 'object') {
 			return gameState;
 		}
 
-		const sanitized = { ...gameState };
+		const sanitized = { ...(gameState as Record<string, unknown>) };
 
-		// Remove potentially sensitive data
-		delete sanitized.player?.password;
-		delete sanitized.player?.token;
-		delete sanitized.player?.sessionId;
+		// Remove potentially sensitive data from player object if it exists
+		const player = sanitized.player as Record<string, unknown> | undefined;
+		if (player && typeof player === 'object') {
+			delete player.password;
+			delete player.token;
+			delete player.sessionId;
+		}
 
 		// Limit object depth
 		return this.limitObjectDepth(sanitized, 3);
 	}
 
-	private limitObjectDepth(obj: any, maxDepth: number, currentDepth = 0): any {
+	private limitObjectDepth(obj: DeepObject, maxDepth: number, currentDepth = 0): DeepObject {
 		if (currentDepth >= maxDepth) {
 			return '[Object]';
 		}
@@ -173,13 +208,19 @@ export class CrashReporter {
 		}
 
 		if (Array.isArray(obj)) {
-			return obj.slice(0, 10).map((item) => this.limitObjectDepth(item, maxDepth, currentDepth + 1));
+			return obj
+				.slice(0, 10)
+				.map((item) => this.limitObjectDepth(item as DeepObject, maxDepth, currentDepth + 1));
 		}
 
-		const result: any = {};
+		const result: Record<string, unknown> = {};
 		for (const key in obj) {
 			if (Object.prototype.hasOwnProperty.call(obj, key)) {
-				result[key] = this.limitObjectDepth(obj[key], maxDepth, currentDepth + 1);
+				result[key] = this.limitObjectDepth(
+					(obj as Record<string, unknown>)[key] as DeepObject,
+					maxDepth,
+					currentDepth + 1
+				);
 			}
 		}
 		return result;

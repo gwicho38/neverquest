@@ -1,4 +1,27 @@
 /**
+ * @fileoverview Entity Attributes - Core attribute system for all game entities
+ *
+ * This module defines the attribute structure used by players, enemies, and NPCs.
+ * It includes raw stats (STR, AGI, VIT, DEX, INT), bonus modifiers from equipment
+ * and consumables, and derived stats like health, attack, and defense.
+ *
+ * Key Types:
+ * - {@link IEntityAttributes} - Complete attribute interface
+ * - {@link IRawAttributes} - Base stat values
+ * - {@link IBonusAttributes} - Equipment/consumable/extra bonuses
+ * - {@link IEquipmentBonus} - Item-based stat modifiers
+ * - {@link IConsumableBonus} - Temporary timed effects
+ *
+ * @example
+ * // Create a new entity with default attributes
+ * const attrs: IEntityAttributes = { ...EntityAttributes };
+ * attrs.level = 5;
+ * attrs.rawAttributes.str = 10;
+ *
+ * @module entities/EntityAttributes
+ */
+
+/**
  * Raw attributes interface for base stats
  */
 export interface IRawAttributes {
@@ -11,12 +34,70 @@ export interface IRawAttributes {
 }
 
 /**
+ * Base interface for stat modifiers
+ */
+export interface IStatModifier {
+	[key: string]: number | string | undefined;
+}
+
+/**
+ * Equipment bonus interface for equipped items
+ */
+export interface IEquipmentBonus extends IStatModifier {
+	/** Equipment item ID */
+	item?: string;
+	/** Attack bonus */
+	atk?: number;
+	/** Defense bonus */
+	def?: number;
+	/** Health bonus */
+	hp?: number;
+	/** Mana bonus */
+	mp?: number;
+	/** Critical chance bonus */
+	crit?: number;
+	/** Dodge chance bonus */
+	dodge?: number;
+}
+
+/**
+ * Consumable bonus interface for temporary effects
+ * Matches ConsumableBonus model structure
+ */
+export interface IConsumableBonus {
+	/** Unique identifier for the bonus */
+	uniqueId: number;
+	/** The stat being modified (e.g., 'atack', 'defense') */
+	statBonus: string;
+	/** The value of the bonus */
+	value: number;
+	/** Duration in seconds */
+	time: number;
+	/** Timer event reference (managed by Phaser) */
+	timer?: Phaser.Time.TimerEvent | null;
+}
+
+/**
+ * Extra bonus interface for miscellaneous modifiers
+ */
+export interface IExtraBonus extends IStatModifier {
+	/** Attack bonus */
+	atk?: number;
+	/** Defense bonus */
+	def?: number;
+	/** Health bonus */
+	hp?: number;
+	/** Description or source */
+	source?: string;
+}
+
+/**
  * Bonus attributes interface for equipment/consumable bonuses
  */
 export interface IBonusAttributes {
-	equipment: any[];
-	consumable: any[];
-	extra: any[];
+	equipment: IEquipmentBonus[];
+	consumable: IConsumableBonus[];
+	extra: IExtraBonus[];
 }
 
 /**
@@ -67,6 +148,9 @@ export interface IEntityAttributes {
 
 	/** Experience needed for next level */
 	nextLevelExperience: number;
+
+	/** Index signature for dynamic stat access (used by consumable buffs) */
+	[key: string]: number | IRawAttributes | IBonusAttributes;
 }
 
 /**

@@ -1,4 +1,18 @@
 /**
+ * @fileoverview Attack calculation constants
+ *
+ * This file defines constants for attack damage calculations:
+ * - Attack bonus dividers for damage scaling
+ * - Attack bonus multipliers
+ * - Level-based attack bonuses
+ *
+ * @see NeverquestBattleManager - Uses these for combat
+ * @see EntityAttributes - Applies attack bonuses
+ *
+ * @module consts/AttributesConst
+ */
+
+/**
  * These are the attributes constants.
  * @constant
  */

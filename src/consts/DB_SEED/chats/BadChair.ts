@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Bad chair interaction dialog
+ *
+ * This dialog triggers when interacting with a weak chair:
+ * - Player observes the chair is unstable
+ * - Decides not to sit on it
+ *
+ * @see NeverquestDialogBox - Displays dialogs
+ * @see Chats - Dialog registry
+ *
+ * @module consts/DB_SEED/chats/BadChair
+ */
+
 export default {
 	id: 6,
 	chat: [

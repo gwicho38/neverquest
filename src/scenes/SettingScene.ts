@@ -1,3 +1,22 @@
+/**
+ * @fileoverview Game settings and options scene for Neverquest
+ *
+ * This scene provides game configuration options:
+ * - Master volume slider
+ * - Music volume slider
+ * - SFX volume slider
+ * - Graphics quality options
+ * - Control customization
+ *
+ * Uses RexUI plugin for slider components.
+ * Settings are persisted via local storage.
+ *
+ * @see NeverquestSoundManager - Audio settings application
+ * @see MainMenuScene - Settings access from menu
+ *
+ * @module scenes/SettingScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestSoundManager } from '../plugins/NeverquestSoundManager';
 import { PanelComponent } from '../components/PanelComponent';
@@ -6,6 +25,37 @@ import { UILabels } from '../consts/Messages';
 
 const COLOR_LIGHT = 0x7b5e57;
 const COLOR_DARK = 0x260e04;
+
+/**
+ * Interface for RexUI slider component
+ */
+interface IRexSlider extends Phaser.GameObjects.GameObject {
+	setScrollFactor: (x: number, y: number) => IRexSlider;
+	setOrigin: (x: number, y: number) => IRexSlider;
+	layout: () => IRexSlider;
+}
+
+/**
+ * Interface for RexUI add factory methods
+ */
+interface IRexUIAdd {
+	slider: (config: Record<string, unknown>) => IRexSlider;
+	roundRectangle: (
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		radius: number,
+		color: number
+	) => Phaser.GameObjects.GameObject;
+}
+
+/**
+ * Interface for RexUI plugin
+ */
+interface IRexUI {
+	add: IRexUIAdd;
+}
 
 export class SettingScene extends Phaser.Scene {
 	neverquestSoundManager: NeverquestSoundManager | null;
@@ -26,12 +76,12 @@ export class SettingScene extends Phaser.Scene {
 	sliderHeight: number;
 	settingBackgroundSpriteName: string;
 	panelComponent: PanelComponent | null;
-	dialog: any;
-	closeButton: any;
-	settingHeader: any;
+	dialog: Phaser.GameObjects.NineSlice | null;
+	closeButton: Phaser.GameObjects.Image | null;
+	settingHeader: { setPosition: (x: number, y: number) => void; y: number } | null;
 	textAudioSlider: Phaser.GameObjects.Text | null;
-	slider: any;
-	rexUI: any;
+	slider: IRexSlider | null;
+	rexUI!: IRexUI;
 
 	constructor() {
 		super({

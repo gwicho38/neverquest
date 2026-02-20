@@ -37,6 +37,18 @@ import { BaseEntity, IBaseEntity } from './BaseEntity';
 import { EntityAttributes, IEntityAttributes } from './EntityAttributes';
 
 /**
+ * Extended ParticleEmitter type that includes the custom 'on' property
+ * used to toggle particle emission. Phaser's native ParticleEmitter uses 'emitting',
+ * but this codebase uses 'on' as a custom toggle property.
+ *
+ * Note: We use Omit to exclude the inherited 'on' method from EventEmitter,
+ * then add our custom boolean 'on' property.
+ */
+type IWalkDustEmitter = Omit<Phaser.GameObjects.Particles.ParticleEmitter, 'on'> & {
+	on: boolean;
+};
+
+/**
  * Player class extending Phaser's Arcade Sprite with game-specific functionality.
  *
  * The Player is the main controllable character. It manages:
@@ -87,12 +99,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public speed: number;
 	public items: IInventoryItem[];
 	public healthBar: NeverquestHealthBar;
-	public walkDust: any;
+	public walkDust: IWalkDustEmitter;
 	public hitZone: Phaser.GameObjects.Zone;
 	public neverquestKeyboardMouseController: NeverquestKeyboardMouseController;
 	public neverquestMovement: NeverquestMovement;
 	public neverquestHUDProgressBar: NeverquestHUDProgressBar | null = null;
-	public joystickScene: any;
+	public joystickScene: Phaser.Scene | null;
 
 	// Original properties from JS version
 	public hitZoneWidth: number = 12;
@@ -197,7 +209,7 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		/**
 		 * The dust particles that the entity will emit when it moves.
 		 */
-		this.walkDust = this.scene.add
+		const emitter = this.scene.add
 			.particles(this.container.x, this.container.y, this.dustParticleName, {
 				follow: this.container,
 				speed: 2,
@@ -214,6 +226,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			})
 			.setDepth(0);
 
+		// Add custom 'on' property for toggling emission
+		// Cast through unknown because we're adding a custom property that shadows the inherited 'on' method
+		this.walkDust = emitter as unknown as IWalkDustEmitter;
 		this.walkDust.on = false;
 		// All the dependencies that need to be inside the update game loop.
 		this.scene.events.on('update', this.onUpdate, this);

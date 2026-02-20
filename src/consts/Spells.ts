@@ -1,6 +1,19 @@
 /**
- * Spell definitions and configurations
- * Used by SpellWheelScene and SpellEffects
+ * @fileoverview Spell definitions and magic system configuration
+ *
+ * This file defines all spells available in the game:
+ * - SpellType enum: Fire, Ice, Lightning, Holy, Dark
+ * - SpellDefinition interface: Name, cost, damage, effects
+ * - SPELLS constant: All available spells
+ * - Unlock functions: Story-gated spell availability
+ *
+ * Spells are unlocked via story progression.
+ *
+ * @see SpellWheelScene - Spell selection UI
+ * @see SpellEffects - Visual effects for spells
+ * @see NeverquestSpellManager - Spell unlock tracking
+ *
+ * @module consts/Spells
  */
 
 import { SpellColors } from './Colors';

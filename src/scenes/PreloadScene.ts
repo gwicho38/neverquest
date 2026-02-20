@@ -1,10 +1,51 @@
+/**
+ * @fileoverview Asset preloading scene for Neverquest
+ *
+ * This scene handles loading all game assets:
+ * - Images and sprites
+ * - Tilemaps and tilesets
+ * - Audio files (music and SFX)
+ * - Sprite atlases and animations
+ * - Custom fonts (WebFont loader)
+ *
+ * Displays loading progress bar and percentage.
+ * Transitions to MainMenuScene when complete.
+ *
+ * Asset configuration comes from GameAssets.ts.
+ *
+ * @see GameAssets - Asset configuration constants
+ * @see MainMenuScene - Next scene after load
+ * @see Animations - Animation definitions
+ *
+ * @module scenes/PreloadScene
+ */
+
 import Phaser from 'phaser';
 import { Animations } from '../consts/Animations';
-import { ASEPRITE_CONFIG, AtlasConfig, Images, NeverquestAudios, TilemapConfig } from '../consts/GameAssets';
+import {
+	ASEPRITE_CONFIG,
+	AtlasConfig,
+	Images,
+	NeverquestAudios,
+	TilemapConfig,
+	IImageAsset,
+	ITilemapAsset,
+	IAudioAsset,
+	IAtlasAsset,
+	IAsepriteAsset,
+} from '../consts/GameAssets';
 import { IPreloadScene } from '../types/SceneTypes';
+import { IAnimationConfig, IResizeSize } from '../types';
 import { HexColors, NumericColors } from '../consts/Colors';
 import { Alpha, FontStyles } from '../consts/Numbers';
 import { FontFamily, UILabels } from '../consts/Messages';
+
+/**
+ * Interface for WebFont loader library
+ */
+interface IWebFontLoader {
+	load: (config: { google: { families: string[] }; active: () => void }) => void;
+}
 
 export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 	public progressBar: Phaser.GameObjects.Graphics | null = null;
@@ -30,12 +71,12 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 
 	public preload(): void {
 		// Images
-		Images.forEach((values: any) => {
+		Images.forEach((values: IImageAsset) => {
 			this.load.image(values.name, values.image);
 		});
 
 		// Tilemap
-		TilemapConfig.forEach((value: any) => {
+		TilemapConfig.forEach((value: ITilemapAsset) => {
 			this.load.tilemapTiledJSON(value.name, value.json);
 		});
 
@@ -43,16 +84,16 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 		this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
 		// Sound
-		NeverquestAudios.forEach((value: any) => {
+		NeverquestAudios.forEach((value: IAudioAsset) => {
 			this.load.audio(value.name, value.audio);
 		});
 
 		// Atlas
-		AtlasConfig.forEach((value: any) => {
+		AtlasConfig.forEach((value: IAtlasAsset) => {
 			this.load.atlas(value.name, value.image, value.json);
 		});
 
-		ASEPRITE_CONFIG.forEach((aseprite: any) => {
+		ASEPRITE_CONFIG.forEach((aseprite: IAsepriteAsset) => {
 			this.load.aseprite(aseprite.name, aseprite.image, aseprite.json);
 		});
 
@@ -111,12 +152,12 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 			this.percentText!.destroy();
 		});
 
-		this.scale.on('resize', (size: any) => {
+		this.scale.on('resize', (size: IResizeSize) => {
 			this.resize(size);
 		});
 	}
 
-	public resize(size: any): void {
+	public resize(size: IResizeSize): void {
 		if (size) {
 			this.cameraWidth = size.width;
 			this.cameraHeight = size.height;
@@ -144,7 +185,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 	}
 
 	public create(): void {
-		Animations.forEach((animation: any) => {
+		Animations.forEach((animation: IAnimationConfig) => {
 			this.anims.create({
 				key: animation.key,
 				frameRate: animation.frameRate,
@@ -158,12 +199,12 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 			});
 		});
 
-		ASEPRITE_CONFIG.forEach((aseprite: any) => {
+		ASEPRITE_CONFIG.forEach((aseprite: IAsepriteAsset) => {
 			this.anims.createFromAseprite(aseprite.name);
 		});
 
 		// Web Fonts
-		(window as any).WebFont.load({
+		(window as unknown as { WebFont: IWebFontLoader }).WebFont.load({
 			google: {
 				families: [FontFamily.PIXEL],
 			},

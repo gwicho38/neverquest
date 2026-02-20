@@ -1,4 +1,20 @@
 /**
+ * @fileoverview Interactive object marker display for Neverquest
+ *
+ * This plugin places visual markers above interactive objects:
+ * - Reads marker positions from Tiled object layer
+ * - Displays question mark or custom sprites
+ * - Indicates interactable NPCs, items, or triggers
+ *
+ * Helps players identify interactive elements in the world.
+ *
+ * @see NeverquestTiledInfoBox - Dialog interaction system
+ * @see Tiled Map Editor - Object layer configuration
+ *
+ * @module plugins/NeverquestObjectMarker
+ */
+
+/**
  * @class
  */
 export class NeverquestObjectMarker {

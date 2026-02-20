@@ -1,3 +1,26 @@
+/**
+ * @fileoverview Procedural dungeon generation for Neverquest
+ *
+ * This plugin generates random dungeon layouts:
+ * - Uses @mikewesthad/dungeon for room generation
+ * - Creates tilemap layers from dungeon data
+ * - Places walls, floors, and decoration tiles
+ * - Supports room-based and corridor-based layouts
+ *
+ * Generation parameters:
+ * - Room count and size ranges
+ * - Corridor width and length
+ * - Door placement rules
+ *
+ * Used for roguelike dungeon experiences.
+ *
+ * @see DungeonScene - Uses generated dungeons
+ * @see TILES - Tile ID constants for dungeon
+ * @see @mikewesthad/dungeon - Core generation library
+ *
+ * @module plugins/NeverquestDungeonGenerator
+ */
+
 import Dungeon from '@mikewesthad/dungeon';
 import TILES from '../consts/DungeonTiles';
 

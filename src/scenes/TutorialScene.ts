@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Tutorial area scene for new player onboarding
+ *
+ * This scene teaches core game mechanics:
+ * - Movement controls
+ * - Attack and block mechanics
+ * - Item interaction
+ * - Dialog system usage
+ *
+ * Guided experience for first-time players.
+ *
+ * @see OverworldScene - Destination after tutorial
+ * @see NeverquestDialogBox - Tutorial prompts
+ *
+ * @module scenes/TutorialScene
+ */
+
 import Phaser from 'phaser';
 import { TilesetImageConfig } from '../models/TilesetImageConfig';
 import AnimatedTiles from '../plugins/AnimatedTiles';
@@ -53,7 +70,7 @@ export class TutorialScene extends Phaser.Scene {
 		const interactiveMarkers = new NeverquestObjectMarker(this, map.map);
 		interactiveMarkers.create();
 
-		const neverquestWarp = new NeverquestWarp(this as any, this.player as any, map.map);
+		const neverquestWarp = new NeverquestWarp(this, this.player, map.map);
 		neverquestWarp.createWarps();
 	}
 

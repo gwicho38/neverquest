@@ -1,4 +1,21 @@
 /**
+ * @fileoverview Animation key name constants
+ *
+ * This class provides standardized animation key names:
+ * - Walk animations (up, down, left, right)
+ * - Attack animations per direction
+ * - Idle animations per direction
+ * - Jump and roll animations
+ *
+ * Extended by NeverquestAnimationManager and controllers.
+ *
+ * @see NeverquestAnimationManager - Uses animation names
+ * @see NeverquestGamePadController - Extends this class
+ *
+ * @module consts/AnimationNames
+ */
+
+/**
  * @class
  */
 export class AnimationNames {

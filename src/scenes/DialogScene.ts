@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Dialog overlay scene for NPC conversations
+ *
+ * This scene manages the dialog system overlay:
+ * - Receives player and map references from parent scene
+ * - Creates NeverquestTiledInfoBox for dialog triggers
+ * - Handles dialog zone overlap detection
+ *
+ * Works in conjunction with gameplay scenes to display dialogs.
+ *
+ * @see NeverquestTiledInfoBox - Dialog zone management
+ * @see NeverquestDialogBox - Dialog rendering
+ * @see CHATS - Dialog content
+ *
+ * @module scenes/DialogScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestTiledInfoBox } from '../plugins/NeverquestTiledInfoBox';
 import { Player } from '../entities/Player';

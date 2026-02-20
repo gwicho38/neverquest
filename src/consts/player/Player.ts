@@ -1,3 +1,20 @@
+/**
+ * @fileoverview Player character animation definitions
+ *
+ * This file defines player sprite animations:
+ * - Idle animations (4 directions)
+ * - Walk animations (4 directions)
+ * - Attack animations (4 directions)
+ * - Slash effect animation
+ *
+ * Each animation specifies atlas, frame range, and timing.
+ *
+ * @see NeverquestAnimationManager - Creates animations
+ * @see Player - Uses these animations
+ *
+ * @module consts/player/Player
+ */
+
 export const PlayerConfig = {
 	texture: 'character',
 	variableName: 'player',

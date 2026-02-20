@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Inventory management scene for Neverquest
+ *
+ * This scene displays and manages player inventory:
+ * - Grid display of collected items
+ * - Item selection and info display
+ * - Use/consume item actions
+ * - Drop item functionality
+ * - Equipment slot management
+ *
+ * Pauses gameplay while open. Accessible via hotkey or HUD button.
+ *
+ * @see Player - Inventory data source
+ * @see Item - Item entity display
+ * @see NeverquestConsumableManager - Item usage
+ * @see NeverquestInterfaceController - Navigation
+ *
+ * @module scenes/InventoryScene
+ */
+
 import Phaser from 'phaser';
 import { InfoBox } from '../components/InfoBox';
 import { PanelComponent } from '../components/PanelComponent';
@@ -10,10 +30,29 @@ import { WarningMessages } from '../consts/Messages';
 
 export const InventorySceneName = 'InventoryScene';
 
+/**
+ * Interface for inventory slot with item and text properties
+ */
 interface InventorySlot extends Phaser.GameObjects.Image {
 	item?: Item;
 	text?: Phaser.GameObjects.Text;
 	playerItemIndex?: number;
+}
+
+/**
+ * Interface for legend sprite with attached text
+ */
+interface ILegendSprite extends Phaser.GameObjects.Sprite {
+	text?: Phaser.GameObjects.Text;
+}
+
+/**
+ * Interface for inventory scene initialization data
+ */
+interface IInventorySceneInitData {
+	player: Player;
+	isReset?: boolean;
+	interfaceControler?: NeverquestInterfaceController | Record<string, unknown>;
 }
 
 /**
@@ -34,27 +73,27 @@ export class InventoryScene extends Phaser.Scene {
 	/**
 	 * The inventory background sprite.
 	 */
-	inventoryBackground: any;
+	inventoryBackground: Phaser.GameObjects.NineSlice | null;
 
 	/**
 	 * The inventory title sprite.
 	 */
-	inventoryTitle: any;
+	inventoryTitle: Phaser.GameObjects.Image | null;
 
 	/**
 	 * The inventory title sprite.
 	 */
-	inventoryTitleText: any;
+	inventoryTitleText: Phaser.GameObjects.Text | null;
 
 	/**
 	 * The inventory slots sprite.
 	 */
-	inventorySlots: any;
+	inventorySlots: Phaser.GameObjects.Image[] | null;
 
 	/**
 	 * The Close button image.
 	 */
-	closeButton: any;
+	closeButton: Phaser.GameObjects.Image | null;
 
 	/**
 	 * The slots and its content.
@@ -163,13 +202,13 @@ export class InventoryScene extends Phaser.Scene {
 	/**
 	 * The back button sprite.
 	 */
-	backButtonLegend!: any;
+	backButtonLegend!: ILegendSprite;
 
 	panelComponent!: PanelComponent;
 
-	actionButtonLegend!: any;
+	actionButtonLegend!: ILegendSprite;
 
-	descriptionButtonLegend!: any;
+	descriptionButtonLegend!: ILegendSprite;
 
 	constructor() {
 		super({
@@ -651,13 +690,13 @@ export class InventoryScene extends Phaser.Scene {
 	 *
 	 * @param args The initial arguments.
 	 */
-	init(args: any): void {
+	init(args: IInventorySceneInitData): void {
 		this.player = args.player;
 		this.player.canMove = false;
 		this.player.canAtack = false;
 		if (args.isReset) {
 			this.isReset = true;
-			this.cachedInterfaceControler = args.interfaceControler;
+			this.cachedInterfaceControler = (args.interfaceControler as NeverquestInterfaceController) ?? null;
 		}
 	}
 

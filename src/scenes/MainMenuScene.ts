@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Main menu and title screen for Neverquest
+ *
+ * This scene displays the game's title and main menu:
+ * - New Game option
+ * - Continue (load save) option
+ * - Settings access
+ * - Background video/animation
+ * - Theme music
+ *
+ * Entry point for all game sessions.
+ * Checks for existing save data to enable Continue option.
+ *
+ * @see NeverquestSaveManager - Save data detection
+ * @see PreloadScene - Asset loading before menu
+ * @see OverworldScene - New game destination
+ *
+ * @module scenes/MainMenuScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestInterfaceController } from '../plugins/NeverquestInterfaceController';
 import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
@@ -6,6 +26,28 @@ import { PanelComponent } from '../components/PanelComponent';
 import { HexColors } from '../consts/Colors';
 import { Alpha, AnimationTiming, Dimensions } from '../consts/Numbers';
 import { FontFamily, UILabels } from '../consts/Messages';
+import { IResizeSize } from '../types';
+
+/**
+ * Interface for Phaser LoaderPlugin with video method using legacy signature
+ * The actual Phaser video loader accepts different parameters in older versions
+ */
+interface ILoaderWithLegacyVideo {
+	video: (
+		key: string,
+		url: string,
+		loadEvent?: string,
+		asBlob?: boolean,
+		noAudio?: boolean
+	) => Phaser.Loader.LoaderPlugin;
+}
+
+/**
+ * Interface for scenes with save manager
+ */
+interface ISceneWithSaveManager extends Phaser.Scene {
+	saveManager?: NeverquestSaveManager;
+}
 
 export class MainMenuScene extends Phaser.Scene {
 	neverquestInterfaceControler: NeverquestInterfaceController | null;
@@ -13,17 +55,17 @@ export class MainMenuScene extends Phaser.Scene {
 	nineSliceOffset: number;
 	textWidth: number;
 	fontFamily: string;
-	lastMenuAction: any;
+	lastMenuAction: Phaser.Time.TimerEvent | null;
 	video: Phaser.GameObjects.Video | null;
 	themeSound: Phaser.Sound.BaseSound | null;
 	saveManager: NeverquestSaveManager | null;
 	loadGameText: Phaser.GameObjects.Text | null;
 	creditsText: Phaser.GameObjects.Text | null;
 	panelComponent: PanelComponent | null;
-	creditsBackground: any;
-	creditsTitle: any;
-	creditsTitleText: any;
-	closeButton: any;
+	creditsBackground: Phaser.GameObjects.NineSlice | null;
+	creditsTitle: Phaser.GameObjects.Image | null;
+	creditsTitleText: Phaser.GameObjects.Text | null;
+	closeButton: Phaser.GameObjects.Image | null;
 	creditsTextContent: Phaser.GameObjects.Text | null;
 
 	constructor() {
@@ -53,7 +95,13 @@ export class MainMenuScene extends Phaser.Scene {
 	preload(): void {
 		// Only load video if it exists (prevents E2E test failures)
 		if (intro_video) {
-			(this.load as any).video('intro_video', intro_video, 'loadeddata', false, true);
+			(this.load as unknown as ILoaderWithLegacyVideo).video(
+				'intro_video',
+				intro_video,
+				'loadeddata',
+				false,
+				true
+			);
 		}
 	}
 
@@ -62,7 +110,7 @@ export class MainMenuScene extends Phaser.Scene {
 		if (intro_video && this.textures.exists('intro_video')) {
 			this.video = this.add.video(this.cameras.main.x, this.cameras.main.y, 'intro_video');
 
-			if ((this.scale.orientation as any) === 'portrait-primary') {
+			if ((this.scale.orientation as unknown as string) === 'portrait-primary') {
 				this.video.setScale(2);
 				this.video.setOrigin(Alpha.MEDIUM, 0);
 			} else {
@@ -129,12 +177,12 @@ export class MainMenuScene extends Phaser.Scene {
 
 		this.setMainMenuActions();
 
-		this.scale.on('resize', (resize: any) => {
+		this.scale.on('resize', (resize: IResizeSize) => {
 			this.resizeAll(resize);
 		});
 	}
 
-	resizeAll(size: any): void {
+	resizeAll(size: IResizeSize): void {
 		if (size && this && this.cameras && this.cameras.main) {
 			this.gameStartText!.setPosition(size.width / 2, size.height / 2);
 			this.loadGameText!.setPosition(this.gameStartText!.x, this.gameStartText!.y + 60);
@@ -173,7 +221,7 @@ export class MainMenuScene extends Phaser.Scene {
 			element: this.loadGameText,
 			action: 'loadGame',
 			context: this,
-			args: null as any,
+			args: null as unknown,
 		};
 		this.neverquestInterfaceControler!.interfaceElements[0][1] = [];
 		this.neverquestInterfaceControler!.interfaceElements[0][1].push(loadGameAction);
@@ -273,7 +321,7 @@ Forest - Intro Scene Music by "syncopika"
 				this.scene.stop();
 
 				setTimeout(() => {
-					const targetScene = this.scene.get(saveData.scene) as any;
+					const targetScene = this.scene.get(saveData.scene) as ISceneWithSaveManager;
 					if (targetScene && targetScene.saveManager) {
 						targetScene.saveManager.applySaveData(saveData);
 					}

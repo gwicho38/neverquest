@@ -1,17 +1,74 @@
+/**
+ * @fileoverview NeverquestSaveManager - Game save/load system
+ *
+ * This plugin provides comprehensive save/load functionality including:
+ * - Manual saves and automatic checkpoints
+ * - Player state persistence (position, attributes, inventory)
+ * - Story flag persistence
+ * - Spell and ability unlock persistence
+ * - localStorage-based persistence
+ *
+ * @example
+ * // Create save manager in scene
+ * const saveManager = new NeverquestSaveManager(this);
+ * saveManager.create();
+ *
+ * // Manual save
+ * saveManager.saveGame();
+ *
+ * // Load and apply save
+ * const saveData = saveManager.loadGame();
+ * if (saveData) {
+ *   saveManager.applySaveData(saveData);
+ * }
+ *
+ * @module plugins/NeverquestSaveManager
+ */
+
 import Phaser from 'phaser';
 import { Player } from '../entities/Player';
 import { HUDScene } from '../scenes/HUDScene';
 import { HexColors } from '../consts/Colors';
 import { SaveMessages, FontFamily } from '../consts/Messages';
 import { SaveManagerValues, Depth } from '../consts/Numbers';
+import { NeverquestStoryFlags, StoryFlag, StoryChoice } from './NeverquestStoryFlags';
+import { NeverquestSpellManager } from './NeverquestSpellManager';
+import { NeverquestAbilityManager } from './NeverquestAbilityManager';
+import { IEntityAttributes } from '../entities/EntityAttributes';
+import { IInventoryItem } from '../types/ItemTypes';
 
-// Interface for save data structure
+/**
+ * Story data structure for save files
+ */
+export interface IStoryData {
+	flags: StoryFlag[];
+	choices: StoryChoice[];
+}
+
+/**
+ * Spell unlock data structure for save files
+ */
+export interface ISpellData {
+	unlockedSpells: string[];
+}
+
+/**
+ * Ability unlock data structure for save files
+ */
+export interface IAbilityData {
+	unlockedAbilities: string[];
+}
+
+/**
+ * Complete save data structure
+ * Contains all game state that needs to persist between sessions
+ */
 export interface ISaveData {
 	player: {
 		x: number;
 		y: number;
-		attributes: any;
-		items: any[];
+		attributes: Partial<IEntityAttributes>;
+		items: IInventoryItem[];
 		level: number;
 		experience: number;
 		health: number;
@@ -20,9 +77,14 @@ export interface ISaveData {
 	timestamp: number;
 	playtime: number;
 	version: string;
+	story?: IStoryData;
+	spells?: ISpellData;
+	abilities?: IAbilityData;
 }
 
-// Interface for scene with optional player property
+/**
+ * Scene interface extension for scenes with player references
+ */
 export interface ISceneWithPlayer extends Phaser.Scene {
 	player?: Player;
 }
@@ -37,6 +99,9 @@ export class NeverquestSaveManager {
 	public checkpointInterval: number;
 	public checkpointTimer: Phaser.Time.TimerEvent | null;
 	public autoSaveEnabled: boolean;
+	public storyFlags: NeverquestStoryFlags | null;
+	public spellManager: NeverquestSpellManager | null;
+	public abilityManager: NeverquestAbilityManager | null;
 
 	constructor(scene: ISceneWithPlayer) {
 		/**
@@ -68,6 +133,21 @@ export class NeverquestSaveManager {
 		 * Whether auto-save is enabled
 		 */
 		this.autoSaveEnabled = true;
+
+		/**
+		 * Story flags manager for tracking narrative progression
+		 */
+		this.storyFlags = null;
+
+		/**
+		 * Spell manager for tracking spell unlocks
+		 */
+		this.spellManager = null;
+
+		/**
+		 * Ability manager for tracking ability unlocks
+		 */
+		this.abilityManager = null;
 	}
 
 	/**
@@ -77,6 +157,31 @@ export class NeverquestSaveManager {
 		console.log('NeverquestSaveManager initialized for scene:', this.scene.scene.key);
 		console.log('Scene time system available:', !!this.scene.time);
 		console.log('Auto-save enabled:', this.autoSaveEnabled);
+
+		// Initialize story flags for tracking narrative progression
+		this.storyFlags = new NeverquestStoryFlags(this.scene);
+		this.storyFlags.load(); // Load any previously saved story progress
+		console.log('Story flags initialized, current act:', this.storyFlags.getCurrentAct());
+
+		// Initialize spell manager for tracking spell unlocks
+		this.spellManager = new NeverquestSpellManager(this.scene);
+		this.spellManager.create();
+
+		// Sync spell unlocks with story flags
+		if (this.storyFlags) {
+			this.spellManager.syncWithStoryFlags(this.storyFlags.getAllFlags());
+		}
+		console.log('Spell manager initialized, unlocked spells:', this.spellManager.getUnlockedCount());
+
+		// Initialize ability manager for tracking ability unlocks
+		this.abilityManager = new NeverquestAbilityManager(this.scene, this.scene.player || null);
+		this.abilityManager.create();
+
+		// Sync ability unlocks with story flags
+		if (this.storyFlags) {
+			this.abilityManager.syncWithStoryFlags(this.storyFlags.getAllFlags());
+		}
+		console.log('Ability manager initialized, unlocked abilities:', this.abilityManager.getUnlockedCount());
 
 		this.startCheckpointTimer();
 
@@ -169,6 +274,9 @@ export class NeverquestSaveManager {
 			timestamp: Date.now(),
 			playtime: this.getPlayTime(),
 			version: '1.0.0',
+			story: this.storyFlags ? this.storyFlags.toJSON() : undefined,
+			spells: this.spellManager ? { unlockedSpells: this.spellManager.toJSON() } : undefined,
+			abilities: this.abilityManager ? { unlockedAbilities: this.abilityManager.toJSON() } : undefined,
 		};
 
 		return saveData;
@@ -301,6 +409,25 @@ export class NeverquestSaveManager {
 			// Update health bar if it exists
 			if (player.healthBar) {
 				player.healthBar.update(player.attributes.health);
+			}
+
+			// Restore story flags if present in save data
+			if (saveData.story && this.storyFlags) {
+				this.storyFlags.fromJSON(saveData.story);
+				console.log('Story flags restored, current act:', this.storyFlags.getCurrentAct());
+				console.log('Fragments collected:', this.storyFlags.getFragmentCount());
+			}
+
+			// Restore spell unlocks if present in save data
+			if (saveData.spells && this.spellManager) {
+				this.spellManager.fromJSON(saveData.spells.unlockedSpells);
+				console.log('Spell unlocks restored:', this.spellManager.getUnlockedCount(), 'spells');
+			}
+
+			// Restore ability unlocks if present in save data
+			if (saveData.abilities && this.abilityManager) {
+				this.abilityManager.fromJSON(saveData.abilities.unlockedAbilities);
+				console.log('Ability unlocks restored:', this.abilityManager.getUnlockedCount(), 'abilities');
 			}
 
 			// Switch to saved scene if different

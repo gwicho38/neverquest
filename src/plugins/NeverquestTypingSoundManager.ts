@@ -1,3 +1,21 @@
+/**
+ * @fileoverview Typewriter sound effects for dialog text
+ *
+ * This plugin plays typing sounds during dialog text reveal:
+ * - Randomized key press sounds for letters
+ * - Distinct sound for space characters
+ * - Configurable volume and pitch variation
+ * - Syncs with text reveal animation
+ *
+ * Creates authentic typewriter feel for NPC dialog.
+ * Cycles through multiple sound variations to avoid monotony.
+ *
+ * @see NeverquestDialogBox - Triggers typing sounds
+ * @see AudioValues - Sound configuration constants
+ *
+ * @module plugins/NeverquestTypingSoundManager
+ */
+
 import { AudioValues } from '../consts/Numbers';
 import { Characters } from '../consts/Messages';
 
@@ -58,11 +76,9 @@ export class NeverquestTypingSoundManager {
 	 * Creates all the audios to play when the dialog scene is typing a text.
 	 */
 	create(): void {
-		this.spaceAudioManager = this.scene.sound.add(this.spaceSoundName);
-		(this.spaceAudioManager as any).volume = this.typingSoundVolume;
+		this.spaceAudioManager = this.scene.sound.add(this.spaceSoundName, { volume: this.typingSoundVolume });
 		for (let i = 0; i < this.typingKeySounds.length; i++) {
-			const audio = this.scene.sound.add(this.typingKeySounds[i]);
-			(audio as any).volume = this.typingSoundVolume;
+			const audio = this.scene.sound.add(this.typingKeySounds[i], { volume: this.typingSoundVolume });
 			this.letterAudios.push(audio);
 		}
 	}

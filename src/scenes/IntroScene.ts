@@ -1,3 +1,21 @@
+/**
+ * @fileoverview Logo and credits intro scene for Neverquest
+ *
+ * This scene displays opening logos and credits:
+ * - Phaser engine logo
+ * - Developer/studio logos
+ * - Particle effects
+ * - Fade transitions
+ *
+ * Plays once at game startup before main menu.
+ * Can be skipped with any input.
+ *
+ * @see PreloadScene - Precedes intro (asset loading)
+ * @see MainMenuScene - Follows intro
+ *
+ * @module scenes/IntroScene
+ */
+
 import Phaser from 'phaser';
 import { FontFamily, IntroSceneText } from '../consts/Messages';
 import { IntroSceneValues } from '../consts/Numbers';
@@ -208,15 +226,22 @@ export class IntroScene extends Phaser.Scene {
 
 		const origin = this.logo_phaser.getTopLeft();
 		let pixel: Phaser.Display.Color;
-		const logoSource = {
-			getRandomPoint: (vec: Phaser.Math.Vector2) => {
+		const logoSource: Phaser.Types.GameObjects.Particles.RandomZoneSource = {
+			getRandomPoint: (vec: Phaser.Types.Math.Vector2Like) => {
 				do {
 					const x = Phaser.Math.Between(0, this.logo_phaser.width * this.logo_phaser.scaleX - 1);
 					const y = Phaser.Math.Between(0, this.logo_phaser.height * this.logo_phaser.scaleY - 1);
 					pixel = textures.getPixel(x, y, this.phaserLogoSpriteName)!;
-					return vec.setTo(x + origin.x, y + origin.y);
+					vec.x = x + origin.x;
+					vec.y = y + origin.y;
+					return;
 				} while (pixel.alpha < 255);
 			},
+		};
+
+		const emitZone: Phaser.Types.GameObjects.Particles.ParticleEmitterRandomZoneConfig = {
+			type: 'random',
+			source: logoSource,
 		};
 
 		this.particles_logo = this.add.particles(0, 0, this.particlesSpriteName, {
@@ -225,7 +250,7 @@ export class IntroScene extends Phaser.Scene {
 			scale: { start: 0, end: 0.25, ease: 'Quad.easeOut' },
 			alpha: { start: 1, end: 0, ease: 'Quad.easeIn' },
 			blendMode: 'ADD',
-			emitZone: { type: 'random', source: logoSource as any },
+			emitZone,
 		});
 
 		this.tweens.add({

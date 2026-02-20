@@ -1,9 +1,29 @@
+/**
+ * @fileoverview Interactive plus button for attribute allocation
+ *
+ * This file provides a clickable plus button sprite:
+ * - Animated button press feedback
+ * - Executes named action via NeverquestUtils.executeFunctionByName
+ * - Used in AttributeScene for stat point allocation
+ *
+ * @see ButtonMinus - Corresponding minus button
+ * @see AttributeScene - Primary usage context
+ *
+ * @module components/UI/ButtonPlus
+ */
+
 import { NeverquestUtils } from '../../utils/NeverquestUtils';
+
+/**
+ * Interface for button action arguments
+ * The args are passed through to executeFunctionByName
+ */
+export type ButtonActionArgs = unknown;
 
 export class ButtonPlus extends Phaser.GameObjects.Sprite {
 	scene: Phaser.Scene;
 
-	constructor(scene: Phaser.Scene, x: number, y: number, action: string, args: any) {
+	constructor(scene: Phaser.Scene, x: number, y: number, action: string, args: ButtonActionArgs) {
 		super(scene, x, y, 'plus_small_button');
 
 		/**

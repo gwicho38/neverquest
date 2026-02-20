@@ -1,13 +1,72 @@
+/**
+ * @fileoverview Video playback scene for cutscenes
+ *
+ * This scene handles video playback for:
+ * - Story cutscenes
+ * - Tutorial videos
+ * - YouTube embedded content (via RexUI)
+ *
+ * Pauses audio from other scenes during playback.
+ * Supports skipping via input.
+ *
+ * @see NeverquestVideoOpener - Triggers video playback
+ * @see NeverquestSoundManager - Audio muting during video
+ *
+ * @module scenes/VideoPlayerScene
+ */
+
 import Phaser from 'phaser';
 import { NeverquestSoundManager } from '../plugins/NeverquestSoundManager';
 import { NumericColors } from '../consts/Colors';
 import { Alpha } from '../consts/Numbers';
+import { IResizeSize } from '../types';
+
+/**
+ * Interface for RexUI YouTube player game object
+ */
+interface IRexYoutubePlayer extends Phaser.GameObjects.GameObject {
+	x: number;
+	y: number;
+	play: () => void;
+}
+
+/**
+ * Interface for game factory with RexUI YouTube player
+ */
+interface IGameFactoryWithYoutube extends Phaser.GameObjects.GameObjectFactory {
+	rexYoutubePlayer: (
+		x: number,
+		y: number,
+		width: number,
+		height: number,
+		config: { videoId: string; controls: boolean; autoPlay: boolean }
+	) => IRexYoutubePlayer;
+}
+
+/**
+ * Interface for player reference with container body
+ * Uses minimal body interface for mock compatibility
+ */
+interface IVideoScenePlayer {
+	container: {
+		body: { maxSpeed: number } | null;
+	};
+	speed: number;
+}
+
+/**
+ * Interface for scene init data
+ */
+interface IVideoPlayerSceneData {
+	videoId: string;
+	player?: IVideoScenePlayer;
+}
 
 export class VideoPlayerScene extends Phaser.Scene {
 	background: Phaser.GameObjects.RenderTexture | null;
 	backgroundColor: number;
 	alpha: number;
-	video: any;
+	video: IRexYoutubePlayer | null;
 	closeButton: Phaser.GameObjects.Image | null;
 	videoId: string;
 	closeButtonSpriteName: string;
@@ -15,7 +74,7 @@ export class VideoPlayerScene extends Phaser.Scene {
 	closeButtonMarginX: number;
 	closeButtonMarginY: number;
 	neverquestSoundManager: NeverquestSoundManager | null;
-	player: any;
+	player: IVideoScenePlayer | null;
 
 	constructor() {
 		super({
@@ -46,7 +105,7 @@ export class VideoPlayerScene extends Phaser.Scene {
 		this.background = this.add.renderTexture(0, 0, this.cameras.main.width, this.cameras.main.height);
 		this.background.setScrollFactor(0, 0);
 		this.background.fill(this.backgroundColor, this.alpha);
-		this.video = (this.add as any).rexYoutubePlayer(
+		this.video = (this.add as IGameFactoryWithYoutube).rexYoutubePlayer(
 			this.cameras.main.midPoint.x,
 			this.cameras.main.midPoint.y,
 			this.cameras.main.width - this.closeButtonMarginX * 4,
@@ -61,14 +120,14 @@ export class VideoPlayerScene extends Phaser.Scene {
 		this.video.play();
 		this.createCloseButton();
 
-		this.scale.on('resize', (size: any) => {
+		this.scale.on('resize', (size: IResizeSize) => {
 			this.changeSize(size.width, size.height);
 		});
 	}
 
-	init(data: any): void {
+	init(data: IVideoPlayerSceneData): void {
 		this.videoId = data.videoId;
-		this.player = data.player;
+		this.player = data.player ?? null;
 		if (this.player && this.player.container.body) this.player.container.body.maxSpeed = 0;
 	}
 

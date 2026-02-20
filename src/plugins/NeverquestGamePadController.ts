@@ -1,5 +1,33 @@
+/**
+ * @fileoverview Gamepad input handling for Neverquest
+ *
+ * This plugin processes gamepad/controller input for:
+ * - Movement (left analog stick)
+ * - Attack and block (face buttons)
+ * - Menu navigation (D-pad)
+ * - Scene toggles (start, select buttons)
+ *
+ * Supports standard gamepad mappings (Xbox, PlayStation, etc.).
+ * Polls connected gamepads each frame and sends input to Player.
+ *
+ * Button mappings:
+ * - A/X: Attack
+ * - B/O: Block
+ * - X/Square: Use item
+ * - Y/Triangle: Spell wheel
+ * - Start: Inventory
+ * - Select: Attributes
+ *
+ * @see NeverquestKeyboardMouseController - Keyboard alternative
+ * @see NeverquestBattleManager - Receives attack/block input
+ * @see Player - Receives movement input
+ *
+ * @module plugins/NeverquestGamePadController
+ */
+
 import Phaser from 'phaser';
 import { AnimationNames } from '../consts/AnimationNames';
+import { Player } from '../entities/Player';
 import { AttributeSceneName } from '../scenes/AttributeScene';
 import { InventorySceneName } from '../scenes/InventoryScene';
 import { SceneToggleWatcher } from '../scenes/watchers/SceneToggleWatcher';
@@ -18,7 +46,7 @@ export class NeverquestGamePadController extends AnimationNames {
 	/**
 	 * The player that the controler will send inputs.
 	 */
-	player: any;
+	player: Player;
 
 	/**
 	 * The Name of the Inventory Scene.
@@ -51,7 +79,7 @@ export class NeverquestGamePadController extends AnimationNames {
 	 * @param scene the scene which the player has to control the player.
 	 * @param player the player object
 	 */
-	constructor(scene: Phaser.Scene, player: any) {
+	constructor(scene: Phaser.Scene, player: Player) {
 		super();
 		this.scene = scene;
 		this.player = player;
@@ -69,7 +97,7 @@ export class NeverquestGamePadController extends AnimationNames {
 		this.neverquestBattleManager = new NeverquestBattleManager();
 		this.scene.input.gamepad.on(
 			'connected',
-			(pad: Phaser.Input.Gamepad.Gamepad, _button: any, _index: number) => {
+			(pad: Phaser.Input.Gamepad.Gamepad, _button: Phaser.Input.Gamepad.Button, _index: number) => {
 				if (!this.gamepad) {
 					this.gamepad = pad;
 				}
@@ -99,12 +127,14 @@ export class NeverquestGamePadController extends AnimationNames {
 	sendInputs(): void {
 		const texture = this.player.texture.key;
 		if (this.gamepad) {
+			const body = this.player.container.body as Phaser.Physics.Arcade.Body;
+
 			if (
 				this.gamepad.left ||
 				(this.gamepad.left && this.gamepad.down) ||
 				(this.gamepad.left && this.gamepad.up)
 			) {
-				this.player.container.body.setVelocityX(-this.player.speed);
+				body.setVelocityX(-this.player.speed);
 				this.player.anims.play(texture + '-' + this.walkLeftAnimationName, true);
 			} else if (
 				this.gamepad.right ||
@@ -112,23 +142,20 @@ export class NeverquestGamePadController extends AnimationNames {
 				(this.gamepad.right && this.gamepad.up)
 			) {
 				this.player.anims.play(texture + '-' + this.walkRightAnimationName, true);
-				this.player.container.body.setVelocityX(this.player.speed);
+				body.setVelocityX(this.player.speed);
 			}
 
 			if (this.gamepad.up) {
-				this.player.container.body.setVelocityY(-this.player.speed);
+				body.setVelocityY(-this.player.speed);
 				if (!this.gamepad.left && !this.gamepad.right)
 					this.player.anims.play(texture + '-' + this.walkUpAnimationName, true);
 			} else if (this.gamepad.down) {
-				this.player.container.body.setVelocityY(this.player.speed);
+				body.setVelocityY(this.player.speed);
 				if (!this.gamepad.left && !this.gamepad.right)
 					this.player.anims.play(texture + '-' + this.walkDownAnimationName, true);
 			}
 
-			if (
-				(this.gamepad.leftStick.x !== 0 || this.gamepad.leftStick.y !== 0) &&
-				this.player.container.body.maxSpeed > 0
-			) {
+			if ((this.gamepad.leftStick.x !== 0 || this.gamepad.leftStick.y !== 0) && body.maxSpeed > 0) {
 				this.neverquestAnimationManager.animateWithAngle(
 					`${texture}-${this.walkPrefixAnimation}`,
 					Phaser.Math.Angle.Wrap(this.gamepad.leftStick.angle())
@@ -136,11 +163,11 @@ export class NeverquestGamePadController extends AnimationNames {
 				this.scene.physics.velocityFromRotation(
 					this.gamepad.leftStick.angle(),
 					this.player.speed,
-					this.player.container.body.velocity
+					body.velocity
 				);
 			}
 
-			this.player.container.body.velocity.normalize().scale(this.player.speed);
+			body.velocity.normalize().scale(this.player.speed);
 		}
 	}
 }

@@ -1,3 +1,26 @@
+/**
+ * @fileoverview Ambient particle effects for environment atmosphere
+ *
+ * This plugin creates ambient particle effects for scene atmosphere:
+ * - Reads particle zone objects from Tiled maps
+ * - Supports multiple particle types (leaves, dust, snow, etc.)
+ * - Configurable emitter zones and rates
+ * - Tween-based fade in/out effects
+ *
+ * Particle zone configuration (set in Tiled object properties):
+ * - particleType: Type of particle effect
+ * - emitRate: Particles per second
+ * - lifespan: Particle duration
+ *
+ * Creates immersive environmental effects for forests, caves, etc.
+ *
+ * @see OverworldScene - Forest leaf particles
+ * @see CaveScene - Dust/cave particles
+ * @see CrossroadsScene - Ambient effects
+ *
+ * @module plugins/NeverquestEnvironmentParticles
+ */
+
 import { Alpha, AnimationTiming, Scale, Depth } from '../consts/Numbers';
 
 /**
@@ -6,17 +29,6 @@ import { Alpha, AnimationTiming, Scale, Depth } from '../consts/Numbers';
 interface TiledProperty {
 	name: string;
 	value: string | number | boolean;
-}
-
-/**
- * Interface for Tiled objects with particle properties
- */
-interface TiledParticleObject {
-	x: number;
-	y: number;
-	width: number;
-	height: number;
-	properties: TiledProperty[];
 }
 
 /**
@@ -78,18 +90,20 @@ export class NeverquestEnvironmentParticles {
 	create(): void {
 		const zones = this.map.getObjectLayer(this.particlesObjectLayerName);
 		if (zones && zones.objects && zones.objects.length > 0) {
-			zones.objects.forEach((zone: any) => {
-				const particleZone = zone as TiledParticleObject;
-				particleZone.properties.forEach((property: TiledProperty) => {
-					if (property.value === this.dustParticleSprite) {
-						this.makeDust(zone.width, zone.height, zone.x, zone.y);
-					} else if (property.value === this.cloudParticleName) {
-						this.makeClouds(zone.width, zone.height, zone.x, zone.y);
-					} else {
-						// If nothing is specified, then create the basic particle system.
-						this.makeDust(zone.width, zone.height, zone.x, zone.y);
-					}
-				});
+			zones.objects.forEach((zone: Phaser.Types.Tilemaps.TiledObject) => {
+				const properties = zone.properties as TiledProperty[] | undefined;
+				if (properties) {
+					properties.forEach((property: TiledProperty) => {
+						if (property.value === this.dustParticleSprite) {
+							this.makeDust(zone.width!, zone.height!, zone.x!, zone.y!);
+						} else if (property.value === this.cloudParticleName) {
+							this.makeClouds(zone.width!, zone.height!, zone.x!, zone.y!);
+						} else {
+							// If nothing is specified, then create the basic particle system.
+							this.makeDust(zone.width!, zone.height!, zone.x!, zone.y!);
+						}
+					});
+				}
 			});
 		}
 	}

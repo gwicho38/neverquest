@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Character attribute management scene for Neverquest
+ *
+ * This scene displays and allows allocation of character stats:
+ * - STR (Strength): Attack damage
+ * - VIT (Vitality): Health and defense
+ * - AGI (Agility): Movement speed
+ * - DEX (Dexterity): Critical chance
+ * - INT (Intelligence): Magic power
+ *
+ * Players spend available stat points earned from leveling.
+ * Uses plus/minus buttons for allocation control.
+ *
+ * @see Player - Attribute data source
+ * @see AttributesManager - Stat calculations
+ * @see ExpManager - Level-up stat point allocation
+ *
+ * @module scenes/AttributeScene
+ */
+
 import Phaser from 'phaser';
 import { ButtonMinus } from '../components/UI/ButtonMinus';
 import { ButtonPlus } from '../components/UI/ButtonPlus';
@@ -9,11 +29,12 @@ import { Player } from '../entities/Player';
 import { HexColors } from '../consts/Colors';
 import { Dimensions } from '../consts/Numbers';
 import { UILabels } from '../consts/Messages';
+import { RawAttributeKey, IRawAttributes } from '../plugins/attributes/AttributesManager';
 
 export const AttributeSceneName = 'AttributeScene';
 
 interface AttributeConfiguration {
-	attribute: string;
+	attribute: RawAttributeKey;
 	text: string;
 }
 
@@ -23,23 +44,26 @@ interface AttributeUI {
 	plus_button: ButtonPlus;
 }
 
+/**
+ * Interface for UI element action binding
+ */
 interface InterfaceAction {
-	element: any;
+	element: Phaser.GameObjects.Image | ButtonMinus | ButtonPlus;
 	action: string;
-	context: any;
-	args: any;
+	context: AttributeScene;
+	args: AttributeConfiguration | null;
 }
 
 export class AttributeScene extends Phaser.Scene {
 	public player: Player | null = null;
-	public attributesBackground: Phaser.GameObjects.Sprite | null = null;
+	public attributesBackground: Phaser.GameObjects.NineSlice | null = null;
 	public atributesBackgroundSpriteName: string = 'attributes_background';
 	public attributesConfiguration: AttributeConfiguration[];
 	public attributesUiArray: AttributeUI[] = [];
 	public panelComponent: PanelComponent | null = null;
 	public interfaceController!: NeverquestInterfaceController;
-	public lastRawAttributes: any;
-	public closeButton: any;
+	public lastRawAttributes: IRawAttributes | null;
+	public closeButton: Phaser.GameObjects.Image | null;
 	public availableAttributesText!: Phaser.GameObjects.Text;
 	public atackText!: Phaser.GameObjects.Text;
 	public defenseText!: Phaser.GameObjects.Text;

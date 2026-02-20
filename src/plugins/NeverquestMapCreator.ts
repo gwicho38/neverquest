@@ -1,7 +1,30 @@
+/**
+ * @fileoverview Tiled map creation and management for Neverquest
+ *
+ * This plugin handles loading and configuring Tiled maps including:
+ * - Map and tileset loading from JSON files
+ * - Collision layer setup and detection
+ * - Layer depth ordering
+ * - Player spawn point extraction
+ * - Warp zone configuration
+ *
+ * Works with Tiled Map Editor exports (JSON format) and supports:
+ * - Multiple tileset images per map
+ * - Object layers for spawn points and triggers
+ * - Custom properties for layer configuration
+ *
+ * @see NeverquestWarp - Uses warp objects from map
+ * @see NeverquestEnemyZones - Uses enemy zone objects from map
+ * @see docs/TILED_MAP_GUIDE.md - Map creation documentation
+ *
+ * @module plugins/NeverquestMapCreator
+ */
+
 import { PlayerConfig } from '../consts/player/Player';
 import { Player } from '../entities/Player';
 import { TilesetImageConfig } from '../models/TilesetImageConfig';
 import { MapObjectNames } from '../consts/Messages';
+import { IGameScene } from '../types/SceneTypes';
 
 /**
  * Interface for Tiled layer properties
@@ -12,13 +35,20 @@ interface TiledProperty {
 }
 
 /**
+ * Extended tilemap interface for infinite maps from Tiled
+ */
+interface ITiledMap extends Phaser.Tilemaps.Tilemap {
+	infinite?: boolean;
+}
+
+/**
  * @class
  */
 export class NeverquestMapCreator {
 	/**
 	 * The Parent Phaser Scene.
 	 */
-	scene: Phaser.Scene;
+	scene: IGameScene;
 
 	/**
 	 * The name of the map to load.
@@ -79,7 +109,7 @@ export class NeverquestMapCreator {
 	 * @param scene The Parent Phaser Scene.
 	 * @param mapName The name of the map to load (defaults to 'larus' for backward compatibility)
 	 */
-	constructor(scene: Phaser.Scene, mapName: string = 'larus') {
+	constructor(scene: IGameScene, mapName: string = 'larus') {
 		this.scene = scene;
 		this.mapName = mapName;
 		this.playerTexture = PlayerConfig.texture;
@@ -102,7 +132,7 @@ export class NeverquestMapCreator {
 			const currentLayer = this.map!.createLayer(layer.name, this.map!.tilesets);
 
 			// For infinite maps with negative coordinates, increase cull padding to ensure tiles render properly
-			if ((this.map as any).infinite) {
+			if ((this.map as ITiledMap).infinite) {
 				currentLayer!.setCullPadding(4, 4); // Render 4 extra tiles in each direction
 			}
 
@@ -123,20 +153,11 @@ export class NeverquestMapCreator {
 
 		const spawnPoint = this.map.findObject(this.spawnObjectLayer, (obj) => obj.name === this.spawnObjectPoint);
 		if (spawnPoint) {
-			(this.scene as any)[PlayerConfig.variableName] = new Player(
-				this.scene,
-				spawnPoint.x,
-				spawnPoint.y,
-				PlayerConfig.texture,
-				this.map
-			);
+			this.scene.player = new Player(this.scene, spawnPoint.x, spawnPoint.y, PlayerConfig.texture, this.map);
 		}
 
-		if (this.collisionLayer && (this.scene as any)[PlayerConfig.variableName]) {
-			this.scene.physics.add.collider(
-				(this.scene as any)[PlayerConfig.variableName].container,
-				this.collisionLayer
-			);
+		if (this.collisionLayer && this.scene.player) {
+			this.scene.physics.add.collider(this.scene.player.container, this.collisionLayer);
 		}
 	}
 }

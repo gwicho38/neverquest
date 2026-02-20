@@ -1,3 +1,23 @@
+/**
+ * @fileoverview Dynamic health bar component for Neverquest
+ *
+ * This plugin renders health bars above entities:
+ * - Real-time health percentage visualization
+ * - Smooth health transition animations
+ * - Color gradients based on health level (green → yellow → red)
+ * - Configurable size and offset positioning
+ * - Visibility toggling
+ *
+ * Used by both Player and Enemy entities to display health status.
+ * Renders using Graphics API for crisp pixel-perfect display.
+ *
+ * @see Player - Player health bar attachment
+ * @see Enemy - Enemy health bar display
+ * @see NeverquestBattleManager - Updates health on damage
+ *
+ * @module plugins/NeverquestHealthBar
+ */
+
 import Phaser from 'phaser';
 import { Alpha, Dimensions } from '../consts/Numbers';
 

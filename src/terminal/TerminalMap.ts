@@ -1,3 +1,19 @@
+/**
+ * @fileoverview Terminal map generation and rendering
+ *
+ * This file provides the map system for terminal gameplay:
+ * - Tile-based map with multiple terrain types
+ * - Overworld generation (grass, water, houses, trees)
+ * - Dungeon generation (rooms, corridors)
+ * - Entity management and collision detection
+ * - Camera-relative viewport rendering
+ *
+ * @see TerminalGame - Uses map for gameplay
+ * @see TerminalAnimator - Visual effect overlay
+ *
+ * @module terminal/TerminalMap
+ */
+
 import { TerminalEntity } from './entities/TerminalEntity';
 import { TerminalAnimator } from './TerminalAnimator';
 

@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Item type definitions for inventory system
+ *
+ * This file defines TypeScript interfaces for items:
+ * - IItemConfig: Complete item definition with textures, scripts, buffs
+ * - IInventoryItem: Inventory entry with count for stacking
+ *
+ * @see DB_SEED/Items - Item seed data
+ * @see InventoryScene - Item display and usage
+ *
+ * @module types/ItemTypes
+ */
+
 import { ItemType } from '../models/ItemType';
 import { BuffType } from '../models/BuffType';
 

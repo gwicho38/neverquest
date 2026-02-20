@@ -1,3 +1,24 @@
+/**
+ * @fileoverview Heads-up display (HUD) overlay scene for Neverquest
+ *
+ * This scene renders persistent UI elements over gameplay:
+ * - Health and XP progress bars
+ * - Minimap display
+ * - Message log for combat feedback
+ * - Quick access buttons (inventory, attributes)
+ * - Touch controls reference
+ *
+ * Runs parallel to gameplay scenes and tracks player state.
+ * Updates automatically when player health/XP changes.
+ *
+ * @see NeverquestHUDProgressBar - Health/XP bar rendering
+ * @see NeverquestMinimap - Minimap display
+ * @see NeverquestMessageLog - Combat message log
+ * @see Player - State source for UI updates
+ *
+ * @module scenes/HUDScene
+ */
+
 import Phaser from 'phaser';
 import { IconNamesConst } from '../consts/UI/IconNames';
 import { NeverquestHUDProgressBar } from '../plugins/HUD/NeverquestHUDProgressBar';
@@ -11,6 +32,39 @@ import { Player } from '../entities/Player';
 import { HexColors } from '../consts/Colors';
 import { Dimensions, Scale } from '../consts/Numbers';
 import { UILabels } from '../consts/Messages';
+import { NeverquestSaveManager } from '../plugins/NeverquestSaveManager';
+import { NeverquestMapCreator } from '../plugins/NeverquestMapCreator';
+
+/**
+ * Interface for scenes that have a save manager
+ */
+interface SceneWithSaveManager extends Phaser.Scene {
+	saveManager?: NeverquestSaveManager | null;
+}
+
+/**
+ * Interface for scenes that have a map creator or dungeon
+ */
+interface SceneWithMap extends Phaser.Scene {
+	mapCreator?: NeverquestMapCreator | null;
+	dungeon?: { map?: Phaser.Tilemaps.Tilemap };
+}
+
+/**
+ * Type for accessing private minimap properties for reset capability
+ * This is used to reset debug logging when the map changes
+ */
+type MinimapWithPrivateAccess = {
+	hasLoggedOnce?: boolean;
+};
+
+/**
+ * Interface for HUD scene initialization arguments
+ */
+interface IHUDSceneArgs {
+	player: Player;
+	map?: Phaser.Tilemaps.Tilemap;
+}
 
 /**
  * Scene for HUD Creation. It contains all the HUD of the game.
@@ -227,15 +281,13 @@ export class HUDScene extends Phaser.Scene {
 		this.attributesShortcutIcon = null;
 	}
 
-	init(args: any): void {
+	init(args: IHUDSceneArgs): void {
 		this.player = args.player;
 		this.map = args.map;
 
 		// Update minimap with new map if it already exists
 		if (this.minimap && this.map) {
 			this.minimap.map = this.map;
-			// Reset the logging flag so we can see debug info for new map
-			(this.minimap as any).hasLoggedOnce = false;
 		}
 	}
 
@@ -387,14 +439,13 @@ export class HUDScene extends Phaser.Scene {
 		this.saveButton.setScrollFactor(0);
 		this.saveButton.setInteractive();
 		this.saveButton.on('pointerdown', () => {
-			const mainScene =
-				this.scene.get('MainScene') ||
+			const mainScene = (this.scene.get('MainScene') ||
 				this.scene.get('TownScene') ||
 				this.scene.get('CaveScene') ||
 				this.scene.get('OverworldScene') ||
-				this.scene.get('DungeonScene');
-			if (mainScene && (mainScene as any).saveManager) {
-				(mainScene as any).saveManager.saveGame(false);
+				this.scene.get('DungeonScene')) as SceneWithSaveManager | null;
+			if (mainScene?.saveManager) {
+				mainScene.saveManager.saveGame(false);
 			}
 		});
 		this.saveButton.on('pointerover', () => {
@@ -521,10 +572,10 @@ export class HUDScene extends Phaser.Scene {
 		const gameScenes = ['MainScene', 'DungeonScene', 'TownScene', 'CaveScene', 'OverworldScene', 'TutorialScene'];
 
 		for (const sceneKey of gameScenes) {
-			const scene = this.scene.get(sceneKey);
+			const scene = this.scene.get(sceneKey) as SceneWithMap | null;
 			if (scene && this.scene.isActive(sceneKey)) {
 				// Get map from the scene
-				const sceneMap = (scene as any).mapCreator?.map || (scene as any).dungeon?.map;
+				const sceneMap = scene.mapCreator?.map || scene.dungeon?.map;
 
 				// Update map reference if it changed
 				if (sceneMap && this.map !== sceneMap) {
@@ -534,7 +585,7 @@ export class HUDScene extends Phaser.Scene {
 					if (this.minimap) {
 						this.minimap.map = sceneMap;
 						// Reset logging flag to see debug info for new map
-						(this.minimap as any).hasLoggedOnce = false;
+						(this.minimap as unknown as MinimapWithPrivateAccess).hasLoggedOnce = false;
 					}
 				}
 				break; // Only use the first active game scene

@@ -1,4 +1,18 @@
 /**
+ * @fileoverview Consumable bonus model for temporary stat effects
+ *
+ * This file defines the ConsumableBonus model class:
+ * - Tracks temporary stat modifications from consumables
+ * - Manages bonus duration via Phaser.Time.TimerEvent
+ * - Stores stat name, value, and active time
+ *
+ * @see NeverquestConsumableManager - Applies consumable bonuses
+ * @see DB_SEED/Items - Consumable item definitions
+ *
+ * @module models/ConsumableBonus
+ */
+
+/**
  * This is a Model Class of the Consumable Bonus.
  * @class
  */

@@ -1,11 +1,49 @@
+/**
+ * @fileoverview Tiled-based dialog trigger system for Neverquest
+ *
+ * This plugin creates dialog zones from Tiled map objects:
+ * - Reads dialog zone objects from tilemap layers
+ * - Maps messageId properties to dialog content
+ * - Creates overlap zones for player interaction
+ * - Triggers NeverquestDialogBox on player entry
+ *
+ * Tiled object configuration:
+ * - messageId: Reference to CHATS registry entry
+ * - Additional properties passed to dialog
+ *
+ * Workflow:
+ * 1. Create object layer "dialogs" in Tiled
+ * 2. Add rectangle objects with messageId property
+ * 3. Plugin creates zones and handles triggers
+ *
+ * @see NeverquestDialogBox - Displays triggered dialogs
+ * @see CHATS - Dialog content registry
+ * @see Tiled Map Editor - https://www.mapeditor.org/
+ *
+ * @module plugins/NeverquestTiledInfoBox
+ */
+
 import { isNumber } from 'lodash';
 import { CHATS } from '../consts/DB_SEED/Chats';
-import { NeverquestDialogBox } from './NeverquestDialogBox';
+import { Player } from '../entities/Player';
+import { IDialogChat, NeverquestDialogBox } from './NeverquestDialogBox';
 import { DialogBox } from '../consts/Numbers';
 
+/**
+ * Tiled map object property
+ */
+interface ITiledProperty {
+	name: string;
+	type: string;
+	value: string | number | boolean;
+}
+
+/**
+ * Extended zone with chat and properties data from Tiled map objects
+ */
 interface Zone extends Phaser.GameObjects.Zone {
-	chat?: any[];
-	properties?: any[];
+	chat?: IDialogChat[];
+	properties?: ITiledProperty[];
 }
 
 /**
@@ -15,7 +53,7 @@ export class NeverquestTiledInfoBox {
 	map: Phaser.Tilemaps.Tilemap;
 	scene: Phaser.Scene;
 	uiScene: Phaser.Scene;
-	player: any;
+	player: Player;
 	neverquestDialogBox: NeverquestDialogBox;
 	tiledObjectLayer: string;
 	messageAttribute: string;
@@ -32,7 +70,7 @@ export class NeverquestTiledInfoBox {
 	 * @param {Phaser.Tilemaps.Tilemap} map Tile Map to get the object from.
 	 * @param {Phaser.Scene} uiScene the User interface Scene. Usually this is an overlay Scene, so the game objects don be affected by the game zoom and don't lose quality on Scale.
 	 */
-	constructor(scene: Phaser.Scene, player: any, map: Phaser.Tilemaps.Tilemap, uiScene: Phaser.Scene) {
+	constructor(scene: Phaser.Scene, player: Player, map: Phaser.Tilemaps.Tilemap, uiScene: Phaser.Scene) {
 		/**
 		 * Tile Map to get the object from.
 		 * @type {Phaser.Tilemaps.Tilemap} */
@@ -83,7 +121,7 @@ export class NeverquestTiledInfoBox {
 		if (infoObjects && infoObjects.objects) {
 			infoObjects.objects.forEach((infoObj) => {
 				const zone = this.scene.add.zone(infoObj.x!, infoObj.y!, infoObj.width, infoObj.height) as Zone;
-				const obj = infoObj.properties?.find((f: any) => f.name === this.messageAttribute);
+				const obj = infoObj.properties?.find((f: ITiledProperty) => f.name === this.messageAttribute);
 				if (!obj) {
 					return;
 				}
@@ -99,11 +137,9 @@ export class NeverquestTiledInfoBox {
 				this.scene.physics.add.existing(zone);
 				zone.setOrigin(0, 0);
 				(zone.body as Phaser.Physics.Arcade.Body).immovable = true;
-				zones.push({
-					...zone,
-					chat: chat.chat,
-					properties: infoObj.properties,
-				} as any); // Extended zone with chat data
+				zone.chat = chat.chat as IDialogChat[];
+				zone.properties = infoObj.properties as ITiledProperty[];
+				zones.push(zone);
 			});
 		}
 
@@ -113,21 +149,22 @@ export class NeverquestTiledInfoBox {
 		this.scene.physics.add.overlap(
 			zones,
 			this.player.hitZone,
-			(zone: any) => {
-				(this.neverquestDialogBox as any).allProperties = zone.properties;
+			(zoneObj) => {
+				const zone = zoneObj as Zone;
+				const body = this.player.container.body as Phaser.Physics.Arcade.Body;
 				this.neverquestDialogBox.isOverlapingChat = true;
 				this.neverquestDialogBox.actionButton.visible = true;
 				this.neverquestDialogBox.interactionIcon.visible = true;
 				this.neverquestDialogBox.interactionIcon.setPosition(
 					this.player.container.x,
-					this.player.container.y - this.player.container.body.height * DialogBox.MARGIN_MULTIPLIER_TEXT_Y
+					this.player.container.y - body.height * DialogBox.MARGIN_MULTIPLIER_TEXT_Y
 				);
 				this.neverquestDialogBox.chat = zone.chat;
 				// Note: We do NOT disable canAtack here. The dialog system (showDialog/hideDialog)
 				// is responsible for managing player attack state when dialogs open/close.
 				// The overlap callback only manages UI visibility (interaction prompt).
 			},
-			(_d: any) => {
+			() => {
 				return this.neverquestDialogBox.canShowDialog;
 			}
 		);

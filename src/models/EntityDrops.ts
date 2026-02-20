@@ -1,4 +1,18 @@
 /**
+ * @fileoverview Entity drop configuration model
+ *
+ * This file defines the EntityDrops model class:
+ * - Configures item drops from defeated enemies
+ * - Specifies item ID and drop chance percentage
+ * - Used by NeverquestDropSystem for loot generation
+ *
+ * @see NeverquestDropSystem - Drop spawning system
+ * @see EnemiesSeedConfig - Enemy drop configurations
+ *
+ * @module models/EntityDrops
+ */
+
+/**
  * The entity drops configuration object.
  * @class
  */
