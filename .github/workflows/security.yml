@@ -50,7 +50,7 @@ jobs:
               run: npm ci
 
             - name: Run npm audit
-              run: npm audit --audit-level=moderate
+              run: npm audit --audit-level=high
 
             - name: Check licenses
               run: npx license-checker --onlyAllow 'MIT;Apache-2.0;BSD-2-Clause;BSD-3-Clause;ISC;CC0-1.0;CC-BY-4.0' || true
