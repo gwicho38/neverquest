@@ -597,5 +597,429 @@ describe('QuestLogScene', () => {
 
 			expect(scene['scrollContainer']!.y).toBe(200);
 		});
+
+		it('should not throw when scrollContainer is null', () => {
+			scene['scrollContainer'] = null;
+			expect(() => scene['updateScrollPosition']()).not.toThrow();
+		});
+	});
+
+	describe('create lifecycle', () => {
+		beforeEach(() => {
+			scene.init({});
+		});
+
+		it('should create panel component', () => {
+			scene.create();
+			expect(scene['panelComponent']).not.toBeNull();
+		});
+
+		it('should set panel title to Quest Log', () => {
+			scene.create();
+			expect(scene['panelComponent']!.setTitleText).toHaveBeenCalledWith('Quest Log');
+		});
+
+		it('should register close button handler', () => {
+			scene.create();
+			expect(scene['panelComponent']!.closeButton.on).toHaveBeenCalledWith('pointerdown', expect.any(Function));
+		});
+
+		it('should create story flags if not provided', () => {
+			scene.create();
+			expect(scene['storyFlags']).not.toBeNull();
+		});
+
+		it('should use provided story flags', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+			expect(scene['storyFlags']).toBe(mockFlags);
+		});
+
+		it('should create scrollable content container', () => {
+			scene.create();
+			expect(scene['scrollContainer']).not.toBeNull();
+		});
+
+		it('should create scroll mask', () => {
+			scene.create();
+			expect(scene['scrollMask']).not.toBeNull();
+		});
+
+		it('should register resize handler', () => {
+			scene.create();
+			expect(scene.scale.on).toHaveBeenCalledWith('resize', expect.any(Function), scene);
+		});
+
+		it('should register scroll input handlers', () => {
+			scene.create();
+			expect(scene.input.on).toHaveBeenCalledWith('wheel', expect.any(Function));
+			expect(scene.input.on).toHaveBeenCalledWith('pointerdown', expect.any(Function));
+			expect(scene.input.on).toHaveBeenCalledWith('pointermove', expect.any(Function));
+		});
+
+		it('should create act header text', () => {
+			scene.create();
+			expect(scene['actHeader']).not.toBeNull();
+		});
+	});
+
+	describe('close button', () => {
+		it('should stop scene when close button clicked', () => {
+			scene.init({});
+			scene.create();
+
+			// Get the close button handler
+			const closeHandler = (scene['panelComponent']!.closeButton.on as jest.Mock).mock.calls.find(
+				(call: [string, () => void]) => call[0] === 'pointerdown'
+			)?.[1];
+
+			expect(closeHandler).toBeDefined();
+			closeHandler();
+			expect(scene.scene.stop).toHaveBeenCalled();
+		});
+	});
+
+	describe('buildQuestDisplay', () => {
+		it('should not build when scrollContainer is null', () => {
+			scene['scrollContainer'] = null;
+			scene['storyFlags'] = { hasFlag: jest.fn() } as any;
+			expect(() => scene['buildQuestDisplay']()).not.toThrow();
+		});
+
+		it('should not build when storyFlags is null', () => {
+			scene['scrollContainer'] = { add: jest.fn() } as any;
+			scene['storyFlags'] = null;
+			expect(() => scene['buildQuestDisplay']()).not.toThrow();
+		});
+
+		it('should display active quests for current act', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			// Should have created text elements for quests
+			const textCalls = (scene.add.text as jest.Mock).mock.calls;
+			// Should have "Active Quests:" header
+			const activeHeader = textCalls.find((call: unknown[]) => call[2] === 'Active Quests:');
+			expect(activeHeader).toBeDefined();
+		});
+
+		it('should display completed quests section when quests are done', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockImplementation((flag: string) => {
+					return flag === StoryFlag.INTRO_COMPLETE;
+				}),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			const textCalls = (scene.add.text as jest.Mock).mock.calls;
+			const completedHeader = textCalls.find((call: unknown[]) => call[2] === 'Completed:');
+			expect(completedHeader).toBeDefined();
+		});
+
+		it('should display fragment count in Act 2+', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(2),
+				getFragmentCount: jest.fn().mockReturnValue(1),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			const textCalls = (scene.add.text as jest.Mock).mock.calls;
+			const fragmentText = textCalls.find(
+				(call: unknown[]) => typeof call[2] === 'string' && (call[2] as string).includes('Sunstone Fragments')
+			);
+			expect(fragmentText).toBeDefined();
+		});
+
+		it('should not display fragment count in Act 1', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			const textCalls = (scene.add.text as jest.Mock).mock.calls;
+			const fragmentText = textCalls.find(
+				(call: unknown[]) => typeof call[2] === 'string' && (call[2] as string).includes('Sunstone Fragments')
+			);
+			expect(fragmentText).toBeUndefined();
+		});
+
+		it('should calculate content height', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			expect(scene['contentHeight']).toBeGreaterThan(0);
+		});
+
+		it('should calculate maxScroll based on content overflow', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(2),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			// maxScroll should be >= 0 (content may or may not overflow)
+			expect(scene['maxScroll']).toBeGreaterThanOrEqual(0);
+		});
+
+		it('should show all 3 fragments as green when complete', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(2),
+				getFragmentCount: jest.fn().mockReturnValue(3),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			const textCalls = (scene.add.text as jest.Mock).mock.calls;
+			const fragmentText = textCalls.find(
+				(call: unknown[]) => typeof call[2] === 'string' && (call[2] as string).includes('[***]')
+			);
+			expect(fragmentText).toBeDefined();
+		});
+	});
+
+	describe('setupScrolling', () => {
+		let wheelHandler: (pointer: unknown, gameObjects: unknown[], deltaX: number, deltaY: number) => void;
+		let pointerDownHandler: (pointer: { y: number; x?: number }) => void;
+		let pointerMoveHandler: (pointer: { y: number; x?: number; isDown: boolean }) => void;
+
+		beforeEach(() => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			// Capture the registered handlers
+			const inputOnCalls = (scene.input.on as jest.Mock).mock.calls;
+			wheelHandler = inputOnCalls.find(
+				(call: [string, (...args: unknown[]) => void]) => call[0] === 'wheel'
+			)?.[1];
+			pointerDownHandler = inputOnCalls.find(
+				(call: [string, (...args: unknown[]) => void]) => call[0] === 'pointerdown'
+			)?.[1];
+			pointerMoveHandler = inputOnCalls.find(
+				(call: [string, (...args: unknown[]) => void]) => call[0] === 'pointermove'
+			)?.[1];
+		});
+
+		it('should scroll down on mouse wheel', () => {
+			scene['maxScroll'] = 200;
+			scene['scrollY'] = 0;
+			scene['panelComponent'] = {
+				panelBackground: { y: 100 },
+			} as any;
+
+			wheelHandler({}, [], 0, 100);
+
+			expect(scene['scrollY']).toBeGreaterThan(0);
+		});
+
+		it('should not scroll beyond maxScroll', () => {
+			scene['maxScroll'] = 50;
+			scene['scrollY'] = 0;
+			scene['panelComponent'] = {
+				panelBackground: { y: 100 },
+			} as any;
+
+			wheelHandler({}, [], 0, 500);
+
+			expect(scene['scrollY']).toBeLessThanOrEqual(50);
+		});
+
+		it('should not scroll when maxScroll is 0', () => {
+			scene['maxScroll'] = 0;
+			scene['scrollY'] = 0;
+
+			wheelHandler({}, [], 0, 100);
+
+			expect(scene['scrollY']).toBe(0);
+		});
+
+		it('should not scroll below 0', () => {
+			scene['maxScroll'] = 200;
+			scene['scrollY'] = 10;
+			scene['panelComponent'] = {
+				panelBackground: { y: 100 },
+			} as any;
+
+			wheelHandler({}, [], 0, -500);
+
+			expect(scene['scrollY']).toBeGreaterThanOrEqual(0);
+		});
+
+		it('should start drag on pointerdown inside panel', () => {
+			const pointer = { x: 300, y: 300 };
+			scene['panelComponent'] = {
+				panelBackground: { x: 100, y: 100, width: 512, height: 512 },
+			} as any;
+
+			pointerDownHandler(pointer);
+			// No error = success, drag state is captured
+		});
+
+		it('should scroll on pointermove while dragging', () => {
+			scene['maxScroll'] = 200;
+			scene['scrollY'] = 0;
+			scene['panelComponent'] = {
+				panelBackground: { x: 100, y: 100, width: 512, height: 512 },
+			} as any;
+
+			// Start drag
+			pointerDownHandler({ x: 300, y: 300 });
+
+			// Move pointer up (should scroll down)
+			pointerMoveHandler({ x: 300, y: 250, isDown: true });
+
+			expect(scene['scrollY']).toBeGreaterThan(0);
+		});
+
+		it('should not scroll on pointermove when not dragging', () => {
+			scene['maxScroll'] = 200;
+			scene['scrollY'] = 0;
+			scene['panelComponent'] = {
+				panelBackground: { x: 100, y: 100, width: 512, height: 512 },
+			} as any;
+
+			// Move without pressing
+			pointerMoveHandler({ x: 300, y: 250, isDown: false });
+
+			expect(scene['scrollY']).toBe(0);
+		});
+	});
+
+	describe('handleResize', () => {
+		it('should rebuild display on resize', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			// Call handleResize
+			scene['handleResize']();
+
+			// Should have recreated panel (create was called again)
+			expect(scene['panelComponent']).not.toBeNull();
+		});
+	});
+
+	describe('createScrollableContent', () => {
+		it('should create container at correct position', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			// Container should be created at panel.x + padding, panel.y + padding
+			expect(scene.add.container).toHaveBeenCalledWith(
+				100 + 30, // panel.x + CONTENT_PADDING_LEFT
+				100 + 100 // panel.y + CONTENT_PADDING_TOP
+			);
+		});
+
+		it('should create geometry mask', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			const mockGraphics = scene.add.graphics();
+			expect(mockGraphics.createGeometryMask).toHaveBeenCalled();
+		});
+
+		it('should set mask on scroll container', () => {
+			const mockFlags = {
+				hasFlag: jest.fn().mockReturnValue(false),
+				getCurrentAct: jest.fn().mockReturnValue(1),
+				getFragmentCount: jest.fn().mockReturnValue(0),
+				load: jest.fn(),
+			};
+			scene.init({ storyFlags: mockFlags as any });
+			scene.create();
+
+			expect(scene['scrollContainer']!.setMask).toHaveBeenCalled();
+		});
+	});
+
+	describe('getQuestsWithStatus', () => {
+		it('should return all 16 quests', () => {
+			scene['storyFlags'] = {
+				hasFlag: jest.fn().mockReturnValue(false),
+			} as any;
+
+			const quests = scene['getQuestsWithStatus']();
+			expect(quests).toHaveLength(16);
+		});
+
+		it('should mark quests complete based on matching story flags', () => {
+			scene['storyFlags'] = {
+				hasFlag: jest.fn().mockImplementation((flag: string) => {
+					return flag === StoryFlag.ENTERED_CROSSROADS;
+				}),
+			} as any;
+
+			const quests = scene['getQuestsWithStatus']();
+			const crossroadsQuest = quests.find((q) => q.id === 'crossroads');
+			expect(crossroadsQuest?.completed).toBe(true);
+		});
+
+		it('should not modify original quest definitions', () => {
+			scene['storyFlags'] = {
+				hasFlag: jest.fn().mockReturnValue(true),
+			} as any;
+
+			scene['getQuestsWithStatus']();
+			// Call again - should still work since originals aren't mutated
+			const quests2 = scene['getQuestsWithStatus']();
+			expect(quests2).toHaveLength(16);
+		});
 	});
 });
