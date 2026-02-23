@@ -548,6 +548,14 @@ const Phaser = {
 			return Math.floor(Math.random() * (max - min + 1)) + min;
 		}),
 	},
+	Cameras: {
+		Scene2D: {
+			Events: {
+				FADE_OUT_COMPLETE: 'camerafadeoutcomplete',
+				FADE_IN_COMPLETE: 'camerafadeincomplete',
+			},
+		},
+	},
 	Geom: {
 		Point: class Point {
 			x: number;
@@ -556,6 +564,19 @@ const Phaser = {
 			constructor(x: number = 0, y: number = 0) {
 				this.x = x;
 				this.y = y;
+			}
+		},
+		Ellipse: class Ellipse {
+			x: number;
+			y: number;
+			width: number;
+			height: number;
+
+			constructor(x: number = 0, y: number = 0, width: number = 0, height: number = 0) {
+				this.x = x;
+				this.y = y;
+				this.width = width;
+				this.height = height;
 			}
 		},
 	},

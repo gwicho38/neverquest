@@ -554,6 +554,265 @@ describe('MainScene', () => {
 		});
 	});
 
+	describe('spellwheelclosed event', () => {
+		it('should set spellWheelOpen to false when spellwheelclosed event fires', () => {
+			const mockEvents = {
+				on: jest.fn(),
+			};
+			(scene as any).events = mockEvents;
+
+			scene.create();
+
+			// Find the spellwheelclosed handler registered via events.on
+			const spellWheelHandler = mockEvents.on.mock.calls.find(
+				(call: unknown[]) => call[0] === 'spellwheelclosed'
+			);
+			expect(spellWheelHandler).toBeDefined();
+
+			// Set spellWheelOpen to true and trigger the handler
+			scene.spellWheelOpen = true;
+			spellWheelHandler[1]();
+			expect(scene.spellWheelOpen).toBe(false);
+		});
+	});
+
+	describe('createUpsideDownPortal()', () => {
+		let mockAdd: any;
+		let mockPhysics: any;
+		let mockTime: any;
+		let mockTweens: any;
+
+		beforeEach(() => {
+			const mockZone = {
+				destroy: jest.fn(),
+			};
+			const mockParticleEmitter = {
+				setDepth: jest.fn(),
+				explode: jest.fn(),
+			};
+			const mockEllipse = {
+				setDepth: jest.fn(),
+			};
+			const mockGraphics = {
+				lineStyle: jest.fn(),
+				setDepth: jest.fn(),
+				beginPath: jest.fn(),
+				moveTo: jest.fn(),
+				lineTo: jest.fn(),
+				strokePath: jest.fn(),
+			};
+			const mockText = {
+				setOrigin: jest.fn().mockReturnThis(),
+				setDepth: jest.fn().mockReturnThis(),
+			};
+
+			mockAdd = {
+				zone: jest.fn(() => mockZone),
+				particles: jest.fn(() => mockParticleEmitter),
+				ellipse: jest.fn(() => mockEllipse),
+				graphics: jest.fn(() => mockGraphics),
+				text: jest.fn(() => mockText),
+			};
+
+			mockPhysics = {
+				add: {
+					existing: jest.fn(),
+					overlap: jest.fn(),
+				},
+			};
+
+			mockTime = {
+				addEvent: jest.fn(),
+			};
+
+			mockTweens = {
+				add: jest.fn(),
+			};
+
+			(scene as any).add = mockAdd;
+			(scene as any).physics = mockPhysics;
+			(scene as any).time = mockTime;
+			(scene as any).tweens = mockTweens;
+		});
+
+		it('should create a portal zone', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockAdd.zone).toHaveBeenCalledWith(250, 200, 60, 80);
+			expect(mockPhysics.add.existing).toHaveBeenCalled();
+		});
+
+		it('should create portal particles', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockAdd.particles).toHaveBeenCalledWith(250, 200, 'particle_warp', expect.any(Object));
+		});
+
+		it('should create portal core ellipse', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockAdd.ellipse).toHaveBeenCalledWith(250, 200, 40, 60, expect.any(Number), expect.any(Number));
+		});
+
+		it('should create pulsing tween on portal core', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockTweens.add).toHaveBeenCalledWith(
+				expect.objectContaining({
+					duration: 2000,
+					yoyo: true,
+					repeat: -1,
+				})
+			);
+		});
+
+		it('should draw 8 energy lines', () => {
+			(scene as any).createUpsideDownPortal();
+
+			// graphics methods are called for each of 8 lines
+			expect(mockAdd.graphics).toHaveBeenCalled();
+		});
+
+		it('should add floating portal text', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockAdd.text).toHaveBeenCalledWith(250, 130, expect.any(String), expect.any(Object));
+		});
+
+		it('should setup overlap detection with player', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockPhysics.add.overlap).toHaveBeenCalledWith(
+				scene.player.container,
+				expect.anything(),
+				expect.any(Function),
+				undefined,
+				scene
+			);
+		});
+
+		it('should setup periodic spark effect', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(mockTime.addEvent).toHaveBeenCalledWith(
+				expect.objectContaining({
+					delay: 3000,
+					loop: true,
+				})
+			);
+		});
+
+		it('should store portal and particle references', () => {
+			(scene as any).createUpsideDownPortal();
+
+			expect(scene.upsideDownPortal).not.toBeNull();
+			expect(scene.upsideDownPortalParticles).not.toBeNull();
+		});
+	});
+
+	describe('handlePortalEntry()', () => {
+		let mockPortalSound: any;
+		let mockCamerasForPortal: any;
+		let mockTweens: any;
+
+		beforeEach(() => {
+			mockPortalSound = { play: jest.fn() };
+			mockCamerasForPortal = {
+				main: {
+					fadeOut: jest.fn(),
+					once: jest.fn(),
+				},
+			};
+			mockTweens = { add: jest.fn() };
+
+			(scene as any).cameras = mockCamerasForPortal;
+			(scene as any).tweens = mockTweens;
+			(scene as any).sound = {
+				...mockSound,
+				get: jest.fn((): null => null),
+			};
+			mockSound.add.mockReturnValue(mockPortalSound);
+			scene.upsideDownPortal = { destroy: jest.fn() } as any;
+		});
+
+		it('should destroy the portal zone on entry', () => {
+			const portal = scene.upsideDownPortal;
+			(scene as any).handlePortalEntry();
+
+			expect(portal!.destroy).toHaveBeenCalled();
+			expect(scene.upsideDownPortal).toBeNull();
+		});
+
+		it('should play portal sound', () => {
+			(scene as any).handlePortalEntry();
+
+			expect(mockSound.add).toHaveBeenCalledWith('start_game', expect.any(Object));
+			expect(mockPortalSound.play).toHaveBeenCalled();
+		});
+
+		it('should play electric sound if available', () => {
+			const mockElectricSound = { play: jest.fn() };
+			(scene as any).sound.get = jest.fn(() => ({}));
+			mockSound.add.mockReturnValueOnce(mockPortalSound).mockReturnValueOnce(mockElectricSound);
+
+			(scene as any).handlePortalEntry();
+
+			expect(mockElectricSound.play).toHaveBeenCalled();
+		});
+
+		it('should fade out camera', () => {
+			(scene as any).handlePortalEntry();
+
+			expect(mockCamerasForPortal.main.fadeOut).toHaveBeenCalled();
+		});
+
+		it('should add distortion tween on camera', () => {
+			(scene as any).handlePortalEntry();
+
+			expect(mockTweens.add).toHaveBeenCalledWith(
+				expect.objectContaining({
+					targets: mockCamerasForPortal.main,
+				})
+			);
+		});
+
+		it('should register fade out complete handler', () => {
+			(scene as any).handlePortalEntry();
+
+			expect(mockCamerasForPortal.main.once).toHaveBeenCalledWith(expect.anything(), expect.any(Function));
+		});
+
+		it('should transition to UpsideDownScene on fade complete', () => {
+			// Setup scene manager with stop method
+			const mockSceneManager = {
+				start: jest.fn(),
+				stop: jest.fn(),
+			};
+			(scene as any).scene = mockSceneManager;
+			scene.themeSound = { stop: jest.fn() } as any;
+			scene.player = { destroy: jest.fn() } as any;
+
+			(scene as any).handlePortalEntry();
+
+			// Get and call the fade complete callback
+			const fadeCallback = mockCamerasForPortal.main.once.mock.calls[0][1];
+			fadeCallback();
+
+			expect(mockSceneManager.start).toHaveBeenCalledWith('UpsideDownScene', {
+				previousScene: 'MainScene',
+			});
+			expect(scene.themeSound!.stop).toHaveBeenCalled();
+			expect(mockSceneManager.stop).toHaveBeenCalledWith('DialogScene');
+			expect(mockSceneManager.stop).toHaveBeenCalledWith('HUDScene');
+			expect(scene.player!.destroy).toHaveBeenCalled();
+		});
+
+		it('should not throw if portal is already null', () => {
+			scene.upsideDownPortal = null;
+			expect(() => (scene as any).handlePortalEntry()).not.toThrow();
+		});
+	});
+
 	describe('Integration', () => {
 		it('should initialize all core systems in correct order', () => {
 			const callOrder: string[] = [];

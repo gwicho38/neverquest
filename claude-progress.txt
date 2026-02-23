@@ -93,6 +93,23 @@
 - **Overall project coverage**: 84.8% → 88.31% statements, 70.4% → 73.41% branches
 - Result: 125 suites, 4672 tests passing (189 new tests), lint clean
 
+#### Test Coverage Improvements (PR #77)
+- **NeverquestBattleManager**: 57.5% → 91.15% statement coverage
+  - Added 22 new tests covering createHitBox (all 4 directions + visual properties),
+    setHitboxRotation, resetEnemyState, takeDamage critical hit path, takeDamage miss path,
+    takeDamage enemy death with item drops/exp, HUD progress bar update, minimum 1 damage
+    when defense > attack, atack animation handlers (start/complete/timeout fallback/guard),
+    enemy hitbox creation on animation complete, handlePlayerDeath with null phaserJuice,
+    stopBlock with canBlock false (dialog state), block animation handling
+- **MainScene**: 58.3% → 97.63% statement coverage
+  - Added 27 new tests covering spellwheelclosed event, createUpsideDownPortal (zone creation,
+    particles, core ellipse, pulsing tween, energy lines, portal text, overlap detection,
+    spark effect, references), handlePortalEntry (portal destruction, portal sound, electric
+    sound, camera fadeout, distortion tween, fade complete handler, scene transition, null portal)
+- **Phaser mock updated**: Added Cameras.Scene2D.Events and Geom.Ellipse to phaserMock.ts
+- **Overall project coverage**: 88.31% → 89.23% statements, 73.41% → 74.4% branches
+- Result: 125 suites, 4724 tests passing (52 new tests), lint clean
+
 #### Issue Triage
 - 6 open issues reviewed (#3, #48-52) - all feature requests, no bugs
 - No stale issues to close
