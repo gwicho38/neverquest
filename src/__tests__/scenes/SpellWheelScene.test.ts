@@ -387,4 +387,521 @@ describe('SpellWheelScene', () => {
 			expect(mockText.setText).toHaveBeenCalledWith('');
 		});
 	});
+
+	describe('spell icons - additional types', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+		});
+
+		it('should return correct icon for flameWave', () => {
+			const icon = (scene as any).getSpellIcon({ id: 'flameWave' });
+			expect(icon).toBe('🌊');
+		});
+
+		it('should return correct icon for frostNova', () => {
+			const icon = (scene as any).getSpellIcon({ id: 'frostNova' });
+			expect(icon).toBe('💠');
+		});
+
+		it('should return correct icon for chainLightning', () => {
+			const icon = (scene as any).getSpellIcon({ id: 'chainLightning' });
+			expect(icon).toBe('⛈️');
+		});
+
+		it('should return correct icon for divineShield', () => {
+			const icon = (scene as any).getSpellIcon({ id: 'divineShield' });
+			expect(icon).toBe('🛡️');
+		});
+
+		it('should return correct icon for shadowBolt', () => {
+			const icon = (scene as any).getSpellIcon({ id: 'shadowBolt' });
+			expect(icon).toBe('🌑');
+		});
+
+		it('should return correct icon for poisonCloud', () => {
+			const icon = (scene as any).getSpellIcon({ id: 'poisonCloud' });
+			expect(icon).toBe('☠️');
+		});
+	});
+
+	describe('selectByPosition', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should select slot matching LEFT position', () => {
+			(scene as any).selectByPosition(0); // SpellPosition.LEFT
+			expect((scene as any).selectedIndex).toBe(0);
+		});
+
+		it('should select slot matching CENTER position', () => {
+			(scene as any).selectByPosition(1); // SpellPosition.CENTER
+			expect((scene as any).selectedIndex).toBe(1);
+		});
+
+		it('should not change selection for invalid position', () => {
+			(scene as any).selectedIndex = -1;
+			(scene as any).selectByPosition(99);
+			expect((scene as any).selectedIndex).toBe(-1);
+		});
+	});
+
+	describe('setSelection', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should clear previous selection styling', () => {
+			// Select first, then second
+			(scene as any).setSelection(0);
+			const firstSlotGraphics = (scene as any).slots[0].graphics;
+			firstSlotGraphics.clear.mockClear();
+
+			(scene as any).setSelection(1);
+			// Previous slot should have been redrawn (clear called)
+			expect(firstSlotGraphics.clear).toHaveBeenCalled();
+		});
+
+		it('should scale up icon for selected slot', () => {
+			(scene as any).setSelection(0);
+			const slot = (scene as any).slots[0];
+			expect(slot.icon.setScale).toHaveBeenCalledWith(1.3);
+		});
+
+		it('should reset icon scale for deselected slot', () => {
+			(scene as any).setSelection(0);
+			const firstIcon = (scene as any).slots[0].icon;
+			firstIcon.setScale.mockClear();
+
+			(scene as any).setSelection(1);
+			expect(firstIcon.setScale).toHaveBeenCalledWith(1);
+		});
+
+		it('should update info text with spell details', () => {
+			(scene as any).setSelection(0);
+			// setText is called for spell name, mana cost, and description
+			expect(mockText.setText).toHaveBeenCalledWith('Fireball');
+			expect(mockText.setText).toHaveBeenCalledWith('Mana: 10');
+			expect(mockText.setText).toHaveBeenCalledWith('A ball of fire');
+		});
+
+		it('should set spell color on name text', () => {
+			(scene as any).setSelection(0);
+			expect(mockText.setColor).toHaveBeenCalledWith('#ff6600');
+		});
+
+		it('should clear info text when index is out of bounds', () => {
+			(scene as any).setSelection(-1);
+			// clearInfoText sets all three text fields to ''
+			expect(mockText.setText).toHaveBeenCalledWith('');
+		});
+	});
+
+	describe('updateSelectionFromMouse', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should select LEFT slot when mouse is far left of center', () => {
+			const pointer = { x: 300, y: 300 }; // dx = -100 (left of center 400)
+			(scene as any).updateSelectionFromMouse(pointer);
+			expect((scene as any).selectedIndex).toBe(0); // LEFT
+		});
+
+		it('should select CENTER slot when mouse is near center', () => {
+			const pointer = { x: 400, y: 300 }; // dx = 0
+			(scene as any).updateSelectionFromMouse(pointer);
+			expect((scene as any).selectedIndex).toBe(1); // CENTER
+		});
+
+		it('should select RIGHT slot when mouse is far right of center', () => {
+			const pointer = { x: 500, y: 300 }; // dx = 100 (right of center 400)
+			// Only 2 spells mocked, RIGHT position (index 2) won't exist
+			// selectByPosition(RIGHT) should find no slot, so selection unchanged
+			(scene as any).selectedIndex = -1;
+			(scene as any).updateSelectionFromMouse(pointer);
+			// With only 2 spells, RIGHT slot doesn't exist, selectedIndex stays -1
+			expect((scene as any).selectedIndex).toBe(-1);
+		});
+
+		it('should ignore mouse when too far vertically', () => {
+			const prevIndex = (scene as any).selectedIndex;
+			const pointer = { x: 400, y: 100 }; // dy = -200, way above SLOT_SIZE
+			(scene as any).updateSelectionFromMouse(pointer);
+			expect((scene as any).selectedIndex).toBe(prevIndex);
+		});
+
+		it('should ignore mouse when too far from wheel', () => {
+			const prevIndex = (scene as any).selectedIndex;
+			const pointer = { x: 700, y: 300 }; // distance > SLOT_RADIUS + SLOT_SIZE
+			(scene as any).updateSelectionFromMouse(pointer);
+			expect((scene as any).selectedIndex).toBe(prevIndex);
+		});
+	});
+
+	describe('castSelectedSpell', () => {
+		let mockSpellEffects: any;
+
+		beforeEach(() => {
+			mockSpellEffects = {
+				fireball: jest.fn(),
+				flameWave: jest.fn(),
+				iceShard: jest.fn(),
+				frostNova: jest.fn(),
+				lightningBolt: jest.fn(),
+				heal: jest.fn(),
+				divineShield: jest.fn(),
+				shadowBolt: jest.fn(),
+				poisonCloud: jest.fn(),
+			};
+
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: {
+					events: { emit: jest.fn() },
+					input: {
+						activePointer: { x: 500, y: 400 },
+					},
+					cameras: {
+						main: {
+							getWorldPoint: jest.fn().mockReturnValue({ x: 600, y: 500 }),
+						},
+					},
+				} as any,
+			});
+
+			scene.create();
+			(scene as any).spellEffects = mockSpellEffects;
+		});
+
+		it('should cast fireball when fireball spell is selected', () => {
+			(scene as any).setSelection(0); // Fireball
+			const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+			(scene as any).castSelectedSpell();
+
+			expect(mockSpellEffects.fireball).toHaveBeenCalledWith(100, 200);
+			consoleSpy.mockRestore();
+		});
+
+		it('should cast iceShard when ice spell is selected', () => {
+			(scene as any).setSelection(1); // Ice Shard
+			const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+			(scene as any).castSelectedSpell();
+
+			expect(mockSpellEffects.iceShard).toHaveBeenCalledWith(100, 200);
+			consoleSpy.mockRestore();
+		});
+
+		it('should close spell wheel after casting', () => {
+			(scene as any).setSelection(0);
+			(scene as any).isOpen = true;
+			const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+			(scene as any).castSelectedSpell();
+
+			expect((scene as any).isOpen).toBe(false);
+			consoleSpy.mockRestore();
+		});
+
+		it('should close spell wheel even without selection', () => {
+			(scene as any).selectedIndex = -1;
+			(scene as any).isOpen = true;
+
+			(scene as any).castSelectedSpell();
+
+			expect((scene as any).isOpen).toBe(false);
+		});
+
+		it('should use world coordinates for targeted spells', () => {
+			(scene as any).setSelection(0);
+			const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+			(scene as any).castSelectedSpell();
+
+			// Should have used getWorldPoint to convert screen to world coords
+			expect((scene as any).parentScene.cameras.main.getWorldPoint).toHaveBeenCalled();
+			consoleSpy.mockRestore();
+		});
+
+		it('should use default target when no parent pointer', () => {
+			(scene as any).parentScene.input.activePointer = null;
+			(scene as any).parentScene.cameras.main = null;
+			(scene as any).setSelection(0);
+			const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+			(scene as any).castSelectedSpell();
+
+			// Should still cast (uses default fallback targetX = playerX + 100)
+			expect(mockSpellEffects.fireball).toHaveBeenCalled();
+			consoleSpy.mockRestore();
+		});
+	});
+
+	describe('castSpellEffect - all spell types', () => {
+		let mockSpellEffects: any;
+
+		beforeEach(() => {
+			mockSpellEffects = {
+				fireball: jest.fn(),
+				flameWave: jest.fn(),
+				iceShard: jest.fn(),
+				frostNova: jest.fn(),
+				lightningBolt: jest.fn(),
+				heal: jest.fn(),
+				divineShield: jest.fn(),
+				shadowBolt: jest.fn(),
+				poisonCloud: jest.fn(),
+			};
+
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+			(scene as any).spellEffects = mockSpellEffects;
+		});
+
+		it('should cast fireball effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'fireball' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.fireball).toHaveBeenCalledWith(10, 20);
+		});
+
+		it('should cast flameWave effect with direction', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'flameWave' }, 10, 20, 110, 20);
+			expect(mockSpellEffects.flameWave).toHaveBeenCalledWith(10, 20, expect.any(Number));
+		});
+
+		it('should cast iceShard effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'iceShard' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.iceShard).toHaveBeenCalledWith(10, 20);
+		});
+
+		it('should cast frostNova effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'frostNova' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.frostNova).toHaveBeenCalledWith(10, 20);
+		});
+
+		it('should cast lightningBolt effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'lightningBolt' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.lightningBolt).toHaveBeenCalledWith(10, 20, 100, 200);
+		});
+
+		it('should cast chainLightning as lightningBolt', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'chainLightning' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.lightningBolt).toHaveBeenCalledWith(10, 20, 100, 200);
+		});
+
+		it('should cast heal effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'heal' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.heal).toHaveBeenCalledWith(10, 20);
+		});
+
+		it('should cast divineShield effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'divineShield' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.divineShield).toHaveBeenCalledWith(10, 20);
+		});
+
+		it('should cast shadowBolt effect', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'shadowBolt' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.shadowBolt).toHaveBeenCalledWith(10, 20, 100, 200);
+		});
+
+		it('should cast poisonCloud at target position', () => {
+			(scene as any).castSpellEffect({ effectMethod: 'poisonCloud' }, 10, 20, 100, 200);
+			expect(mockSpellEffects.poisonCloud).toHaveBeenCalledWith(100, 200);
+		});
+
+		it('should warn for unknown spell effect', () => {
+			const consoleSpy = jest.spyOn(console, 'warn').mockImplementation();
+			(scene as any).castSpellEffect({ effectMethod: 'unknownSpell' }, 10, 20, 100, 200);
+			expect(consoleSpy).toHaveBeenCalledWith(expect.stringContaining('unknownSpell'));
+			consoleSpy.mockRestore();
+		});
+	});
+
+	describe('input handlers', () => {
+		let keyHandlers: Record<string, () => void>;
+
+		beforeEach(() => {
+			keyHandlers = {};
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: {
+					events: { emit: jest.fn() },
+					input: { activePointer: { x: 500, y: 400 } },
+					cameras: {
+						main: {
+							getWorldPoint: jest.fn().mockReturnValue({ x: 600, y: 500 }),
+						},
+					},
+				} as any,
+			});
+
+			(scene as any).input.keyboard.on = jest.fn().mockImplementation((event: string, callback: () => void) => {
+				keyHandlers[event] = callback;
+			});
+
+			scene.create();
+		});
+
+		it('should select LEFT position on M key', () => {
+			keyHandlers['keydown-M']();
+			expect((scene as any).selectedIndex).toBe(0);
+		});
+
+		it('should select CENTER position on N key', () => {
+			keyHandlers['keydown-N']();
+			expect((scene as any).selectedIndex).toBe(1);
+		});
+
+		it('should cast and close on L key release', () => {
+			(scene as any).setSelection(0);
+			(scene as any).isOpen = true;
+			const consoleSpy = jest.spyOn(console, 'log').mockImplementation();
+
+			keyHandlers['keyup-L']();
+
+			expect((scene as any).isOpen).toBe(false);
+			consoleSpy.mockRestore();
+		});
+
+		it('should close without casting on ESC', () => {
+			(scene as any).isOpen = true;
+
+			keyHandlers['keyup-ESC']();
+
+			expect((scene as any).isOpen).toBe(false);
+		});
+	});
+
+	describe('animateOpen', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should set isOpen to true', () => {
+			expect((scene as any).isOpen).toBe(true);
+		});
+
+		it('should tween overlay alpha to 1', () => {
+			const tweenCalls = mockTweens.add.mock.calls;
+			const overlayTween = tweenCalls.find(
+				(call: [{ targets: unknown; alpha: number }]) => call[0].targets === mockGraphics && call[0].alpha === 1
+			);
+			expect(overlayTween).toBeDefined();
+		});
+
+		it('should tween wheel scale to 1', () => {
+			const tweenCalls = mockTweens.add.mock.calls;
+			const scaleTween = tweenCalls.find(
+				(call: [{ targets: unknown; scale: number }]) =>
+					call[0].targets === mockContainer && call[0].scale === 1
+			);
+			expect(scaleTween).toBeDefined();
+		});
+	});
+
+	describe('close with onComplete', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should call scene.stop on close animation complete', () => {
+			(scene as any).isOpen = true;
+			mockTweens.add.mockClear();
+
+			(scene as any).close(false);
+
+			// Find the tween with onComplete
+			const tweenCalls = mockTweens.add.mock.calls;
+			const tweenWithComplete = tweenCalls.find((call: [{ onComplete?: () => void }]) => call[0].onComplete);
+			expect(tweenWithComplete).toBeDefined();
+
+			// Execute the onComplete callback
+			tweenWithComplete[0].onComplete();
+			expect((scene as any).scene.stop).toHaveBeenCalled();
+		});
+	});
+
+	describe('getSelectedSpell - with valid selection', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should return the selected spell object', () => {
+			(scene as any).setSelection(0);
+			const spell = scene.getSelectedSpell();
+			expect(spell).not.toBeNull();
+			expect(spell!.id).toBe('fireball');
+			expect(spell!.name).toBe('Fireball');
+		});
+
+		it('should return second spell when index is 1', () => {
+			(scene as any).setSelection(1);
+			const spell = scene.getSelectedSpell();
+			expect(spell).not.toBeNull();
+			expect(spell!.id).toBe('iceShard');
+		});
+	});
+
+	describe('drawSlot', () => {
+		beforeEach(() => {
+			scene.init({
+				player: { container: { x: 100, y: 200 } } as any,
+				parentScene: { events: { emit: jest.fn() } } as any,
+			});
+			scene.create();
+		});
+
+		it('should draw selected slot with different styling', () => {
+			const gfx = (scene as any).add.graphics();
+			const spell = { type: 'fire', id: 'fireball' };
+
+			(scene as any).drawSlot(gfx, 0, 0, spell, true);
+
+			expect(gfx.clear).toHaveBeenCalled();
+			expect(gfx.fillRoundedRect).toHaveBeenCalled();
+			expect(gfx.strokeRoundedRect).toHaveBeenCalled();
+			// Selected uses white stroke (0xffffff)
+			expect(gfx.lineStyle).toHaveBeenCalledWith(4, 0xffffff, 1);
+		});
+
+		it('should draw unselected slot with default styling', () => {
+			const gfx = (scene as any).add.graphics();
+			const spell = { type: 'fire', id: 'fireball' };
+
+			(scene as any).drawSlot(gfx, 0, 0, spell, false);
+
+			expect(gfx.lineStyle).toHaveBeenCalledWith(2, 0x555555, 1);
+		});
+	});
 });
