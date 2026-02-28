@@ -128,7 +128,7 @@
 		"chalk": "^5.6.2",
 		"css-loader": "^5.1.1",
 		"easystarjs": "^0.4.4",
-		"ink-docstrap": "^0.5.4",
+		"ink-docstrap": "^1.3.2",
 		"lodash": "^4.17.21",
 		"nes.css": "^2.3.0",
 		"phaser": "^3.90.0",
