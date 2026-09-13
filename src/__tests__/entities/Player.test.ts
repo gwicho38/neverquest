@@ -234,6 +234,22 @@ describe('Player', () => {
 		expect(player.shield.scaleY).toBeCloseTo(0.875);
 	});
 
+	test.each([
+		['down', -8, -9],
+		['up', 8, 9],
+		['left', -7, -10],
+		['right', 7, 10],
+	])('rests the shield on the arm when facing %s, including while blocking', (direction, carriedX, raisedX) => {
+		(player.anims as any).currentAnim = { key: `character-idle-${direction}` };
+		player.updateShield();
+		expect(player.shield.x).toBe(carriedX);
+		expect(player.shield.y).toBe(8);
+		player.isBlocking = true;
+		player.updateShield();
+		expect(player.shield.x).toBe(raisedX);
+		expect(player.shield.y).toBe(9);
+	});
+
 	test('raises the shield while blocking and returns it to the carried pose on release', () => {
 		player.isBlocking = true;
 		player.updateShield();

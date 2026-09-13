@@ -28,10 +28,11 @@ export const ShieldVisual = {
 	CARRIED_TINT: 0xffffff,
 	RAISED_TINT: 0xbcefff,
 	POSES: {
-		down: { x: -8, y: 4, raisedX: -3, raisedY: 3 },
-		up: { x: 7, y: 1, raisedX: 3, raisedY: -6 },
-		left: { x: -7, y: 4, raisedX: -10, raisedY: 2 },
-		right: { x: 7, y: 4, raisedX: 10, raisedY: 2 },
+		// Keep the shield beside the forearm, below the face even in the larger guard pose.
+		down: { x: -8, y: 8, raisedX: -9, raisedY: 9 },
+		up: { x: 8, y: 8, raisedX: 9, raisedY: 9 },
+		left: { x: -7, y: 8, raisedX: -10, raisedY: 9 },
+		right: { x: 7, y: 8, raisedX: 10, raisedY: 9 },
 	},
 } as const;
 

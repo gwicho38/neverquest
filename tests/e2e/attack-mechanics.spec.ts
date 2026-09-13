@@ -27,6 +27,44 @@ test.describe('Attack Mechanics E2E', () => {
 		await game.buff();
 	});
 
+	for (const [direction, key] of [
+		['down', 's'],
+		['up', 'w'],
+		['left', 'a'],
+		['right', 'd'],
+	]) {
+		test(`shield rests below the face when facing ${direction}`, async ({ page }) => {
+			await page.keyboard.down(key);
+			await page.waitForFunction(
+				(facing) =>
+					(window as any).game.scene.getScene('MainScene').player.anims.currentAnim.key.endsWith(facing),
+				direction
+			);
+			await page.keyboard.up(key);
+			for (const blocking of [false, true]) {
+				if (blocking) await page.keyboard.down('k');
+				await expect
+					.poll(() =>
+						page.evaluate(() => {
+							const player = (window as any).game.scene.getScene('MainScene').player;
+							return { y: player.shield.y, blocking: player.isBlocking };
+						})
+					)
+					.toEqual({ y: blocking ? 9 : 8, blocking });
+				const position = await page.evaluate(() => {
+					const shield = (window as any).game.scene.getScene('MainScene').player.shield;
+					return { x: shield.x, top: shield.y - shield.displayHeight * shield.originY };
+				});
+				expect(Math.abs(position.x)).toBeGreaterThanOrEqual(7);
+				expect(position.top).toBeGreaterThanOrEqual(1);
+				await page.screenshot({
+					path: test.info().outputPath(`shield-${direction}-${blocking ? 'blocking' : 'carried'}.png`),
+				});
+			}
+			await page.keyboard.up('k');
+		});
+	}
+
 	test('the visible shield raises while K is held and lowers on release', async ({ page }) => {
 		const shield = () =>
 			page.evaluate(() => {
