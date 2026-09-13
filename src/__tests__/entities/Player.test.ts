@@ -235,10 +235,10 @@ describe('Player', () => {
 	});
 
 	test.each([
-		['down', -8, -9],
-		['up', 8, 9],
-		['left', -7, -10],
-		['right', 7, 10],
+		['down', -10, -11],
+		['up', 6, 7],
+		['left', -9, -12],
+		['right', 5, 8],
 	])('rests the shield on the arm when facing %s, including while blocking', (direction, carriedX, raisedX) => {
 		(player.anims as any).currentAnim = { key: `character-idle-${direction}` };
 		player.updateShield();

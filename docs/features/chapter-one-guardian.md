@@ -42,7 +42,7 @@ Encounter timing, balance, and text are in `src/consts/ChapterOne.ts`. The guard
 - Reveal fog at spawn and update it as the player moves. Render combat warnings above the fog layer.
 - Pause combat during chapter completion and stop the paused dungeon when the player returns to the village.
 - Remove player update listeners on destruction and ignore attachment updates after animation teardown.
-- Anchor the shield beside the forearm, below the face in all four directions. Blocking moves it outward rather than up toward the head; verify both carried and blocking poses in browser screenshots.
+- Anchor the shield beside the forearm, below the face in all four directions. Both poses are nudged two sprite pixels to screen-left, without changing their height or size. Blocking moves it outward rather than up toward the head; verify both carried and blocking poses in browser screenshots.
 - Browser attack tests must enter gameplay from the main menu before waiting for a player.
 
 ## Checks

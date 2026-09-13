@@ -27,12 +27,12 @@ test.describe('Attack Mechanics E2E', () => {
 		await game.buff();
 	});
 
-	for (const [direction, key] of [
-		['down', 's'],
-		['up', 'w'],
-		['left', 'a'],
-		['right', 'd'],
-	]) {
+	for (const [direction, key, carriedX, raisedX] of [
+		['down', 's', -10, -11],
+		['up', 'w', 6, 7],
+		['left', 'a', -9, -12],
+		['right', 'd', 5, 8],
+	] as const) {
 		test(`shield rests below the face when facing ${direction}`, async ({ page }) => {
 			await page.keyboard.down(key);
 			await page.waitForFunction(
@@ -55,7 +55,7 @@ test.describe('Attack Mechanics E2E', () => {
 					const shield = (window as any).game.scene.getScene('MainScene').player.shield;
 					return { x: shield.x, top: shield.y - shield.displayHeight * shield.originY };
 				});
-				expect(Math.abs(position.x)).toBeGreaterThanOrEqual(7);
+				expect(position.x).toBe(blocking ? raisedX : carriedX);
 				expect(position.top).toBeGreaterThanOrEqual(1);
 				await page.screenshot({
 					path: test.info().outputPath(`shield-${direction}-${blocking ? 'blocking' : 'carried'}.png`),
