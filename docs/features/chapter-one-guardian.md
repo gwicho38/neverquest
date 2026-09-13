@@ -27,7 +27,7 @@ Run `mcli run play`, then open the address printed by the development server. St
 
 - Move with WASD or the arrow keys.
 - Attack with J, Space, or the left mouse button. Hold K to block.
-- The character carries a visible Knight's Shield. It follows facing direction and raises while blocking.
+- The character carries a visible Knight's Shield. It follows facing direction and raises while blocking. Both poses are scaled down by 30% from the initial attachment size; blocking strength is unchanged.
 - Leave the red circle before the ground slam. Its position locks when it appears.
 - Attack during the guardian's recovery. At half health, its attacks become faster.
 - Defeat the guardian to recover the artifact. The chapter ending identifies the unlocked Flame Wave spell; hold L to open the spell wheel.

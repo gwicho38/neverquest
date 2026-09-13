@@ -23,8 +23,8 @@ export const PlayerConfig = {
 /** Shield attachment offsets in the character's local pixel coordinates. */
 export const ShieldVisual = {
 	TEXTURE: 'knight_shield',
-	CARRIED_SCALE: 1,
-	RAISED_SCALE: 1.25,
+	CARRIED_SCALE: 0.7,
+	RAISED_SCALE: 0.875,
 	CARRIED_TINT: 0xffffff,
 	RAISED_TINT: 0xbcefff,
 	POSES: {

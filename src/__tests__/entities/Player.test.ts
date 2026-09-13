@@ -225,6 +225,15 @@ describe('Player', () => {
 		expect(mockScene.add.image).toHaveBeenCalledWith(0, 0, ShieldVisual.TEXTURE);
 	});
 
+	test('renders both shield poses 30 percent smaller on both axes', () => {
+		expect(player.shield.scaleX).toBeCloseTo(0.7);
+		expect(player.shield.scaleY).toBeCloseTo(0.7);
+		player.isBlocking = true;
+		player.updateShield();
+		expect(player.shield.scaleX).toBeCloseTo(0.875);
+		expect(player.shield.scaleY).toBeCloseTo(0.875);
+	});
+
 	test('raises the shield while blocking and returns it to the carried pose on release', () => {
 		player.isBlocking = true;
 		player.updateShield();

@@ -40,8 +40,9 @@ test.describe('Attack Mechanics E2E', () => {
 			});
 		const carried = await shield();
 		expect(carried.texture).toBe('knight_shield');
+		expect(carried.scale).toBeCloseTo(0.7);
 		await page.keyboard.down('k');
-		await page.waitForFunction(() => (window as any).game.scene.getScene('MainScene').player.shield.scaleX > 1);
+		await expect.poll(async () => (await shield()).scale).toBeCloseTo(0.875);
 		const raised = await shield();
 		expect(raised.blocking).toBeTruthy();
 		expect(raised.x).not.toBe(carried.x);
