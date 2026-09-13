@@ -27,6 +27,7 @@ import Phaser from 'phaser';
 import { NumericColors } from '../consts/Colors';
 import { ENTITIES } from '../consts/Entities';
 import { EntitySpeed, Alpha, Scale, AnimationTiming } from '../consts/Numbers';
+import { ShieldVisual } from '../consts/player/Player';
 import { KNIGHTS_SHIELD_ITEM_ID } from '../consts/DB_SEED/Items';
 import { AttributesManager } from '../plugins/attributes/AttributesManager';
 import { NeverquestHUDProgressBar } from '../plugins/HUD/NeverquestHUDProgressBar';
@@ -97,6 +98,8 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	public attributesManager: AttributesManager;
 	public entityName: string;
 	public container: Phaser.GameObjects.Container;
+	public shield: Phaser.GameObjects.Image;
+	private shieldPose: string = '';
 	public speed: number;
 	public items: IInventoryItem[];
 	public healthBar: NeverquestHealthBar;
@@ -212,6 +215,9 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 		 */
 		this.container = new Phaser.GameObjects.Container(this.scene, x, y, [this, this.healthBar, this.hitZone]);
 		this.container.setDepth(1);
+		this.shield = this.scene.add.image(0, 0, ShieldVisual.TEXTURE);
+		this.container.add(this.shield);
+		this.updateShield();
 
 		// Initializes the physics.
 		this.setPhysics();
@@ -256,6 +262,25 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 	onUpdate(): void {
 		this.updateMovementDependencies();
 		if (this.neverquestMovement) this.neverquestMovement.move();
+		this.updateShield();
+	}
+
+	/** Update the attachment only when facing or blocking changes; combat owns the flags. */
+	updateShield(): void {
+		// A scene transition can destroy the sprite during an in-flight update.
+		if (!this.anims) return;
+		const suffix = this.anims.currentAnim?.key.split('-').pop();
+		const direction = suffix && suffix in ShieldVisual.POSES ? (suffix as keyof typeof ShieldVisual.POSES) : 'down';
+		const poseKey = `${direction}:${this.isBlocking}`;
+		if (poseKey === this.shieldPose) return;
+		this.shieldPose = poseKey;
+		const pose = ShieldVisual.POSES[direction];
+		this.shield.x = this.isBlocking ? pose.raisedX : pose.x;
+		this.shield.y = this.isBlocking ? pose.raisedY : pose.y;
+		this.shield.scaleX = this.shield.scaleY = this.isBlocking
+			? ShieldVisual.RAISED_SCALE
+			: ShieldVisual.CARRIED_SCALE;
+		this.shield.tint = this.isBlocking ? ShieldVisual.RAISED_TINT : ShieldVisual.CARRIED_TINT;
 	}
 
 	/**
@@ -455,6 +480,12 @@ export class Player extends Phaser.Physics.Arcade.Sprite implements IBaseEntity 
 			yoyo: true,
 			ease: 'Sine.easeInOut',
 		});
+	}
+
+	/** Detach the scene listener before Phaser removes sprite animation state. */
+	destroy(fromScene?: boolean): void {
+		this.scene?.events.off('update', this.onUpdate, this);
+		super.destroy(fromScene);
 	}
 
 	/**

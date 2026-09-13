@@ -1,4 +1,5 @@
 import { Player } from '../../entities/Player';
+import { ShieldVisual } from '../../consts/player/Player';
 
 // Mock Phaser module
 jest.mock('phaser', () => {
@@ -43,6 +44,7 @@ jest.mock('phaser', () => {
 		addToUpdateList() {
 			return this;
 		}
+		destroy() {}
 	}
 
 	return {
@@ -104,6 +106,7 @@ jest.mock('phaser', () => {
 // Mock Phaser scene
 const mockScene = {
 	add: {
+		image: jest.fn(() => ({})),
 		existing: jest.fn(),
 		particles: jest.fn(() => {
 			const emitter = {
@@ -214,6 +217,43 @@ describe('Player', () => {
 		expect(player.attributes.health).toBeGreaterThan(0);
 		expect(player.attributes.level).toBeGreaterThanOrEqual(1);
 		expect(player.speed).toBeGreaterThan(0);
+	});
+
+	test('carries a visible shield in the player container', () => {
+		expect(player.shield).toBeDefined();
+		expect(player.container.add).toHaveBeenCalledWith(player.shield);
+		expect(mockScene.add.image).toHaveBeenCalledWith(0, 0, ShieldVisual.TEXTURE);
+	});
+
+	test('raises the shield while blocking and returns it to the carried pose on release', () => {
+		player.isBlocking = true;
+		player.updateShield();
+		expect(player.shield.x).toBe(ShieldVisual.POSES.down.raisedX);
+		expect(player.shield.scaleX).toBe(ShieldVisual.RAISED_SCALE);
+		player.isBlocking = false;
+		player.updateShield();
+		expect(player.shield.x).toBe(ShieldVisual.POSES.down.x);
+		expect(player.shield.scaleX).toBe(ShieldVisual.CARRIED_SCALE);
+	});
+
+	test('moves the shield with facing without changing combat permissions', () => {
+		(player.anims as any).currentAnim = { key: 'character-walk-right' };
+		player.canMove = false;
+		player.canAtack = false;
+		player.updateShield();
+		expect(player.shield.x).toBe(ShieldVisual.POSES.right.x);
+		expect(player.canMove).toBe(false);
+		expect(player.canAtack).toBe(false);
+	});
+
+	test('ignores shield updates after the sprite animation state is destroyed', () => {
+		(player as any).anims = undefined;
+		expect(() => player.updateShield()).not.toThrow();
+	});
+
+	test('removes its scene update listener when destroyed', () => {
+		player.destroy();
+		expect(mockScene.events.off).toHaveBeenCalledWith('update', player.onUpdate, player);
 	});
 
 	test('should initialize speed equal to baseSpeed (bug regression test)', () => {

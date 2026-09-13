@@ -20,6 +20,21 @@ export const PlayerConfig = {
 	variableName: 'player',
 };
 
+/** Shield attachment offsets in the character's local pixel coordinates. */
+export const ShieldVisual = {
+	TEXTURE: 'knight_shield',
+	CARRIED_SCALE: 1,
+	RAISED_SCALE: 1.25,
+	CARRIED_TINT: 0xffffff,
+	RAISED_TINT: 0xbcefff,
+	POSES: {
+		down: { x: -8, y: 4, raisedX: -3, raisedY: 3 },
+		up: { x: 7, y: 1, raisedX: 3, raisedY: -6 },
+		left: { x: -7, y: 4, raisedX: -10, raisedY: 2 },
+		right: { x: 7, y: 4, raisedX: 10, raisedY: 2 },
+	},
+} as const;
+
 export const Player = [
 	{
 		atlas: PlayerConfig.texture,

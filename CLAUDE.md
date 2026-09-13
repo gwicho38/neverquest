@@ -235,22 +235,22 @@ tree-shaken from production). Use it from the browser console, the Playwright
 MCP, or e2e specs:
 
 ```js
-nq.ready();                 // game booted?
-nq.start('MainScene');      // enter the hub (SceneManager.start; runs in parallel)
-nq.player();                // { x, y, speed, baseSpeed, runSpeed, health, isRunning }
-nq.flags.set('met_elder');  // advance the story via the REAL event bus (bridge + FSM react)
+nq.ready(); // game booted?
+nq.start('MainScene'); // enter the hub (SceneManager.start; runs in parallel)
+nq.player(); // { x, y, speed, baseSpeed, runSpeed, health, isRunning }
+nq.flags.set('met_elder'); // advance the story via the REAL event bus (bridge + FSM react)
 nq.flags.has('act_1_complete');
-nq.quest('cave_artifact');  // FSM state: 'not-started' | 'active' | 'complete'
-nq.gotoElder();             // teleport onto the Elder NPC (fires the real overlap)
-nq.warpToDungeon();         // start DungeonScene
-nq.clearDungeon();          // emit the exact ENEMY_DEFEATED events a full clear produces
-nq.completeChapter();       // fire all Act 1 beats -> Chapter Complete
-nq.snapshot();              // { ready, activeScenes, player, flags, quests } for assertions
+nq.quest('cave_artifact'); // FSM state: 'not-started' | 'active' | 'complete'
+nq.gotoElder(); // teleport onto the Elder NPC (fires the real overlap)
+nq.warpToDungeon(); // start DungeonScene
+nq.clearDungeon(); // simulate defeated enemies, including the Cave Guardian
+nq.completeChapter(); // fire all Act 1 beats -> Chapter Complete
+nq.snapshot(); // { ready, activeScenes, player, flags, quests } for assertions
 nq.help();
 ```
 
-`nq.press(key)` / `nq.hold(key, ms)` dispatch synthetic keyboard input — useful
-**headed only** (see below).
+`nq.press(key)` / `nq.hold(key, ms)` dispatch synthetic keyboard input. For
+browser input tests, prefer Playwright's `page.keyboard` after entering gameplay.
 
 ### E2E (Playwright + the `GameDriver` helper)
 
@@ -266,11 +266,16 @@ npm run test:e2e                   # runs tests/e2e/*.spec.ts against the dev se
   player speed, quest chain, cave-clear → Chapter Complete, codex reachability).
   These are the durable version of manual playthrough verification.
 
-**Gotcha — headless can't do keyboard.** Headless Chromium does NOT deliver
-keyboard input to Phaser (neither `page.keyboard` nor synthetic events move the
-player). **Drive behavior via events/state (`nq.flags.set`, `nq.warpToDungeon`,
-`nq.gotoElder`), not keypresses.** Keyboard-specific behavior (e.g. the H/J
-binding) is covered by jest unit tests instead.
+**Enter gameplay before testing input.** The game boots to the main menu.
+Use `GameDriver.boot()` and `enterHub()` before waiting for a player or sending
+keys. Headless Chromium keyboard tests pass with that setup. Use events/state
+(`nq.flags.set`, `nq.warpToDungeon`, `nq.gotoElder`) to advance quest setup.
+Compare player speeds against `EntitySpeed.PLAYER_WALK` and `PLAYER_RUN`;
+historical values in prose can lag behind the tuning constants.
+
+**Chapter 1 guardian:** the encounter owns its attack timers and cancels them
+on death or shutdown. Only guardian defeat awards the cave quest flags. Keep
+combat warnings above the action so the HUD game log cannot cover them.
 
 **Gotcha — headless has no WebAudio.** Boot the game with `?noaudio=1` (the
 `GameDriver` does this) or `this.sound.add(...)` throws on boot.

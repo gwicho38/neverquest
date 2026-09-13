@@ -133,4 +133,11 @@ describe('ChapterCompleteScene', () => {
 		expect(mockSceneManager.stop).toHaveBeenCalledWith('DungeonScene');
 		expect(mockSceneManager.start).toHaveBeenCalledWith('MainMenuScene');
 	});
+
+	it('closes the paused guardian encounter when returning to the village', () => {
+		scene.init({ returnScene: 'MainScene', encounterScene: 'DungeonScene' });
+		scene.continueGame();
+		expect(mockSceneManager.stop).toHaveBeenCalledWith('DungeonScene');
+		expect(mockSceneManager.start).toHaveBeenCalledWith('MainScene');
+	});
 });

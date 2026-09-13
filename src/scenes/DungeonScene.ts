@@ -46,6 +46,8 @@ import { NeverquestQuestManager } from '../plugins/NeverquestQuestManager';
 import { StoryFlag } from '../plugins/NeverquestStoryFlags';
 import { GameEvents } from '../consts/Events';
 import { ChapterCompleteSceneName } from './ChapterCompleteScene';
+import { ChapterOne } from '../consts/ChapterOne';
+import { NeverquestCaveGuardian } from '../plugins/NeverquestCaveGuardian';
 
 export class DungeonScene extends Phaser.Scene {
 	dungeon!: NeverquestDungeonGenerator;
@@ -63,8 +65,7 @@ export class DungeonScene extends Phaser.Scene {
 	spellWheelOpen: boolean = false;
 	storyFlagBridge: NeverquestStoryFlagBridge | null = null;
 	questManager: NeverquestQuestManager | null = null;
-	private totalEnemies = 0;
-	private enemiesDefeated = 0;
+	guardian: NeverquestCaveGuardian | null = null;
 	private caveCleared = false;
 
 	constructor() {
@@ -85,13 +86,10 @@ export class DungeonScene extends Phaser.Scene {
 	}
 
 	/**
-	 * Counts defeated enemies; once all are down, the cave is cleared.
+	 * Ordinary enemies cannot complete the chapter. Only the guardian's defeat counts.
 	 */
 	private handleEnemyDefeated(): void {
-		this.enemiesDefeated += 1;
-		if (!this.caveCleared && this.enemiesDefeated >= this.totalEnemies) {
-			this.onCaveCleared();
-		}
+		this.guardian?.check();
 	}
 
 	/**
@@ -112,7 +110,10 @@ export class DungeonScene extends Phaser.Scene {
 	 * Launches the "Chapter 1 Complete" overlay; Continue returns to the hub.
 	 */
 	private onChapterComplete(): void {
-		this.scene.launch(ChapterCompleteSceneName, { returnScene: 'MainScene' });
+		this.themeSong?.stop();
+		this.ambientSound?.stop();
+		this.scene.launch(ChapterCompleteSceneName, { returnScene: 'MainScene', encounterScene: this.scene.key });
+		this.scene.pause();
 	}
 
 	/**
@@ -120,7 +121,18 @@ export class DungeonScene extends Phaser.Scene {
 	 */
 	create(): void {
 		this.dungeon = new NeverquestDungeonGenerator(this);
+		this.dungeon.maxRooms = ChapterOne.ROOM_COUNT;
 		this.dungeon.create();
+		const entrance = this.dungeon.dungeon.rooms[0];
+		const roomDistance = (room: typeof entrance): number =>
+			Math.hypot(
+				room.x + room.width / 2 - entrance.x - entrance.width / 2,
+				room.y + room.height / 2 - entrance.y - entrance.height / 2
+			);
+		const guardianRoom = this.dungeon.dungeon.rooms.reduce(
+			(farthest, room) => (roomDistance(room) > roomDistance(farthest) ? room : farthest),
+			entrance
+		);
 
 		// Initialize pathfinding system
 		this.pathfinding = new NeverquestPathfinding(this, this.dungeon.map, this.dungeon.groundLayer, {
@@ -134,8 +146,8 @@ export class DungeonScene extends Phaser.Scene {
 
 		this.player = new Player(
 			this,
-			this.dungeon.map.widthInPixels / 2,
-			this.dungeon.map.heightInPixels / 2,
+			(entrance.x + entrance.width / 2) * this.dungeon.tileWidth,
+			(entrance.y + entrance.height / 2) * this.dungeon.tileHeight,
 			PlayerConfig.texture,
 			this.dungeon.map
 		);
@@ -162,6 +174,7 @@ export class DungeonScene extends Phaser.Scene {
 		this.scene.launch('HUDScene', { player: this.player, map: this.dungeon.map });
 		this.enemies = [];
 		this.dungeon.dungeon.rooms.forEach((room) => {
+			if (room === entrance || room === guardianRoom) return;
 			const spriteBounds = Phaser.Geom.Rectangle.Inflate(
 				new Phaser.Geom.Rectangle(
 					(room.x + 1) * this.dungeon.tileWidth,
@@ -174,7 +187,7 @@ export class DungeonScene extends Phaser.Scene {
 			);
 			// 2 per room keeps the Chapter 1 cave clearable for a level-1 player
 			// (was 5/room = ~60 enemies, brutal at level 1).
-			for (let i = 0; i < 2; i++) {
+			for (let i = 0; i < ChapterOne.ENEMIES_PER_ROOM; i++) {
 				const pos = Phaser.Geom.Rectangle.Random(spriteBounds, new Phaser.Geom.Point());
 				const enemy = new Enemy(this, pos.x, pos.y, 'bat', 2);
 				this.enemies.push(enemy);
@@ -198,6 +211,7 @@ export class DungeonScene extends Phaser.Scene {
 
 		this.fog = new NeverquestFogWarManager(this, this.dungeon.map, this.player);
 		this.fog.createFog();
+		this.fog.updateFog();
 
 		// Initialize dynamic lighting system for atmospheric dungeons
 		this.lighting = new NeverquestLightingManager(this, {
@@ -222,16 +236,20 @@ export class DungeonScene extends Phaser.Scene {
 		this.questManager.create();
 		this.events.on(GameEvents.CHAPTER_COMPLETE, this.onChapterComplete, this);
 
-		// Chapter 1 cave objective: defeat every enemy to retrieve the artifact
-		// and slay the guardian. Track clears via the BattleManager's events.
-		this.totalEnemies = this.enemies.length;
-		this.enemiesDefeated = 0;
+		// A distinct guardian encounter replaces the old kill-every-bat objective.
 		this.caveCleared = false;
-		if (this.totalEnemies === 0) {
-			this.onCaveCleared();
-		} else {
-			this.events.on(GameEvents.ENEMY_DEFEATED, this.handleEnemyDefeated, this);
-		}
+		const guardianX = (guardianRoom.x + guardianRoom.width / 2) * this.dungeon.tileWidth;
+		const guardianY = (guardianRoom.y + guardianRoom.height / 2) * this.dungeon.tileHeight;
+		this.guardian = new NeverquestCaveGuardian(this, this.player, guardianX, guardianY, () => this.onCaveCleared());
+		this.enemies.push(this.guardian.enemy);
+		this.physics.add.collider(this.player.container, this.guardian.enemy.container);
+		this.lighting.addStaticLight(guardianX, guardianY, ChapterOne.DETECTION_RANGE);
+		this.events.on(GameEvents.ENEMY_DEFEATED, this.handleEnemyDefeated, this);
+		this.events.once('shutdown', () => {
+			this.events.off(GameEvents.ENEMY_DEFEATED, this.handleEnemyDefeated, this);
+			this.events.off(GameEvents.CHAPTER_COMPLETE, this.onChapterComplete, this);
+			this.guardian?.destroy();
+		});
 
 		this.setupSaveKeybinds();
 
@@ -478,6 +496,6 @@ export class DungeonScene extends Phaser.Scene {
 	}
 
 	update(): void {
-		return;
+		this.fog?.updateFog();
 	}
 }

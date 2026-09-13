@@ -18,6 +18,7 @@
 import Phaser from 'phaser';
 import { HexColors, NumericColors } from '../consts/Colors';
 import { Depth, Dimensions, Scale } from '../consts/Numbers';
+import { ChapterOne } from '../consts/ChapterOne';
 
 export const ChapterCompleteSceneName = 'ChapterCompleteScene';
 
@@ -26,13 +27,15 @@ export class ChapterCompleteScene extends Phaser.Scene {
 	private continueButton: Phaser.GameObjects.Text | null = null;
 	private mainMenuButton: Phaser.GameObjects.Text | null = null;
 	private returnScene: string = 'MainScene';
+	private encounterScene: string | null = null;
 
 	constructor() {
 		super({ key: ChapterCompleteSceneName });
 	}
 
-	init(data: { returnScene?: string }): void {
+	init(data: { returnScene?: string; encounterScene?: string }): void {
 		this.returnScene = data?.returnScene || 'MainScene';
+		this.encounterScene = data?.encounterScene || null;
 	}
 
 	create(): void {
@@ -73,7 +76,7 @@ export class ChapterCompleteScene extends Phaser.Scene {
 			.text(
 				width / 2,
 				height / 2,
-				'The cave guardian is slain and the stolen artifact is yours.\nThe village is safe — but darker roads lie ahead.',
+				`The cave guardian is slain and the stolen artifact is yours.\n${ChapterOne.REWARD}`,
 				{
 					fontSize: '20px',
 					color: HexColors.WHITE,
@@ -146,6 +149,7 @@ export class ChapterCompleteScene extends Phaser.Scene {
 	 * Closes the overlay and resumes free exploration of the hub.
 	 */
 	continueGame(): void {
+		if (this.encounterScene) this.scene.stop(this.encounterScene);
 		this.scene.stop(ChapterCompleteSceneName);
 		if (!this.scene.isActive(this.returnScene)) {
 			this.scene.start(this.returnScene);
@@ -156,6 +160,7 @@ export class ChapterCompleteScene extends Phaser.Scene {
 	 * Returns to the main menu, stopping gameplay scenes.
 	 */
 	returnToMainMenu(): void {
+		if (this.encounterScene) this.scene.stop(this.encounterScene);
 		this.scene.stop(ChapterCompleteSceneName);
 		this.scene.stop(this.returnScene);
 		this.scene.stop('DialogScene');

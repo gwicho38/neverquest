@@ -7,6 +7,7 @@
 
 import type { ConsoleMessage } from '@playwright/test';
 import { test, expect } from '@playwright/test';
+import { GameDriver } from './helpers/game';
 
 test.describe('Attack Mechanics E2E', () => {
 	let consoleLogs: ConsoleMessage[] = [];
@@ -19,30 +20,35 @@ test.describe('Attack Mechanics E2E', () => {
 			consoleLogs.push(msg);
 		});
 
-		// Navigate to the game
-		await page.goto('http://localhost:8080');
+		// The game now boots to the menu. Enter the hub before asserting player input.
+		const game = new GameDriver(page);
+		await game.boot();
+		await game.enterHub();
+		await game.buff();
+	});
 
-		// Wait for game to load
-		await page.waitForFunction(() => {
-			return (window as any).game !== undefined;
-		});
-
-		// Wait for an active scene with player to be created
-		await page.waitForFunction(
-			() => {
-				const game = (window as any).game;
-				if (!game || !game.scene || !game.scene.scenes) return false;
-				// Find any scene with a player that has canAtack defined
-				const activeScene = game.scene.scenes.find(
-					(s: any) => s.player && typeof s.player.canAtack === 'boolean'
-				);
-				return !!activeScene;
-			},
-			{ timeout: 60000 }
-		);
-
-		// Wait a bit more for game to stabilize
-		await page.waitForTimeout(2000);
+	test('the visible shield raises while K is held and lowers on release', async ({ page }) => {
+		const shield = () =>
+			page.evaluate(() => {
+				const player = (window as any).game.scene.getScene('MainScene').player;
+				return {
+					texture: player.shield.texture.key,
+					x: player.shield.x,
+					scale: player.shield.scaleX,
+					blocking: player.isBlocking,
+				};
+			});
+		const carried = await shield();
+		expect(carried.texture).toBe('knight_shield');
+		await page.keyboard.down('k');
+		await page.waitForFunction(() => (window as any).game.scene.getScene('MainScene').player.shield.scaleX > 1);
+		const raised = await shield();
+		expect(raised.blocking).toBeTruthy();
+		expect(raised.x).not.toBe(carried.x);
+		await page.screenshot({ path: test.info().outputPath('shield-raised.png') });
+		await page.keyboard.up('k');
+		await page.waitForFunction(() => !(window as any).game.scene.getScene('MainScene').player.isBlocking);
+		expect((await shield()).scale).toBe(carried.scale);
 	});
 
 	test('player should initialize with canAtack = true', async ({ page }) => {

@@ -22,6 +22,15 @@ ANDROID_DIR := android
 # Default target
 .DEFAULT_GOAL := help
 
+.PHONY: ci-native
+ci-native: ## Run the web CI checks locally through mcli ci preflight
+	npm run lint
+	npx prettier --check 'src/**/*.{js,ts}'
+	npm run typecheck
+	npm run test:coverage -- --maxWorkers=2 --silent
+	npm audit --omit=dev --audit-level=high || npm audit --audit-level=critical
+	npm run build
+
 # =============================================================================
 # HELP AND INFO
 # =============================================================================

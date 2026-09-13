@@ -214,15 +214,20 @@ export function installNeverquestTestApi(): void {
 			return true;
 		},
 		warpToDungeon(): void {
-			getGame()?.scene.start('DungeonScene', { previousScene: 'MainScene' });
+			const source = gameplayScene();
+			if (source) {
+				source.scene.start('DungeonScene', { previousScene: source.scene.key });
+			} else {
+				getGame()?.scene.start('DungeonScene', { previousScene: 'MainScene' });
+			}
 		},
 		clearDungeon(): void {
 			const dz = getGame()?.scene.getScene('DungeonScene') as
-				| (Phaser.Scene & { totalEnemies?: number })
+				| (Phaser.Scene & { enemies?: Array<{ attributes: { health: number } }> })
 				| undefined;
 			if (!dz) return;
-			const total = dz.totalEnemies ?? 0;
-			for (let i = 0; i < total; i++) {
+			for (const enemy of dz.enemies ?? []) {
+				enemy.attributes.health = 0;
 				dz.events.emit(GameEvents.ENEMY_DEFEATED, 'Enemy');
 			}
 		},

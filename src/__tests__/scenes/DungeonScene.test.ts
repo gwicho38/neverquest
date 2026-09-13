@@ -11,6 +11,17 @@ import { NeverquestLightingManager } from '../../plugins/NeverquestLightingManag
 import { NeverquestSaveManager } from '../../plugins/NeverquestSaveManager';
 import { Player } from '../../entities/Player';
 import { Enemy } from '../../entities/Enemy';
+import { NeverquestCaveGuardian } from '../../plugins/NeverquestCaveGuardian';
+import { GameEvents } from '../../consts/Events';
+import { StoryFlag } from '../../plugins/NeverquestStoryFlags';
+
+jest.mock('../../plugins/NeverquestCaveGuardian', () => ({
+	NeverquestCaveGuardian: jest.fn().mockImplementation(() => ({
+		enemy: { container: {}, attributes: { health: 60 } },
+		check: jest.fn(),
+		destroy: jest.fn(),
+	})),
+}));
 
 // Mock Phaser
 jest.mock('phaser', () => {
@@ -76,6 +87,7 @@ jest.mock('../../plugins/NeverquestDungeonGenerator', () => ({
 jest.mock('../../plugins/NeverquestFogWarManager', () => ({
 	NeverquestFogWarManager: jest.fn().mockImplementation(() => ({
 		createFog: jest.fn(),
+		updateFog: jest.fn(),
 	})),
 }));
 
@@ -269,6 +281,8 @@ describe('DungeonScene', () => {
 
 		(scene as any).events = {
 			on: jest.fn(),
+			once: jest.fn(),
+			off: jest.fn(),
 			emit: jest.fn(),
 		};
 	});
@@ -336,13 +350,13 @@ describe('DungeonScene', () => {
 			expect(NeverquestLineOfSight).toHaveBeenCalled();
 		});
 
-		it('should create player at map center', () => {
+		it('should spawn the player on the floor in the entrance room', () => {
 			scene.create();
 
 			expect(Player).toHaveBeenCalledWith(
 				scene,
-				800, // map.widthInPixels / 2
-				600, // map.heightInPixels / 2
+				160, // center of the entrance room, not the potentially solid map center
+				160,
 				'player',
 				expect.anything()
 			);
@@ -390,9 +404,34 @@ describe('DungeonScene', () => {
 		it('should create enemies in rooms', () => {
 			scene.create();
 
-			// 2 rooms * 2 enemies per room = 4 enemies (capped for level-1 survivability)
-			expect(Enemy).toHaveBeenCalledTimes(4);
-			expect(scene.enemies.length).toBe(4);
+			// The two-room fixture contains only the safe entrance and guardian arena.
+			expect(Enemy).not.toHaveBeenCalled();
+			expect(scene.enemies).toEqual([scene.guardian!.enemy]);
+			expect(NeverquestCaveGuardian).toHaveBeenCalledWith(scene, scene.player, 608, 608, expect.any(Function));
+		});
+
+		it('does not award the artifact or guardian victory for clearing ordinary enemies', () => {
+			scene.create();
+			for (let i = 0; i < scene.enemies.length; i++) {
+				(scene as any).handleEnemyDefeated();
+			}
+			expect((scene as any).events.emit).not.toHaveBeenCalled();
+		});
+
+		it('awards the artifact and guardian victory once the guardian is defeated', () => {
+			scene.create();
+			const onDefeated = (NeverquestCaveGuardian as jest.Mock).mock.calls[0][4];
+			onDefeated();
+			onDefeated();
+			expect((scene as any).events.emit).toHaveBeenCalledTimes(2);
+			expect((scene as any).events.emit).toHaveBeenCalledWith(
+				GameEvents.SET_STORY_FLAG,
+				StoryFlag.CAVE_ARTIFACT_RETRIEVED
+			);
+			expect((scene as any).events.emit).toHaveBeenCalledWith(
+				GameEvents.SET_STORY_FLAG,
+				StoryFlag.CAVE_BOSS_DEFEATED
+			);
 		});
 
 		it('should play theme song and ambient sound', () => {
@@ -408,6 +447,13 @@ describe('DungeonScene', () => {
 
 			expect(NeverquestFogWarManager).toHaveBeenCalled();
 			expect(scene.fog.createFog).toHaveBeenCalled();
+		});
+
+		it('reveals the player position as the dungeon renders instead of leaving the screen black', () => {
+			scene.create();
+			expect(scene.fog.updateFog).toHaveBeenCalledTimes(1);
+			scene.update();
+			expect(scene.fog.updateFog).toHaveBeenCalledTimes(2);
 		});
 
 		it('should create lighting system', () => {

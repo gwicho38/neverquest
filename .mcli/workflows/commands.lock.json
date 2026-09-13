@@ -1,6 +1,19 @@
 {
-	"version": "1.0",
-	"initialized_at": "2025-11-30T19:18:42.632975",
-	"scope": "local",
-	"commands": {}
+	"version": "2.0",
+	"generated_at": "2026-09-13T20:02:19.723076Z",
+	"commands": {
+		"play": {
+			"file": "play.sh",
+			"language": "shell",
+			"content_hash": "sha256:004ece12ed5f351b8a929764ea99500d5dc527dbe307dd73992594273f8ec7fc",
+			"version": "1.0.0",
+			"group": "workflows",
+			"description": "Run the Neverquest development server",
+			"author": "",
+			"requires": [],
+			"tags": [],
+			"shell": "zsh",
+			"last_modified": "2026-09-13T22:02:18.279019Z"
+		}
+	}
 }

@@ -13,6 +13,7 @@
 
 import { test, expect } from '@playwright/test';
 import { GameDriver } from './helpers/game';
+import { EntitySpeed } from '../../src/consts/Numbers';
 
 test.describe('Chapter 1 — The Awakening (e2e)', () => {
 	test('boots with the nq driver and no crash errors', async ({ page }) => {
@@ -22,13 +23,13 @@ test.describe('Chapter 1 — The Awakening (e2e)', () => {
 		expect(game.crashErrors()).toEqual([]);
 	});
 
-	test('player walks at 150 and runs at 200', async ({ page }) => {
+	test('player uses the configured walk and run speeds', async ({ page }) => {
 		const game = new GameDriver(page);
 		await game.boot();
 		await game.enterHub();
 		const player = await game.player();
-		expect(player?.baseSpeed).toBe(150);
-		expect(player?.runSpeed).toBe(200);
+		expect(player?.baseSpeed).toBe(EntitySpeed.PLAYER_WALK);
+		expect(player?.runSpeed).toBe(EntitySpeed.PLAYER_RUN);
 	});
 
 	test('intro completes on hub entry; the first quest is active', async ({ page }) => {
@@ -64,6 +65,59 @@ test.describe('Chapter 1 — The Awakening (e2e)', () => {
 		expect(await game.hasFlag('act_1_complete')).toBeTruthy();
 		// The boss-kill cascade should have unlocked Flame Wave.
 		expect(await game.hasFlag('spell_flame_wave_unlocked')).toBeTruthy();
+		expect(game.crashErrors()).toEqual([]);
+	});
+
+	test('guardian warns, can be dodged, and completes the chapter only on defeat', async ({ page }) => {
+		const game = new GameDriver(page);
+		await game.boot();
+		await game.enterHub();
+		await game.setFlag('met_elder');
+		await game.warpToDungeon();
+		await game.waitForScene('DungeonScene');
+		const startingHealth = await page.evaluate(() => {
+			const dungeon = (window as any).game.scene.getScene('DungeonScene');
+			const player = dungeon.player;
+			const tile = dungeon.dungeon.groundLayer.getTileAtWorldXY(player.container.x, player.container.y);
+			if (!tile || tile.collides) throw new Error('The entrance spawn is not walkable');
+			const guardian = dungeon.guardian.enemy;
+			player.container.body.reset(guardian.container.x + 80, guardian.container.y);
+			return player.attributes.health;
+		});
+		await page.waitForFunction(
+			() => (window as any).game.scene.getScene('DungeonScene').guardian.state === 'warning'
+		);
+		await page.waitForFunction(() => {
+			const dungeon = (window as any).game.scene.getScene('DungeonScene');
+			return dungeon.fog.lastPlayerX === dungeon.player.container.x;
+		});
+		expect(await game.isActive('MainScene')).toBeFalsy();
+		expect(await game.hasFlag('cave_boss_defeated')).toBeFalsy();
+		await page.screenshot({ path: test.info().outputPath('guardian-warning.png') });
+		await page.evaluate(() => {
+			const dungeon = (window as any).game.scene.getScene('DungeonScene');
+			const guardian = dungeon.guardian.enemy;
+			dungeon.player.container.body.reset(guardian.container.x - 80, guardian.container.y);
+		});
+		await page.waitForFunction(
+			() => (window as any).game.scene.getScene('DungeonScene').guardian.state === 'recovering'
+		);
+		expect(
+			await page.evaluate(() => (window as any).game.scene.getScene('DungeonScene').player.attributes.health)
+		).toBe(startingHealth);
+		await page.evaluate(() => {
+			const dungeon = (window as any).game.scene.getScene('DungeonScene');
+			// Exercise real damage, XP, defeat event, quest bridge and chapter overlay.
+			dungeon.player.attributes.atack = 999;
+			dungeon.player.attributes.critical = 100;
+			dungeon.guardian.enemy.neverquestBattleManager.takeDamage(dungeon.player, dungeon.guardian.enemy);
+		});
+		await game.waitForScene('ChapterCompleteScene');
+		expect(await game.hasFlag('spell_flame_wave_unlocked')).toBeTruthy();
+		expect(await page.evaluate(() => (window as any).game.scene.isPaused('DungeonScene'))).toBeTruthy();
+		await page.evaluate(() => (window as any).game.scene.getScene('ChapterCompleteScene').continueGame());
+		await page.waitForFunction(() => !(window as any).game.scene.isPaused('DungeonScene'));
+		expect(await game.isActive('MainScene')).toBeTruthy();
 		expect(game.crashErrors()).toEqual([]);
 	});
 
