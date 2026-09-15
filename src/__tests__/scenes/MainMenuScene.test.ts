@@ -42,6 +42,7 @@ describe('MainMenuScene', () => {
 			setInteractive: jest.fn().mockReturnThis(),
 			setPosition: jest.fn().mockReturnThis(),
 			on: jest.fn(),
+			off: jest.fn(),
 			destroy: jest.fn(),
 		};
 
@@ -87,6 +88,7 @@ describe('MainMenuScene', () => {
 			orientation: 'landscape-primary',
 			aspectRatio: 1.5,
 			on: jest.fn(),
+			off: jest.fn(),
 		};
 
 		// Mock scene manager
@@ -198,8 +200,15 @@ describe('MainMenuScene', () => {
 
 	describe('preload()', () => {
 		it('should load intro video if video asset exists', () => {
+			(scene.sys.game.device as any).video = { getVideoURL: jest.fn(() => ({ url: 'intro.mp4', type: 'mp4' })) };
 			scene.preload();
-			expect(mockLoad.video).toHaveBeenCalledWith('intro_video', expect.any(String), 'loadeddata', false, true);
+			expect(mockLoad.video).toHaveBeenCalledWith('intro_video', expect.any(String), true);
+		});
+
+		it('should skip optional video when the browser cannot decode it', () => {
+			(scene.sys.game.device as any).video = { getVideoURL: jest.fn((): null => null) };
+			scene.preload();
+			expect(mockLoad.video).not.toHaveBeenCalled();
 		});
 	});
 
@@ -358,6 +367,15 @@ describe('MainMenuScene', () => {
 				resizeCallback({ width: 1024, height: 768 });
 				expect(spyResize).toHaveBeenCalledWith({ width: 1024, height: 768 });
 			});
+
+			it('should remove its resize callback when the scene shuts down', () => {
+				const callback = mockScale.on.mock.calls.find((call: any) => call[0] === 'resize')[1];
+				const shutdown = (scene.events.once as jest.Mock).mock.calls.find(
+					(call: any) => call[0] === 'shutdown'
+				)[1];
+				shutdown();
+				expect(mockScale.off).toHaveBeenCalledWith('resize', callback);
+			});
 		});
 	});
 
@@ -405,6 +423,11 @@ describe('MainMenuScene', () => {
 
 		it('should handle null size gracefully', () => {
 			expect(() => scene.resizeAll(null)).not.toThrow();
+		});
+
+		it('should resize the menu when its optional video is not loaded', () => {
+			scene.video = null;
+			expect(() => scene.resizeAll({ width: 800, height: 600, aspectRatio: 1.33 })).not.toThrow();
 		});
 
 		it('should handle missing cameras gracefully', () => {

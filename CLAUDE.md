@@ -293,6 +293,17 @@ combat warnings above the action so the HUD game log cannot cover them.
   Registry) → `NeverquestQuestManager` FSM → `CHAPTER_COMPLETE`. Constants in
   `src/consts/Events.ts`; quest data in `src/consts/progression/QuestFlagMap.ts`.
 
+### City prototype
+
+- Enter through **City Prototype** on the main menu. City design and milestones:
+  `docs/design/open-world-city.md`.
+- `NeverquestCitySimulation` owns movement, vehicle occupancy, mission state, and
+  cash. `CityScene` owns rendering and input. Keep simulation rules independent
+  of Phaser and keep city progress separate from RPG saves.
+- City browser coverage is in `tests/e2e/city.spec.ts` and runs in GitHub CI.
+- Remove global scale listeners on scene shutdown. A menu may have no video;
+  resize handlers must handle that case.
+
 ---
 
 ## CI/CD Requirements
