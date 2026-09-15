@@ -1,4 +1,5 @@
-import { CITY, CITY_BUILDINGS, CITY_JOB } from '../consts/City';
+import { CITY, CITY_BUILDINGS, CITY_JOB, CITY_COMBAT } from '../consts/City';
+import { NeverquestCityCombat } from './NeverquestCityCombat';
 
 export interface ICityPoint {
 	x: number;
@@ -18,6 +19,23 @@ export class NeverquestCitySimulation {
 	job: 'available' | 'carrying' | 'complete' = 'available';
 	cash = 0;
 	private listeners = new Set<() => void>();
+	readonly combat = new NeverquestCityCombat(
+		(point) => this.canOccupy(point, CITY_COMBAT.coverRadius),
+		() => this.emitChange()
+	);
+
+	fireAt(target: ICityPoint): boolean {
+		return this.combat.shoot(this.pedestrian, target, this.driving);
+	}
+
+	reloadOrRetry(): boolean {
+		if (!this.combat.defeated) return this.combat.reload(this.driving);
+		this.pedestrian = { ...CITY.spawn };
+		this.car = { ...CITY.carSpawn, speed: 0 };
+		this.driving = false;
+		this.combat.reset();
+		return true;
+	}
 
 	get position(): ICityPoint {
 		const { x, y } = this.driving ? this.car : this.pedestrian;
@@ -71,6 +89,8 @@ export class NeverquestCitySimulation {
 		const x = Math.max(-1, Math.min(1, input.x));
 		const y = Math.max(-1, Math.min(1, input.y));
 		if (!Number.isFinite(x) || !Number.isFinite(y)) return;
+		this.combat.update(dt, this.position, this.driving);
+		if (this.combat.defeated) return;
 		if (!this.driving) {
 			const length = Math.max(1, Math.hypot(x, y));
 			const speed = CITY.walkSpeed * (input.run ? CITY.runMultiplier : 1);
@@ -101,6 +121,7 @@ export class NeverquestCitySimulation {
 	}
 
 	toggleVehicle(): boolean {
+		if (this.combat.defeated) return false;
 		if (!this.driving) {
 			if (Math.hypot(this.pedestrian.x - this.car.x, this.pedestrian.y - this.car.y) > CITY.enterRadius)
 				return false;
@@ -125,7 +146,7 @@ export class NeverquestCitySimulation {
 
 	/** Interaction is explicit; overlap never changes mission or vehicle state. */
 	interact(): boolean {
-		if (this.driving) return false;
+		if (this.driving || this.combat.defeated) return false;
 		const destination = this.destination;
 		if (Math.hypot(this.pedestrian.x - destination.x, this.pedestrian.y - destination.y) > CITY_JOB.radius)
 			return false;

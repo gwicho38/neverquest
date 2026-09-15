@@ -300,6 +300,9 @@ combat warnings above the action so the HUD game log cannot cover them.
 - `NeverquestCitySimulation` owns movement, vehicle occupancy, mission state, and
   cash. `CityScene` owns rendering and input. Keep simulation rules independent
   of Phaser and keep city progress separate from RPG saves.
+- `NeverquestCityCombat` owns weapon timers, enemy aim, health, and defeat.
+  Retry resets the encounter and transport, preserving the simulation's job and cash.
+  Bullet rays and enemy perception must use the same building collision query.
 - City browser coverage is in `tests/e2e/city.spec.ts` and runs in GitHub CI.
 - Remove global scale listeners on scene shutdown. A menu may have no video;
   resize handlers must handle that case.

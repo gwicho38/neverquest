@@ -1,7 +1,7 @@
 import { test, expect, Page } from '@playwright/test';
 import type { CityScene } from '../../src/scenes/CityScene';
 import type { MainMenuScene } from '../../src/scenes/MainMenuScene';
-import { CITY, CITY_JOB } from '../../src/consts/City';
+import { CITY, CITY_COMBAT as C, CITY_JOB } from '../../src/consts/City';
 
 async function openCity(page: Page, seedSave = false): Promise<void> {
 	await page.goto('/?noaudio=1');
@@ -34,6 +34,10 @@ async function state(page: Page) {
 			job: city.job,
 			cash: city.cash,
 			speed: city.car.speed,
+			health: city.combat.health,
+			ammo: city.combat.ammo,
+			enemyHealth: city.combat.enemy.health,
+			reloading: city.combat.reloadRemaining > 0,
 		};
 	});
 }
@@ -74,6 +78,78 @@ test('city menu, walking, driving, delivery and reward work through real input',
 	await expect.poll(async () => (await state(page)).cash).toBe(CITY_JOB.reward);
 	await page.keyboard.press('e');
 	expect((await state(page)).cash).toBe(CITY_JOB.reward);
+	expect(errors).toEqual([]);
+});
+
+test('mouse aim works with a scrolled camera, pistol kills and R reloads', async ({ page }, testInfo) => {
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await openCity(page);
+	await page.setViewportSize({ width: 800, height: 600 });
+	await page.evaluate(() => {
+		(window.game.scene.getScene('CityScene') as CityScene).simulation.pedestrian = { x: 600, y: 720 };
+	});
+	await page.waitForFunction(() => {
+		const camera = (window.game.scene.getScene('CityScene') as CityScene).cameras.main;
+		// Rounded camera follow stops a few pixels short of the exact center.
+		return Math.abs(camera.scrollX - 200) < 10 && Math.abs(camera.scrollY - 420) < 10;
+	});
+	const target = await page.evaluate(() => {
+		const scene = window.game.scene.getScene('CityScene') as CityScene;
+		const rect = window.game.canvas.getBoundingClientRect();
+		return {
+			x:
+				rect.left +
+				((scene.simulation.combat.enemy.x - scene.cameras.main.scrollX) * rect.width) / scene.scale.width,
+			y:
+				rect.top +
+				((scene.simulation.combat.enemy.y - scene.cameras.main.scrollY) * rect.height) / scene.scale.height,
+		};
+	});
+	await page.mouse.click(target.x, target.y);
+	await expect.poll(async () => (await state(page)).enemyHealth).toBe(C.enemyHealth - 1);
+	await page.screenshot({ path: testInfo.outputPath('city-combat.png') });
+	await page.mouse.down();
+	await expect.poll(async () => (await state(page)).enemyHealth, { intervals: [50] }).toBe(0);
+	await page.mouse.up();
+	expect((await state(page)).ammo).toBe(C.magazineSize - C.enemyHealth);
+	await page.keyboard.press('r');
+	await expect.poll(async () => (await state(page)).reloading).toBe(true);
+	await expect.poll(async () => (await state(page)).ammo).toBe(C.magazineSize);
+	expect((await state(page)).health).toBeGreaterThan(0);
+	expect(errors).toEqual([]);
+});
+
+test('lookout can defeat the player; R retries and keeps delivery progress', async ({ page }) => {
+	const errors: string[] = [];
+	page.on('pageerror', (error) => errors.push(error.message));
+	await openCity(page);
+	await page.keyboard.press('e');
+	await page.evaluate((point) => {
+		(window.game.scene.getScene('CityScene') as CityScene).simulation.pedestrian = { ...point };
+	}, CITY_JOB.dropoff);
+	await page.keyboard.press('e');
+	await expect.poll(async () => (await state(page)).cash).toBe(CITY_JOB.reward);
+	await page.evaluate((point) => {
+		(window.game.scene.getScene('CityScene') as CityScene).simulation.pedestrian = { ...point };
+	}, CITY_JOB.pickup);
+	await page.keyboard.press('e');
+	await page.evaluate(() => {
+		(window.game.scene.getScene('CityScene') as CityScene).simulation.pedestrian = { x: 600, y: 720 };
+	});
+	await expect.poll(async () => (await state(page)).health, { timeout: 12000 }).toBe(0);
+	const defeated = await state(page);
+	await page.keyboard.down('d');
+	await page.mouse.click(700, 400, { delay: 100 });
+	await page.keyboard.up('d');
+	expect((await state(page)).position).toEqual(defeated.position);
+	expect((await state(page)).ammo).toBe(defeated.ammo);
+	await page.keyboard.press('r');
+	await expect.poll(async () => (await state(page)).health).toBe(C.playerHealth);
+	expect((await state(page)).position).toEqual(CITY.spawn);
+	expect((await state(page)).enemyHealth).toBe(C.enemyHealth);
+	expect((await state(page)).cash).toBe(CITY_JOB.reward);
+	expect((await state(page)).job).toBe('carrying');
 	expect(errors).toEqual([]);
 });
 

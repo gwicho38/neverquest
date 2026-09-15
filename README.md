@@ -6,7 +6,9 @@
 
 Select **City Prototype** in the main menu to explore the first city district. Walk with WASD, collect a delivery with E, enter the coupe with F, and drive with W/S and A/D. Brake with Space, exit with F, and deliver on foot with E. Escape returns to the menu. City progress lasts for the session.
 
-See the [city design and development roadmap](docs/design/open-world-city.md) for the plan toward combat, police, traffic, interiors, saves, and a larger world.
+There is an armed lookout east of dispatch. Aim with the mouse, hold the left button to fire, and press R to reload. Buildings provide cover; dodge the red aim line before the lookout shoots. After defeat, R retries while keeping your parcel and cash.
+
+See the [city design and development roadmap](docs/design/open-world-city.md) for the plan toward police, traffic, interiors, saves, and a larger world.
 
 This is a Work in progress project, meant to be a code base for your 2D Action RPG game. It's based on the world class [Phaser Framework](https://phaser.io/), you should be able to use anything that the Phaser Framework provides in this project. Though it's not mandatory, it would be nice of you if you credit me for supplying this code base (I have put a lot of work on it).
 

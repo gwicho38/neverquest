@@ -1,5 +1,5 @@
 import Phaser from 'phaser';
-import { CITY, CITY_BUILDINGS, CITY_JOB, CITY_STYLE as S, CITY_TEXT as T } from '../consts/City';
+import { CITY, CITY_BUILDINGS, CITY_COMBAT as C, CITY_JOB, CITY_STYLE as S, CITY_TEXT as T } from '../consts/City';
 import { NeverquestCitySimulation } from '../plugins/NeverquestCitySimulation';
 
 /** A playable district with original code-drawn pixel art and no external assets. */
@@ -17,6 +17,12 @@ export class CityScene extends Phaser.Scene {
 	private notice: Phaser.GameObjects.Text;
 	private minimap: Phaser.GameObjects.Graphics;
 	private keys: Record<string, Phaser.Input.Keyboard.Key>;
+	private enemy: Phaser.GameObjects.Container;
+	private enemyLabel: Phaser.GameObjects.Text;
+	private combatEffects: Phaser.GameObjects.Graphics;
+	private combatStatus: Phaser.GameObjects.Text;
+	private defeatMessage: Phaser.GameObjects.Text;
+	private triggerHeld = false;
 
 	constructor() {
 		super({ key: CITY.scene });
@@ -24,6 +30,7 @@ export class CityScene extends Phaser.Scene {
 
 	create(): void {
 		this.simulation = new NeverquestCitySimulation();
+		this.triggerHeld = false;
 		this.cameras.main.setBackgroundColor(S.background);
 		this.cameras.main.setBounds(0, 0, CITY.width, CITY.height);
 		this.drawDistrict();
@@ -38,6 +45,8 @@ export class CityScene extends Phaser.Scene {
 		this.keys = this.input.keyboard?.addKeys(S.keys) as Record<string, Phaser.Input.Keyboard.Key>;
 		this.input.keyboard?.on('keydown-F', this.enterOrExit, this);
 		this.input.keyboard?.on('keydown-E', this.interact, this);
+		this.input.keyboard?.on('keydown-R', this.reloadOrRetry, this);
+		this.input.on('pointerdown', this.pullTrigger, this);
 		this.input.keyboard?.on('keydown-ESC', this.returnToMenu, this);
 		this.scale.on(Phaser.Scale.Events.RESIZE, this.layoutHud, this);
 		const unsubscribe = this.simulation.onChange(() => this.refreshHud());
@@ -47,6 +56,8 @@ export class CityScene extends Phaser.Scene {
 			this.scale.off(Phaser.Scale.Events.RESIZE, this.layoutHud, this);
 			this.input.keyboard?.off('keydown-F', this.enterOrExit, this);
 			this.input.keyboard?.off('keydown-E', this.interact, this);
+			this.input.keyboard?.off('keydown-R', this.reloadOrRetry, this);
+			this.input.off('pointerdown', this.pullTrigger, this);
 			this.input.keyboard?.off('keydown-ESC', this.returnToMenu, this);
 		});
 		this.refreshHud();
@@ -153,7 +164,22 @@ export class CityScene extends Phaser.Scene {
 		person.fillStyle(S.cyan).fillRect(-8, -5, S.playerWidth, 11);
 		person.fillStyle(S.white).fillRect(-4, -8, 8, 8);
 		person.fillStyle(S.ink).fillRect(-4, -10, 8, 4);
+		person.fillStyle(S.white).fillRect(-S.gunWidth / 2, S.gunOffset, S.gunWidth, S.gunLength);
 		this.pedestrian = this.add.container(CITY.spawn.x, CITY.spawn.y, [person]).setDepth(9);
+		const lookout = this.add.graphics();
+		lookout.fillStyle(S.danger).fillRect(-S.playerWidth / 2, -S.playerHeight / 2, S.playerWidth, S.playerHeight);
+		lookout.fillStyle(S.ink).fillRect(-S.gunWidth, -S.playerHeight / 2, S.gunWidth * 2, S.gunWidth);
+		lookout.fillStyle(S.white).fillRect(-S.gunWidth / 2, S.gunOffset, S.gunWidth, S.gunLength);
+		this.enemy = this.add.container(C.enemySpawn.x, C.enemySpawn.y, [lookout]).setDepth(9);
+		this.enemyLabel = this.add
+			.text(C.enemySpawn.x, C.enemySpawn.y - S.enemyLabelY, T.lookout, {
+				fontFamily: S.font,
+				fontSize: S.labelSize,
+				color: S.dangerText,
+			})
+			.setOrigin(0.5)
+			.setDepth(10);
+		this.combatEffects = this.add.graphics().setDepth(11);
 	}
 
 	private createHud(): void {
@@ -161,21 +187,34 @@ export class CityScene extends Phaser.Scene {
 		const title = this.add.text(0, 0, T.title, { ...style, fontSize: S.titleSize, color: S.accent });
 		const subtitle = this.add.text(0, 30, T.subtitle, { ...style, color: S.muted, fontSize: 12 });
 		this.status = this.add.text(0, 54, '', style);
+		this.combatStatus = this.add.text(0, S.combatStatusY, '', { ...style, color: S.accent });
+		this.defeatMessage = this.add
+			.text(0, 0, T.defeated, {
+				...style,
+				fontSize: S.titleSize,
+				align: 'center',
+				backgroundColor: '#111722',
+				padding: { x: S.margin, y: S.margin },
+			})
+			.setOrigin(0.5)
+			.setVisible(false);
 		this.objective = this.add.text(0, 0, '', { ...style, backgroundColor: '#111722', padding: { x: 12, y: 10 } });
 		this.controls = this.add.text(0, 0, T.controls, { ...style, color: S.muted, fontSize: 12 });
 		this.notice = this.add.text(0, 0, '', { ...style, color: '#f9d47e' });
 		this.minimap = this.add.graphics();
-		const backdrop = this.add.rectangle(-10, -10, 390, 100, S.ink, 0.94).setOrigin(0);
+		const backdrop = this.add.rectangle(-10, -10, S.hudWidth, S.hudHeight, S.ink, 0.94).setOrigin(0);
 		this.hud = this.add
 			.container(S.margin, S.margin, [
 				backdrop,
 				title,
 				subtitle,
 				this.status,
+				this.combatStatus,
 				this.objective,
 				this.controls,
 				this.notice,
 				this.minimap,
+				this.defeatMessage,
 			])
 			.setScrollFactor(0)
 			.setDepth(S.hudDepth);
@@ -189,12 +228,21 @@ export class CityScene extends Phaser.Scene {
 		this.controls.setPosition(0, this.scale.height - S.margin - 44).setWordWrapWidth(width);
 		this.notice.setPosition(0, S.hudHeight).setWordWrapWidth(width);
 		this.minimap.setPosition(width - S.mapWidth, 0).setVisible(width > 600);
+		this.defeatMessage.setPosition(this.scale.width / 2 - S.margin, this.scale.height / 2 - S.margin);
 	}
 
 	private refreshHud(): void {
 		const city = this.simulation;
+		const combat = city.combat;
+		this.combatStatus.setText(
+			`${T.health} ${combat.health}/${C.playerHealth}  /  ${T.pistol} ${combat.ammo}/${C.magazineSize}${combat.reloadRemaining > 0 ? `  ${T.reloading}` : ''}`
+		);
+		this.defeatMessage.setVisible(combat.defeated);
 		this.status.setText(`$${city.cash}  /  ${city.driving ? T.driving : T.onFoot}  /  ${T.sessionOnly}`);
-		this.objective.setText(city.job === 'carrying' ? T.deliver : city.job === 'complete' ? T.complete : T.pickup);
+		this.objective.setText([
+			city.job === 'carrying' ? T.deliver : city.job === 'complete' ? T.complete : T.pickup,
+			combat.enemy.health > 0 ? T.lookoutHint : T.lookoutCleared,
+		]);
 		this.controls.setText(city.driving ? T.drivingControls : T.controls);
 		this.marker
 			.setPosition(city.destination.x, city.destination.y)
@@ -207,6 +255,75 @@ export class CityScene extends Phaser.Scene {
 		map.fillStyle(S.gold).fillCircle(city.destination.x * scale, city.destination.y * scale, 3);
 		map.fillStyle(S.pink).fillCircle(city.car.x * scale, city.car.y * scale, 2);
 		map.fillStyle(S.cyan).fillCircle(city.position.x * scale, city.position.y * scale, 3);
+		if (combat.enemy.health > 0)
+			map.fillStyle(S.danger).fillCircle(combat.enemy.x * scale, combat.enemy.y * scale, 3);
+	}
+
+	private pullTrigger(pointer: Phaser.Input.Pointer): void {
+		this.triggerHeld = pointer.leftButtonDown();
+		// A short click may begin and end between render frames.
+		if (this.triggerHeld) this.simulation.fireAt(this.cameras.main.getWorldPoint(pointer.x, pointer.y));
+	}
+
+	private reloadOrRetry(event: KeyboardEvent): void {
+		if (event.repeat) return;
+		this.simulation.reloadOrRetry();
+		this.notice.setText('');
+		this.triggerHeld = false;
+	}
+
+	private drawCombat(): void {
+		const city = this.simulation;
+		const combat = city.combat;
+		const enemy = combat.enemy;
+		const pointer = this.input.activePointer;
+		const aim = this.cameras.main.getWorldPoint(pointer.x, pointer.y);
+		if (!pointer.leftButtonDown() || !this.input.manager.isOver) this.triggerHeld = false;
+		if (this.triggerHeld) city.fireAt(aim);
+		if (!city.driving)
+			this.pedestrian.setRotation(Math.atan2(aim.y - city.pedestrian.y, aim.x - city.pedestrian.x) + Math.PI / 2);
+		this.pedestrian.setAlpha(combat.defeated ? 0.35 : 1);
+		this.enemy.setPosition(enemy.x, enemy.y).setVisible(enemy.health > 0);
+		const facing = enemy.aim || city.pedestrian;
+		this.enemy.setRotation(Math.atan2(facing.y - enemy.y, facing.x - enemy.x) + Math.PI / 2);
+		this.enemyLabel.setPosition(enemy.x, enemy.y - S.enemyLabelY).setVisible(enemy.health > 0);
+		const g = this.combatEffects.clear();
+		if (enemy.health > 0) {
+			g.fillStyle(S.ink).fillRect(
+				enemy.x - S.healthBarWidth / 2,
+				enemy.y + S.healthBarY,
+				S.healthBarWidth,
+				S.healthBarHeight
+			);
+			g.fillStyle(S.danger).fillRect(
+				enemy.x - S.healthBarWidth / 2,
+				enemy.y + S.healthBarY,
+				(S.healthBarWidth * enemy.health) / C.enemyHealth,
+				S.healthBarHeight
+			);
+		}
+		if (enemy.aim) {
+			g.lineStyle(S.traceWidth, S.danger, 0.65).lineBetween(enemy.x, enemy.y, enemy.aim.x, enemy.aim.y);
+			g.beginPath()
+				.arc(
+					enemy.x,
+					enemy.y,
+					S.warningRadius,
+					-Math.PI / 2,
+					-Math.PI / 2 + Math.PI * 2 * (1 - enemy.windup / C.enemyWindup)
+				)
+				.strokePath();
+		}
+		for (const trace of combat.traces)
+			g.lineStyle(
+				S.traceWidth,
+				trace.owner === 'player' ? S.gold : S.danger,
+				trace.remaining / C.traceSeconds
+			).lineBetween(trace.start.x, trace.start.y, trace.end.x, trace.end.y);
+		if (combat.hitFlashRemaining > 0)
+			g.lineStyle(S.traceWidth, S.danger).strokeCircle(city.pedestrian.x, city.pedestrian.y, S.warningRadius);
+		if (!city.driving && !combat.defeated && this.input.manager.isOver)
+			g.lineStyle(1, S.cyan).strokeCircle(aim.x, aim.y, S.crosshairRadius);
 	}
 
 	private enterOrExit(event: KeyboardEvent): void {
@@ -232,7 +349,7 @@ export class CityScene extends Phaser.Scene {
 		this.simulation.update(delta / 1000, { x, y, run: !!down('SHIFT'), brake: !!down('SPACE') });
 		const city = this.simulation;
 		this.pedestrian.setPosition(city.pedestrian.x, city.pedestrian.y).setVisible(!city.driving);
-		if (!city.driving && (x || y)) this.pedestrian.setRotation(Math.atan2(y, x) + Math.PI / 2);
+		this.drawCombat();
 		this.vehicle.setPosition(city.car.x, city.car.y).setRotation(city.car.heading);
 		this.vehicleLabel.setPosition(city.car.x + 32, city.car.y + 30).setVisible(!city.driving);
 		this.followTarget.setPosition(city.position.x, city.position.y);
