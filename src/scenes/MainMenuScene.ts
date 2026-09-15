@@ -28,20 +28,7 @@ import { HexColors } from '../consts/Colors';
 import { Alpha, AnimationTiming, Dimensions } from '../consts/Numbers';
 import { FontFamily, UILabels } from '../consts/Messages';
 import { IResizeSize } from '../types';
-
-/**
- * Interface for Phaser LoaderPlugin with video method using legacy signature
- * The actual Phaser video loader accepts different parameters in older versions
- */
-interface ILoaderWithLegacyVideo {
-	video: (
-		key: string,
-		url: string,
-		loadEvent?: string,
-		asBlob?: boolean,
-		noAudio?: boolean
-	) => Phaser.Loader.LoaderPlugin;
-}
+import { CITY, CITY_STYLE, CITY_TEXT } from '../consts/City';
 
 /**
  * Interface for scenes with save manager
@@ -63,6 +50,7 @@ export class MainMenuScene extends Phaser.Scene {
 	saveManager: NeverquestSaveManager | null;
 	loadGameText: Phaser.GameObjects.Text | null;
 	creditsText: Phaser.GameObjects.Text | null;
+	cityText: Phaser.GameObjects.Text | null = null;
 	panelComponent: PanelComponent | null;
 	creditsBackground: Phaser.GameObjects.NineSlice | null;
 	creditsTitle: Phaser.GameObjects.Image | null;
@@ -96,15 +84,10 @@ export class MainMenuScene extends Phaser.Scene {
 	}
 
 	preload(): void {
-		// Only load video if it exists (prevents E2E test failures)
-		if (intro_video) {
-			(this.load as unknown as ILoaderWithLegacyVideo).video(
-				'intro_video',
-				intro_video,
-				'loadeddata',
-				false,
-				true
-			);
+		// Phaser's video loader dereferences the chosen format even when no codec
+		// is supported. An optional background must not prevent the menu booting.
+		if (intro_video && this.sys.game.device.video.getVideoURL(intro_video)) {
+			this.load.video('intro_video', intro_video, true);
 		}
 	}
 
@@ -194,11 +177,23 @@ export class MainMenuScene extends Phaser.Scene {
 			this.showCredits();
 		});
 
+		this.cityText = this.add
+			.text(this.gameStartText.x, this.gameStartText.y + CITY_STYLE.menuOffset, CITY_TEXT.menu, {
+				fontSize: CITY_STYLE.menuFontSize,
+				fontFamily: this.fontFamily,
+				color: CITY_STYLE.accent,
+			})
+			.setOrigin(0.5, 0.5)
+			.setInteractive();
+		this.cityText.on('pointerdown', () => this.startCity());
+
 		this.setMainMenuActions();
 
-		this.scale.on('resize', (resize: IResizeSize) => {
+		const onResize = (resize: IResizeSize): void => {
 			this.resizeAll(resize);
-		});
+		};
+		this.scale.on('resize', onResize);
+		this.events.once('shutdown', () => this.scale.off('resize', onResize));
 	}
 
 	resizeAll(size: IResizeSize): void {
@@ -206,11 +201,13 @@ export class MainMenuScene extends Phaser.Scene {
 			this.titleLogo!.setPosition(size.width / 2, size.height / 2 - Dimensions.MAIN_MENU_TITLE_OFFSET_Y);
 			this.gameStartText!.setPosition(size.width / 2, size.height / 2);
 			this.loadGameText!.setPosition(this.gameStartText!.x, this.gameStartText!.y + 60);
+			this.cityText?.setPosition(this.gameStartText!.x, this.gameStartText!.y + CITY_STYLE.menuOffset);
 			this.creditsText!.setPosition(
 				this.gameStartText!.x,
 				this.gameStartText!.y + Dimensions.MAIN_MENU_CREDITS_SPACING
 			);
-			this.video!.setPosition(this.cameras.main.x, this.cameras.main.y);
+			if (!this.video) return;
+			this.video.setPosition(this.cameras.main.x, this.cameras.main.y);
 			if (size.aspectRatio < 1) {
 				this.video!.setScale(2);
 				this.video!.setOrigin(Alpha.MEDIUM, 0);
@@ -254,6 +251,15 @@ export class MainMenuScene extends Phaser.Scene {
 		};
 		this.neverquestInterfaceControler!.interfaceElements[0][2] = [];
 		this.neverquestInterfaceControler!.interfaceElements[0][2].push(credits);
+
+		this.neverquestInterfaceControler!.interfaceElements[0][3] = [
+			{
+				element: this.cityText,
+				action: 'startCity',
+				context: this,
+				args: null as unknown,
+			},
+		];
 
 		this.neverquestInterfaceControler!.updateHighlightedElement(firstAction.element);
 	}
@@ -312,6 +318,11 @@ Forest - Intro Scene Music by "syncopika"
 		this.neverquestInterfaceControler!.clearItems();
 		this.setMainMenuActions();
 		this.neverquestInterfaceControler!.menuHistoryRetrieve();
+	}
+
+	startCity(): void {
+		this.themeSound?.stop();
+		this.scene.start(CITY.scene);
 	}
 
 	startGame(): void {

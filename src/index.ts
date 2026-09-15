@@ -37,6 +37,7 @@ import { IntroScene } from './scenes/IntroScene';
 import { InventoryScene } from './scenes/InventoryScene';
 // import { JoystickScene } from './scenes/JoystickScene';
 import { MainMenuScene } from './scenes/MainMenuScene';
+import { CityScene } from './scenes/CityScene';
 import { MainScene } from './scenes/MainScene';
 // import { MobileCheckScene } from './scenes/MobileCheckScene';
 // import { OverworldScene } from './scenes/OverworldScene';
@@ -111,6 +112,7 @@ const config: Phaser.Types.Core.GameConfig = {
 		IntroScene,
 		MainScene,
 		MainMenuScene,
+		CityScene,
 		// UpsideDownScene,
 		DungeonScene,
 		IceCavernsScene, // Ice Caverns biome (level 15-20)
