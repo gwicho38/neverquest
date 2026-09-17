@@ -30,7 +30,6 @@ import {
 	TilemapConfig,
 	IImageAsset,
 	ITilemapAsset,
-	IAudioAsset,
 	IAtlasAsset,
 	IAsepriteAsset,
 } from '../consts/GameAssets';
@@ -39,6 +38,7 @@ import { IAnimationConfig, IResizeSize } from '../types';
 import { HexColors, NumericColors } from '../consts/Colors';
 import { Alpha, FontStyles } from '../consts/Numbers';
 import { FontFamily, UILabels } from '../consts/Messages';
+import { queueGameAudio, restoreMissingGameAudio } from '../plugins/NeverquestAudioLoader';
 
 /**
  * Interface for WebFont loader library
@@ -84,9 +84,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 		this.load.script('webfont', 'https://ajax.googleapis.com/ajax/libs/webfont/1.6.26/webfont.js');
 
 		// Sound
-		NeverquestAudios.forEach((value: IAudioAsset) => {
-			this.load.audio(value.name, value.audio);
-		});
+		queueGameAudio(this, NeverquestAudios);
 
 		// Atlas
 		AtlasConfig.forEach((value: IAtlasAsset) => {
@@ -185,6 +183,7 @@ export class PreloadScene extends Phaser.Scene implements IPreloadScene {
 	}
 
 	public create(): void {
+		restoreMissingGameAudio(this, NeverquestAudios);
 		Animations.forEach((animation: IAnimationConfig) => {
 			this.anims.create({
 				key: animation.key,

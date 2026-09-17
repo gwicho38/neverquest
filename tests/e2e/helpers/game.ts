@@ -47,7 +47,7 @@ export class GameDriver {
 
 	/** Navigate to the game and wait for the nq driver to be installed. */
 	async boot(): Promise<void> {
-		// noaudio=1: headless browsers have no WebAudio backend.
+		// Isolate gameplay here; audio-startup.spec.ts covers normal audio-enabled boot.
 		await this.page.goto('/?noaudio=1');
 		await this.page.waitForFunction(() => !!(window as any).nq, undefined, WAIT);
 		await this.page.waitForFunction(() => (window as any).nq.ready(), undefined, WAIT);

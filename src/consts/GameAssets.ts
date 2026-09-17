@@ -41,6 +41,12 @@ export interface IAudioAsset {
 	audio: string;
 }
 
+export const AUDIO_LOADING = {
+	silentChannels: 1,
+	silentSeconds: 1,
+	unavailableMessage: '[Audio] Unavailable clip; continuing silently:',
+} as const;
+
 /**
  * Interface for atlas asset configuration (texture atlas with JSON data)
  * Note: json can be either a path string or imported JSON object

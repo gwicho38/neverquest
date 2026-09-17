@@ -71,8 +71,8 @@ if (!canvas) {
 	}
 }
 
-// Allow disabling audio via `?noaudio=1`. Headless browsers (e2e) have no
-// WebAudio backend, so creating sounds throws; normal play keeps sound on.
+// Gameplay tests can isolate audio with `?noaudio=1`. Normal startup is also
+// tested with audio enabled, including browsers that cannot decode a clip.
 const noAudio = new URLSearchParams(window.location.search).has('noaudio');
 
 const config: Phaser.Types.Core.GameConfig = {

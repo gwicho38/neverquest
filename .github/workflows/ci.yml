@@ -81,10 +81,16 @@ jobs:
                   cache: 'npm'
             - name: Install dependencies
               run: npm ci
-            - name: Install Chromium
-              run: npx playwright install --with-deps chromium
-            - name: Play the city prototype
-              run: npm run test:e2e -- tests/e2e/city.spec.ts --workers=1 --reporter=line
+            - name: Install browsers
+              run: npx playwright install --with-deps chromium firefox
+            - name: Provide audio output for browser startup checks
+              run: |
+                  sudo apt-get install --no-install-recommends -y pulseaudio pulseaudio-utils
+                  pulseaudio --start --exit-idle-time=-1
+                  pactl load-module module-null-sink sink_name=neverquest_test
+                  pactl set-default-sink neverquest_test
+            - name: Play the city and verify audio startup
+              run: npm run test:e2e -- tests/e2e/city.spec.ts tests/e2e/audio-startup.spec.ts --workers=1 --reporter=line
             - name: Upload browser evidence
               if: always()
               uses: actions/upload-artifact@v4

@@ -277,8 +277,12 @@ historical values in prose can lag behind the tuning constants.
 on death or shutdown. Only guardian defeat awards the cave quest flags. Keep
 combat warnings above the action so the HUD game log cannot cover them.
 
-**Gotcha — headless has no WebAudio.** Boot the game with `?noaudio=1` (the
-`GameDriver` does this) or `this.sound.add(...)` throws on boot.
+**Audio startup needs separate coverage.** `GameDriver` uses `?noaudio=1` to
+isolate gameplay tests. `tests/e2e/audio-startup.spec.ts` tests the normal URL in
+Chromium and Firefox, including decode and download failures. Run this coverage
+when changing preload or menu code; muted tests alone miss audio startup crashes.
+`NeverquestAudioLoader` keeps failed declared clips playable as silence while
+preserving successfully decoded sounds.
 
 ### Other landmines learned the hard way
 
