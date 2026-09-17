@@ -23,6 +23,11 @@ export default defineConfig({
 			name: 'chromium',
 			use: { ...devices['Desktop Chrome'] },
 		},
+		{
+			name: 'firefox-audio',
+			testMatch: 'audio-startup.spec.ts',
+			use: { ...devices['Desktop Firefox'] },
+		},
 	],
 
 	/* Run dev server before starting tests */
